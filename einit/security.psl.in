@@ -1,0 +1,20 @@
+/* Solution security policy of the "wifi_iperf_separate_vfs" example. */
+
+use nk.base._
+
+/* Including EDL files */
+use EDL kl.core.Core
+use EDL Einit
+
+use EDL wpa.WpaSupplicant
+use EDL kl.drivers.UART
+use EDL sdk.Test
+
+@INIT_EXTERNAL_ENTITIES@
+
+/* Assigning the execute interface */
+execute: kl.core.Execute
+
+/* Security policy in this example allows any interaction between processes and the KasperskyOS kernel.
+ * It is used to simplify the example and it must not be used in real applications. */
+use nonsecurity._
