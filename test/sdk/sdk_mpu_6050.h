@@ -27,14 +27,11 @@ struct Vector3f {
     void subtract(Vector3f sub);
 };
 
-int startI2CMPU();
-int writeRegister(uint8_t reg, uint8_t val);
-int readVector(uint8_t reg, Vector3f& val);
+void setMpuAddress(uint8_t address);
+void setMpuFrequency(uint32_t frequency);
+void setMpuScale(uint8_t scale);
+void setMpuRange(uint8_t range);
 
-void setMPUAddress(uint8_t address);
-void setMPUFrequency(uint32_t frequency);
-
-int initializeMPU(uint8_t scale = 0x18, uint8_t range = 0x18);
 int calibrateGyro();
 Vector3f getAcceleration();
 Vector3f getGyro();

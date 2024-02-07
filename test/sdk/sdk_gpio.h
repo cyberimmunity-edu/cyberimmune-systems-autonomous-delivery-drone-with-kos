@@ -1,10 +1,9 @@
 #pragma once
-#include <gpio/gpio.h>
+#include <stdlib.h>
 
-extern GpioHandle gpioH;
+void setLightPin(uint8_t pin);
+void setBlinkPeriod(uint32_t ms);
 
-int startGPIO(void);
 int setLight(int turnOn);
-void blinkLight(void);
 void startBlinking(void);
 void stopBlinking(void);

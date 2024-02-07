@@ -1,17 +1,14 @@
 #pragma once
-
-#include <uart/uart.h>
+#include <stdlib.h>
 
 #define KOS_COMMAND_MESSAGE_HEAD_SIZE 4
 
-extern UartHandle uartH;
-
-enum KOSCommandType {
+enum KOSCommand {
     ERROR = 0x00,
-    Command_ArmRequest = 0x3A,
-    Command_ArmPermit = 0xA5,
-    Command_ArmForbid = 0xE4,
-    Command_AbortFlight = 0xAB
+    ArmRequest = 0x3A,
+    ArmPermit = 0xA5,
+    ArmForbid = 0xE4,
+    AbortFlight = 0xAB
 };
 
 struct KOSCommandMessage {
@@ -19,9 +16,8 @@ struct KOSCommandMessage {
     uint8_t command;
 
     KOSCommandMessage();
-    KOSCommandMessage(KOSCommandType com);
+    KOSCommandMessage(KOSCommand com);
 };
 
-int startUART(void);
-int wait_for_ardupilot_request();
-int send_command(KOSCommandType com);
+int waitForCommand();
+int sendCommand(KOSCommand com);

@@ -1,5 +1,4 @@
 #pragma once
-#include <i2c/i2c.h>
 #include <stdlib.h>
 
 /*
@@ -35,13 +34,13 @@ struct CompassReading {
 	void calibrate(float* offsets, float* scales);
 };
 
-int startI2CCompass();
-int readCompass(CompassReading& res);
-
 void setCompassAddress(uint8_t address);
 void setCompassFrequency(uint32_t frequency);
 void setMagneticDeclination(int degrees, int minutes);
+void setCompassMode(uint8_t mode);
+void setCompassOutputDataRate(uint8_t odr);
+void setCompassFullScale(uint8_t rng);
+void setCompassOverSampleRatio(uint8_t osr);
 
-int initializeCompass(uint8_t mode = 0x01, uint8_t odr = 0x0C, uint8_t rng = 0x10, uint8_t osr = 0x00);
 int calibrateCompass();
 float getAzimuth();

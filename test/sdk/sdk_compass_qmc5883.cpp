@@ -1,16 +1,19 @@
-#include "sdk_compass.h"
-#include <bsp/bsp.h>
+#include "sdk_compass_qmc5883.h"
+#include "sdk_firmware.h"
+#include <i2c/i2c.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <math.h>
 
-#define I2C_COMPASS_CHANNEL "i2c0"
-#define I2C_COMPASS_CONFIG "rpi4_bcm2711.p0-1"
-
 I2cHandle i2cCompassH = NULL;
+int compassInitialized = false;
 uint8_t compassAddress = 0x0D;
 uint32_t compassFrequency = 100000;
 float magneticDeclination = 0.0f;
+uint8_t compassMode = 0x01;
+uint8_t compassOdr = 0x0C;
+uint8_t compassRng = 0x10;
+uint8_t compassOsr = 0x00;
 float compassCalibrationOffsets[3] = { 0.0f, 0.0f, 0.0f };
 float compassCalibrationScales[3] = { 1.0f, 1.0f, 1.0f };
 
@@ -26,28 +29,52 @@ void CompassReading::calibrate(float* offsets, float* scales) {
     Z = (Z - offsets[2]) * scales[2];
 }
 
-int startI2CCompass() {
-    Retcode rc = BspEnableModule(I2C_COMPASS_CHANNEL);
-    if (rc != rcOk) {
-        fprintf(stderr, "Failed to enable '%s' module\n", I2C_COMPASS_CHANNEL);
-        return 0;
-    }
-    rc = BspSetConfig(I2C_COMPASS_CHANNEL, I2C_COMPASS_CONFIG);
-    if (rc != rcOk) {
-        fprintf(stderr, "Failed to set pmux configuration for '%s' channel\n", I2C_COMPASS_CHANNEL);
-        return 0;
-    }
-    rc = I2cInit();
-    if (rc != rcOk) {
-        fprintf(stderr, "Failed to initialize I2C\n");
-        return 0;
-    }
-    rc = I2cOpenChannel(I2C_COMPASS_CHANNEL, &i2cCompassH);
+int openCompassChannel() {
+    char* channel = getChannelName(firmwareChannel::COMPASS);
+    Retcode rc = I2cOpenChannel(channel, &i2cCompassH);
     if (rc != rcOk)
     {
-        fprintf(stderr, "Failed to open '%s' channel\n", I2C_COMPASS_CHANNEL);
+        fprintf(stderr, "Failed to open '%s' channel\n", channel);
         return 0;
     }
+    return 1;
+}
+
+int startCompass() {
+    uint8_t flags = compassMode | compassOdr | compassRng | compassOsr;
+
+    I2cMsg messages[2];
+    uint8_t bufInit[2] = { 0x0B, 0x01 };
+    uint8_t bufMode[2] = { 0x09, flags };
+
+    messages[0].addr = compassAddress;
+    messages[0].flags = 0;
+    messages[0].buf = bufInit;
+    messages[0].len = 2;
+
+    messages[1].addr = compassAddress;
+    messages[1].flags = 0;
+    messages[1].buf = bufMode;
+    messages[1].len = 2;
+
+    Retcode rc = I2cXfer(i2cCompassH, compassFrequency, messages, 2);
+    if (rc != rcOk) {
+        fprintf(stderr, "Failed to start compass\n");
+        return 0;
+    }
+
+    compassInitialized = true;
+
+    return 1;
+}
+
+int initializeCompass() {
+    if ((i2cCompassH == NULL) && !openCompassChannel())
+        return 0;
+
+    if (!compassInitialized && !startCompass())
+        return 0;
+
     return 1;
 }
 
@@ -67,7 +94,7 @@ int readCompass(CompassReading& res) {
     messages[1].len = 6;
 
     I2cError rc = I2cXfer(i2cCompassH, compassFrequency, messages, 2);
-    if (rc != I2C_EOK) {
+    if (rc != rcOk) {
         fprintf(stderr, "Failed to read from compass\n");
         return 0;
     }
@@ -91,34 +118,26 @@ void setMagneticDeclination(int degrees, int minutes) {
     magneticDeclination = degrees + minutes / 60.0f;
 }
 
-int initializeCompass(uint8_t mode, uint8_t odr, uint8_t rng, uint8_t osr) {
-    uint8_t flags = mode | odr | rng | osr;
-
-    I2cMsg messages[2];
-    uint8_t bufInit[2] = { 0x0B, 0x01 };
-    uint8_t bufMode[2] = { 0x09, flags };
-
-    messages[0].addr = compassAddress;
-    messages[0].flags = 0;
-    messages[0].buf = bufInit;
-    messages[0].len = 2;
-
-    messages[1].addr = compassAddress;
-    messages[1].flags = 0;
-    messages[1].buf = bufMode;
-    messages[1].len = 2;
-
-    Retcode rc = I2cXfer(i2cCompassH, compassFrequency, messages, 2);
-    if (rc != rcOk) {
-        fprintf(stderr, "Failed to write to compass\n");
-        return 0;
-    }
-
-    return 1;
+void setCompassMode(uint8_t mode) {
+    compassMode = mode;
 }
 
+void setCompassOutputDataRate(uint8_t odr) {
+    compassOdr = odr;
+}
+
+void setCompassFullScale(uint8_t rng) {
+    compassRng = rng;
+}
+
+void setCompassOverSampleRatio(uint8_t osr) {
+    compassOsr = osr;
+}
 
 int calibrateCompass() {
+    if (!initializeCompass())
+        return 0;
+
     for (int i = 0; i < 3; i++) {
         compassCalibrationOffsets[i] = 0.0f;
         compassCalibrationScales[i] = 1.0f;
@@ -172,6 +191,9 @@ int calibrateCompass() {
 }
 
 float getAzimuth() {
+    if (!initializeCompass())
+        return NAN;
+
     CompassReading r;
     if (!readCompass(r)) {
         fprintf(stderr, "Failed to get an azimuth\n");

@@ -1,6 +1,7 @@
 #pragma once
+#include <stdlib.h>
 
-#include <string>
-#include <kos_net.h>
+void setServerIP(char* address);
+void setServerPort(uint8_t port);
 
-int get_request(std::string address, uint port, std::string query, std::string& response);
+int sendRequest(char* query, char* response);
