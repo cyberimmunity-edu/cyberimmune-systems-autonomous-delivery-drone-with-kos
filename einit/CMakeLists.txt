@@ -27,8 +27,6 @@ set (ENTITIES
      ${wpa_SUPPLICANT_ENTITY}
      ${rump_DHCPCD_ENTITY})
 
-set (SECURITY_PSL_FILE "security.psl.in")
-
 set_target_properties (${wpa_SUPPLICANT_ENTITY} PROPERTIES
     DEPENDS_ON_ENTITY ""
     EXTRA_CONNECTIONS "\
@@ -63,10 +61,21 @@ set (FILES ${CMAKE_SOURCE_DIR}/resources/hdd/etc/wpa_supplicant.conf
 build_kos_hw_image (kos-image
                     EINIT_ENTITY EinitHw
                     CONNECTIONS_CFG "init.yaml.in"
-                    SECURITY_PSL ${SECURITY_PSL_FILE}
+                    SECURITY_PSL "security.psl.in"
                     IMAGE_FILES ${ENTITIES} ${FILES})
 
 # SD card image with KasperskyOS for the target hardware platform.
 build_sd_image (sd-image
                 KOS_IMAGE_TARGET kos-image
                 IMAGE_FS         ${IMAGE_FS})
+
+set (QEMU_FLAGS "--nographic -monitor none -netdev user,id=net0,dhcpstart=10.0.2.15")
+set (QEMU_ENV "QEMU_AUDIO_DRV=none")
+
+build_kos_qemu_image (kos-qemu-image
+                    EINIT_ENTITY EinitQemu
+                    QEMU_FLAGS ${QEMU_FLAGS}
+                    QEMU_ENV ${QEMU_ENV}
+                    CONNECTIONS_CFG "init.yaml.in"
+                    SECURITY_PSL "security.psl.in"
+                    IMAGE_FILES ${ENTITIES} ${FILES})

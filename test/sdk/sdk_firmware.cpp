@@ -1,11 +1,17 @@
 #include "sdk_firmware.h"
 #include "sdk_gpio.h"
+
+#ifdef FOR_SITL
+#include "sdk_autopilot_communication.h"
+#else
 #include <coresrv/hal/hal_api.h>
 #include <rtl/retcode_hr.h>
 #include <bsp/bsp.h>
 #include <gpio/gpio.h>
 #include <uart/uart.h>
 #include <i2c/i2c.h>
+#endif
+
 #include <kos_net.h>
 #include <stdio.h>
 
@@ -19,6 +25,8 @@ char i2c_compass_config_suffix[] = "p0-1";
 char i2c_mpu_config_suffix[] = "p2-3";
 
 int initializeFirmware() {
+#ifndef FOR_SITL
+
     char boardName[64] = {0};
     if (KnHalGetEnv("board", boardName, sizeof(boardName)) != rcOk)
     {
@@ -121,12 +129,23 @@ int initializeFirmware() {
     }
     fprintf(stderr, "MPU6050 is initialized\n");
 
+#endif
+
     fprintf(stderr, "Initializing network connection\n");
     if (!wait_for_network()) {
         fprintf(stderr, "Failed to connect to network\n");
         return 0;
     }
     fprintf(stderr, "Network connection is established\n");
+
+#ifdef FOR_SITL
+
+    if (!initializeSitlUart()) {
+        fprintf(stderr, "Failed to open SITL socket\n");
+        return 0;
+    }
+
+#endif
 
     fprintf(stderr, "All modules are initialized\n");
     setLight(0);

@@ -2,7 +2,7 @@
 #include <kos_net.h>
 #include <string.h>
 
-char serverIP[] = "192.168.0.105";
+char serverIP[] = "192.168.1.78";
 uint8_t serverPort = 80;
 uint16_t responseBufferSize = 1024;
 
@@ -16,8 +16,7 @@ void setServerPort(uint8_t port) {
 
 int sendRequest(char* query, char* response) {
     int socketDesc = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-    if (socketDesc < 0)
-    {
+    if (socketDesc < 0) {
         fprintf(stderr, "Failed to create a socket: %s\n", strerror(errno));
         return 0;
     }
@@ -32,7 +31,7 @@ int sendRequest(char* query, char* response) {
         return 0;
 	}
 
-    char request[responseBufferSize];
+    char request[responseBufferSize] = {0};
     strcat(request, "GET /");
     strcat(request, query);
     strcat(request, " HTTP/1.1\r\nHost: ");

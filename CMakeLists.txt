@@ -35,15 +35,17 @@ include_directories (${precompiled_vfs_INCLUDE})
 find_package (wpa REQUIRED COMPONENTS SUPPLICANT_ENTITY)
 include_directories (${wpa_INCLUDE})
 
-# Add a package with the GPIO client library.
-find_package (gpio REQUIRED COMPONENTS CLIENT_LIB ENTITY)
-include_directories (${gpio_INCLUDE})
+if (NOT FOR_SITL)
+    # Add a package with the GPIO client library.
+    find_package (gpio REQUIRED COMPONENTS CLIENT_LIB ENTITY)
+    include_directories (${gpio_INCLUDE})
 
-find_package (uart REQUIRED)
-include_directories (${uart_INCLUDE})
+    find_package (uart REQUIRED)
+    include_directories (${uart_INCLUDE})
 
-find_package (i2c REQUIRED)
-include_directories (${i2c_INCLUDE})
+    find_package (i2c REQUIRED)
+    include_directories (${i2c_INCLUDE})
+endif()
 
 # Recommended flags against vulnerabilities.
 add_compile_options (-Wall -Wextra -Wconversion

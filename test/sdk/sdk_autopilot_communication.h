@@ -19,5 +19,11 @@ struct KOSCommandMessage {
     KOSCommandMessage(KOSCommand com);
 };
 
+#ifdef FOR_SITL
+
+int initializeSitlUart(void);
+
+#endif
+
 int waitForCommand();
 int sendCommand(KOSCommand com);

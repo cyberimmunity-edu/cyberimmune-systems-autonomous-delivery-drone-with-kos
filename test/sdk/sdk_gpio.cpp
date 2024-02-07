@@ -1,6 +1,10 @@
 #include "sdk_gpio.h"
 #include "sdk_firmware.h"
+
+#ifndef FOR_SITL
 #include <gpio/gpio.h>
+#endif
+
 #include <stdio.h>
 #include <unistd.h>
 #include <thread>
@@ -9,12 +13,17 @@
 #define GPIO_LOW_LEVEL 0
 #define GPIO_HIGH_LEVEL 1
 
+#ifndef FOR_SITL
 GpioHandle gpioH = NULL;
+#endif
+
 uint8_t lightPin = 8;
 uint32_t blinkPeriod = 1;
 std::thread blinkThread;
 std::mutex blinkMutex;
 bool blinkStop;
+
+#ifndef FOR_SITL
 
 int openGpioChannel() {
     char* channel = getChannelName(firmwareChannel::GPIO);
@@ -43,6 +52,8 @@ int initializeGpio() {
     return 1;
 }
 
+#endif
+
 void blinkLight(void) {
     bool mode = true;
     while (true) {
@@ -70,6 +81,12 @@ void setBlinkPeriod(uint32_t ms) {
 }
 
 int setLight(int turnOn) {
+#ifdef FOR_SITL
+
+    return 1;
+
+#else
+
     if (!initializeGpio())
         return 0;
 
@@ -80,19 +97,33 @@ int setLight(int turnOn) {
         return 0;
     }
     return 1;
+
+#endif
 }
 
 void startBlinking(void) {
+#ifdef FOR_SITL
+
+#else
+
     if (!initializeGpio())
         return;
 
     blinkStop = false;
     blinkThread = std::thread(blinkLight);
+
+#endif
 }
 
 void stopBlinking(void) {
+#ifdef FOR_SITL
+
+#else
+
     blinkMutex.lock();
     blinkStop = true;
     blinkMutex.unlock();
     blinkThread.join();
+
+#endif
 }

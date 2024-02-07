@@ -1,11 +1,18 @@
 #include "sdk_mpu_6050.h"
 #include "sdk_firmware.h"
+
+#ifndef FOR_SITL
 #include <i2c/i2c.h>
+#endif
+
 #include <stdio.h>
 #include <unistd.h>
 #include <math.h>
 
+#ifndef FOR_SITL
 I2cHandle i2cMPUH = NULL;
+#endif
+
 int mpuInitialized = false;
 uint8_t mpuAddress = 0x68;
 uint32_t mpuFrequency = 400000;
@@ -38,6 +45,8 @@ void Vector3f::subtract(Vector3f sub) {
     Y -= sub.Y;
     Z -= sub.Z;
 }
+
+#ifndef FOR_SITL
 
 int openMpuChannel() {
     char* channel = getChannelName(firmwareChannel::MPU);
@@ -123,16 +132,6 @@ int startMpu() {
     return 1;
 }
 
-int initializeMpu() {
-    if ((i2cMPUH == NULL) && !openMpuChannel())
-        return 0;
-
-    if (!mpuInitialized && !startMpu())
-        return 0;
-
-    return 1;
-}
-
 int readVector(uint8_t reg, Vector3f& val) {
     I2cMsg messages[2];
     uint8_t writeBuffer[1] = { reg };
@@ -162,6 +161,18 @@ int readVector(uint8_t reg, Vector3f& val) {
     return 1;
 }
 
+int initializeMpu() {
+    if ((i2cMPUH == NULL) && !openMpuChannel())
+        return 0;
+
+    if (!mpuInitialized && !startMpu())
+        return 0;
+
+    return 1;
+}
+
+#endif
+
 void setMpuAddress(uint8_t address) {
     mpuAddress = address;
 }
@@ -179,6 +190,12 @@ void setMpuRange(uint8_t range) {
 }
 
 int calibrateGyro() {
+#ifdef FOR_SITL
+
+    return 1;
+
+#else
+
     if (!initializeMpu())
         return 0;
 
@@ -203,9 +220,17 @@ int calibrateGyro() {
     fprintf(stderr, "Gyro delta: %f, %f, %f\n", gyroDelta.X, gyroDelta.Y, gyroDelta.Z);
 
     return 1;
+
+#endif
 }
 
 Vector3f getAcceleration() {
+#ifdef FOR_SITL
+
+    return Vector3f(0.0f, 0.0f, 0.0f);
+
+#else
+
     if (!initializeMpu())
         return Vector3f(NAN, NAN, NAN);
 
@@ -218,9 +243,17 @@ Vector3f getAcceleration() {
     acc.multiply(rangePerDigit * 9.80665f);
 
     return acc;
+
+#endif
 }
 
 Vector3f getGyro() {
+#ifdef FOR_SITL
+
+    return Vector3f(0.0f, 0.0f, 0.0f);
+
+#else
+
     if (!initializeMpu())
         return Vector3f(NAN, NAN, NAN);
 
@@ -234,9 +267,17 @@ Vector3f getGyro() {
     gyro.multiply(dpsPerDigit);
 
     return gyro;
+
+#endif
 }
 
 float getTemperature() {
+#ifdef FOR_SITL
+
+    return 0.0f;
+
+#else
+
     if (!initializeMpu())
         return NAN;
 
@@ -262,4 +303,6 @@ float getTemperature() {
 
     int16_t temp = (readBuffer[0] << 8) | readBuffer[1];
     return (temp / 340.0f + 36.5f);
+
+#endif
 }

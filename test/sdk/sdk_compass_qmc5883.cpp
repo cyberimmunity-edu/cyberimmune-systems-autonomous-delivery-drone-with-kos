@@ -1,11 +1,18 @@
 #include "sdk_compass_qmc5883.h"
 #include "sdk_firmware.h"
+
+#ifndef FOR_SITL
 #include <i2c/i2c.h>
+#endif
+
 #include <stdio.h>
 #include <unistd.h>
 #include <math.h>
 
+#ifndef FOR_SITL
 I2cHandle i2cCompassH = NULL;
+#endif
+
 int compassInitialized = false;
 uint8_t compassAddress = 0x0D;
 uint32_t compassFrequency = 100000;
@@ -28,6 +35,8 @@ void CompassReading::calibrate(float* offsets, float* scales) {
     Y = (Y - offsets[1]) * scales[1];
     Z = (Z - offsets[2]) * scales[2];
 }
+
+#ifndef FOR_SITL
 
 int openCompassChannel() {
     char* channel = getChannelName(firmwareChannel::COMPASS);
@@ -68,16 +77,6 @@ int startCompass() {
     return 1;
 }
 
-int initializeCompass() {
-    if ((i2cCompassH == NULL) && !openCompassChannel())
-        return 0;
-
-    if (!compassInitialized && !startCompass())
-        return 0;
-
-    return 1;
-}
-
 int readCompass(CompassReading& res) {
     I2cMsg messages[2];
     uint8_t writeBuffer[] = { 0x00 };
@@ -105,6 +104,18 @@ int readCompass(CompassReading& res) {
 
     return 1;
 }
+
+int initializeCompass() {
+    if ((i2cCompassH == NULL) && !openCompassChannel())
+        return 0;
+
+    if (!compassInitialized && !startCompass())
+        return 0;
+
+    return 1;
+}
+
+#endif
 
 void setCompassAddress(uint8_t address) {
     compassAddress = address;
@@ -135,6 +146,12 @@ void setCompassOverSampleRatio(uint8_t osr) {
 }
 
 int calibrateCompass() {
+#ifdef FOR_SITL
+
+    return 1;
+
+#else
+
     if (!initializeCompass())
         return 0;
 
@@ -188,9 +205,17 @@ int calibrateCompass() {
     fprintf(stderr, "Calibration scales: %f, %f, %f\n", compassCalibrationScales[0], compassCalibrationScales[1], compassCalibrationScales[2]);
 
     return 1;
+
+#endif
 }
 
 float getAzimuth() {
+#ifdef FOR_SITL
+
+    return 0.0f;
+
+#else
+
     if (!initializeCompass())
         return NAN;
 
@@ -206,4 +231,6 @@ float getAzimuth() {
     while (azimuth >= 360)
         azimuth -= 360;
 	return azimuth;
+
+#endif
 }
