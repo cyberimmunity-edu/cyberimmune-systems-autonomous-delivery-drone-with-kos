@@ -26,7 +26,6 @@ char i2c_mpu_config_suffix[] = "p2-3";
 
 int initializeFirmware() {
 #ifndef FOR_SITL
-
     char boardName[64] = {0};
     if (KnHalGetEnv("board", boardName, sizeof(boardName)) != rcOk)
     {
@@ -128,7 +127,6 @@ int initializeFirmware() {
         return 0;
     }
     fprintf(stderr, "MPU6050 is initialized\n");
-
 #endif
 
     fprintf(stderr, "Initializing network connection\n");
@@ -139,12 +137,10 @@ int initializeFirmware() {
     fprintf(stderr, "Network connection is established\n");
 
 #ifdef FOR_SITL
-
     if (!initializeSitlUart()) {
         fprintf(stderr, "Failed to open SITL socket\n");
         return 0;
     }
-
 #endif
 
     fprintf(stderr, "All modules are initialized\n");

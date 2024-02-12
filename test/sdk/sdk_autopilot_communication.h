@@ -1,5 +1,5 @@
 #pragma once
-#include <stdlib.h>
+#include <stdint.h>
 
 #define KOS_COMMAND_MESSAGE_HEAD_SIZE 4
 
@@ -20,10 +20,8 @@ struct KOSCommandMessage {
 };
 
 #ifdef FOR_SITL
-
 int initializeSitlUart(void);
-
 #endif
 
-int waitForCommand();
 int sendCommand(KOSCommand com);
+int waitForCommand();

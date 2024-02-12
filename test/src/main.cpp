@@ -4,11 +4,15 @@
 #include "../sdk/sdk_autopilot_communication.h"
 #include "../sdk/sdk_compass_qmc5883.h"
 #include "../sdk/sdk_mpu_6050.h"
+#include "../sdk/sdk_mission.h"
+#include "../sdk/sdk_authenticity.h"
 #include <stdio.h>
+#include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
 
-char serverResponse[1024];
+const uint32_t responseMaxLength = 1024;
+char serverResponse[responseMaxLength] = {0};
 
 int main(int argc, char* argv[]) {
     if (!initializeFirmware())
@@ -24,12 +28,18 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;
     fprintf(stderr, "MPU gyro calibration is finished\n");
 
-    if (!sendRequest("auth?id=1", serverResponse))
+    if (!shareRsaKey(serverResponse))
+        return EXIT_FAILURE;
+
+    if (!sendRequest("auth", serverResponse))
         return EXIT_FAILURE;
     fprintf(stderr, "Authentication message is sent to the server\n");
 
-    fprintf(stderr, "Waiting for an arm...\n");
-
+    if (!requestMission())
+        return EXIT_FAILURE;
+    fprintf(stderr, "Correct mission is received from the server\n");
+    printMission();
+    fprintf(stderr, "Ready to arm\n");
     if (!waitForCommand()) {
         fprintf(stderr, "Error in waiting for ardupilot arm-request\n");
         return EXIT_FAILURE;
@@ -37,13 +47,13 @@ int main(int argc, char* argv[]) {
 
     startBlinking();
     fprintf(stderr, "Request for server is sent. Waiting for response...\n");
-
     //sleep(10);
-    if (!sendRequest("arm?id=1", serverResponse))
+    if (!sendRequest("arm", serverResponse))
         return EXIT_FAILURE;
     fprintf(stderr, "Server response is received\n");
+    fprintf(stderr, "%s\n", serverResponse);
 
-    if (strstr(serverResponse, "Arm: 0 ") != NULL) {
+    if (strstr(serverResponse, "$Arm: 0#") != NULL) {
         stopBlinking();
         if (!setLight(true))
             return EXIT_FAILURE;
@@ -52,7 +62,7 @@ int main(int argc, char* argv[]) {
             return EXIT_FAILURE;
         fprintf(stderr, "Arm permit is passed to ardupilot\n");
     }
-    else if (strstr(serverResponse, "Arm: 1 ") != NULL) {
+    else if (strstr(serverResponse, "$Arm: 1#") != NULL) {
         stopBlinking();
         if (!setLight(false))
             return EXIT_FAILURE;
@@ -77,12 +87,12 @@ int main(int argc, char* argv[]) {
         fprintf(stderr, "Temperature: %f\n", getTemperature());
         fprintf(stderr, "\n");
 
-        if (!sendRequest("fly_accept?id=1", serverResponse))
+        if (!sendRequest("fly_accept", serverResponse))
             return EXIT_FAILURE;
-        if (strstr(serverResponse, "Arm: 0 ") != NULL) {
+        if (strstr(serverResponse, "$Arm: 0#") != NULL) {
             //Continue fligt
         }
-        else if (strstr(serverResponse, "Arm: 1 ") != NULL) {
+        else if (strstr(serverResponse, "$Arm: 1#") != NULL) {
     //    if (tmpRep >= 20) {
             fprintf(stderr, "A request to stop the flight was received from the server\n");
             if (!setLight(false))

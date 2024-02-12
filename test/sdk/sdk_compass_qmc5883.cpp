@@ -37,7 +37,6 @@ void CompassReading::calibrate(float* offsets, float* scales) {
 }
 
 #ifndef FOR_SITL
-
 int openCompassChannel() {
     char* channel = getChannelName(firmwareChannel::COMPASS);
     Retcode rc = I2cOpenChannel(channel, &i2cCompassH);
@@ -114,7 +113,6 @@ int initializeCompass() {
 
     return 1;
 }
-
 #endif
 
 void setCompassAddress(uint8_t address) {
@@ -146,12 +144,7 @@ void setCompassOverSampleRatio(uint8_t osr) {
 }
 
 int calibrateCompass() {
-#ifdef FOR_SITL
-
-    return 1;
-
-#else
-
+#ifndef FOR_SITL
     if (!initializeCompass())
         return 0;
 
@@ -203,19 +196,15 @@ int calibrateCompass() {
     fprintf(stderr, "Compass is calibrated\n");
     fprintf(stderr, "Calibration offsets: %f, %f, %f\n", compassCalibrationOffsets[0], compassCalibrationOffsets[1], compassCalibrationOffsets[2]);
     fprintf(stderr, "Calibration scales: %f, %f, %f\n", compassCalibrationScales[0], compassCalibrationScales[1], compassCalibrationScales[2]);
+#endif
 
     return 1;
-
-#endif
 }
 
 float getAzimuth() {
 #ifdef FOR_SITL
-
     return 0.0f;
-
 #else
-
     if (!initializeCompass())
         return NAN;
 
@@ -231,6 +220,5 @@ float getAzimuth() {
     while (azimuth >= 360)
         azimuth -= 360;
 	return azimuth;
-
 #endif
 }

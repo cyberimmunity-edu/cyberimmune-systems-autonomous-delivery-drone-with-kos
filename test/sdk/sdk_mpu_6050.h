@@ -1,6 +1,5 @@
 #pragma once
-#include <i2c/i2c.h>
-#include <stdlib.h>
+#include <stdint.h>
 
 /*
 SCALE

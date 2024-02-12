@@ -35,6 +35,9 @@ include_directories (${precompiled_vfs_INCLUDE})
 find_package (wpa REQUIRED COMPONENTS SUPPLICANT_ENTITY)
 include_directories (${wpa_INCLUDE})
 
+find_package (MbedTLS REQUIRED COMPONENTS)
+include_directories (${MbedTLS_INCLUDE})
+
 if (NOT FOR_SITL)
     # Add a package with the GPIO client library.
     find_package (gpio REQUIRED COMPONENTS CLIENT_LIB ENTITY)

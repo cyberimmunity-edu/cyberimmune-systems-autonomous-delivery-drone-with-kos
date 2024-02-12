@@ -24,7 +24,6 @@ std::mutex blinkMutex;
 bool blinkStop;
 
 #ifndef FOR_SITL
-
 int openGpioChannel() {
     char* channel = getChannelName(firmwareChannel::GPIO);
     Retcode rc = GpioOpenPort(channel, &gpioH);
@@ -51,7 +50,6 @@ int initializeGpio() {
 
     return 1;
 }
-
 #endif
 
 void blinkLight(void) {
@@ -81,12 +79,7 @@ void setBlinkPeriod(uint32_t ms) {
 }
 
 int setLight(int turnOn) {
-#ifdef FOR_SITL
-
-    return 1;
-
-#else
-
+#ifndef FOR_SITL
     if (!initializeGpio())
         return 0;
 
@@ -96,34 +89,26 @@ int setLight(int turnOn) {
         fprintf(stderr, "GpioOut %d for pin %u failed, error code: %d\n", turnOn, lightPin, RC_GET_CODE(rc));
         return 0;
     }
-    return 1;
-
 #endif
+
+    return 1;
 }
 
 void startBlinking(void) {
-#ifdef FOR_SITL
-
-#else
-
+#ifndef FOR_SITL
     if (!initializeGpio())
         return;
 
     blinkStop = false;
     blinkThread = std::thread(blinkLight);
-
 #endif
 }
 
 void stopBlinking(void) {
-#ifdef FOR_SITL
-
-#else
-
+#ifndef FOR_SITL
     blinkMutex.lock();
     blinkStop = true;
     blinkMutex.unlock();
     blinkThread.join();
-
 #endif
 }

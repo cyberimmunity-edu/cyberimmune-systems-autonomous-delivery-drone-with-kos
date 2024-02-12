@@ -47,7 +47,6 @@ void Vector3f::subtract(Vector3f sub) {
 }
 
 #ifndef FOR_SITL
-
 int openMpuChannel() {
     char* channel = getChannelName(firmwareChannel::MPU);
     Retcode rc = I2cOpenChannel(channel, &i2cMPUH);
@@ -170,7 +169,6 @@ int initializeMpu() {
 
     return 1;
 }
-
 #endif
 
 void setMpuAddress(uint8_t address) {
@@ -190,12 +188,7 @@ void setMpuRange(uint8_t range) {
 }
 
 int calibrateGyro() {
-#ifdef FOR_SITL
-
-    return 1;
-
-#else
-
+#ifndef FOR_SITL
     if (!initializeMpu())
         return 0;
 
@@ -218,19 +211,15 @@ int calibrateGyro() {
 
     fprintf(stderr, "Gyro is calibrated\n");
     fprintf(stderr, "Gyro delta: %f, %f, %f\n", gyroDelta.X, gyroDelta.Y, gyroDelta.Z);
+#endif
 
     return 1;
-
-#endif
 }
 
 Vector3f getAcceleration() {
 #ifdef FOR_SITL
-
     return Vector3f(0.0f, 0.0f, 0.0f);
-
 #else
-
     if (!initializeMpu())
         return Vector3f(NAN, NAN, NAN);
 
@@ -243,17 +232,13 @@ Vector3f getAcceleration() {
     acc.multiply(rangePerDigit * 9.80665f);
 
     return acc;
-
 #endif
 }
 
 Vector3f getGyro() {
 #ifdef FOR_SITL
-
     return Vector3f(0.0f, 0.0f, 0.0f);
-
 #else
-
     if (!initializeMpu())
         return Vector3f(NAN, NAN, NAN);
 
@@ -267,17 +252,13 @@ Vector3f getGyro() {
     gyro.multiply(dpsPerDigit);
 
     return gyro;
-
 #endif
 }
 
 float getTemperature() {
 #ifdef FOR_SITL
-
     return 0.0f;
-
 #else
-
     if (!initializeMpu())
         return NAN;
 
@@ -303,6 +284,5 @@ float getTemperature() {
 
     int16_t temp = (readBuffer[0] << 8) | readBuffer[1];
     return (temp / 340.0f + 36.5f);
-
 #endif
 }
