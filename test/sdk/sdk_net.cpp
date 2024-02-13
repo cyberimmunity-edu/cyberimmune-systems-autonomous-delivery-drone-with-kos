@@ -4,7 +4,7 @@
 #include <string.h>
 
 char boardId[] = "id=1";
-char serverIp[16] = "192.168.0.105";
+char serverIp[16] = "192.168.1.78";
 uint8_t serverPort = 80;
 uint16_t bufferSize = 2048;
 

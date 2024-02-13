@@ -6,22 +6,14 @@
 #endif
 
 #include <stdio.h>
-#include <unistd.h>
-#include <thread>
-#include <mutex>
 
-#define GPIO_LOW_LEVEL 0
-#define GPIO_HIGH_LEVEL 1
+#define MAX_PIN_NUM 40
 
 #ifndef FOR_SITL
 GpioHandle gpioH = NULL;
 #endif
 
-uint8_t lightPin = 8;
-uint32_t blinkPeriod = 1;
-std::thread blinkThread;
-std::mutex blinkMutex;
-bool blinkStop;
+int8_t pinInit[MAX_PIN_NUM] = {0};
 
 #ifndef FOR_SITL
 int openGpioChannel() {
@@ -35,80 +27,51 @@ int openGpioChannel() {
         fprintf(stderr, "GPIO module %s handle is invalid\n", channel);
         return 0;
     }
-    rc = GpioSetMode(gpioH, lightPin, GPIO_DIR_OUT);
-    if (rcOk != rc)
-    {
-        fprintf(stderr, "GpioSetMode for module %s pin %u failed, error code: %d\n", channel, lightPin, RC_GET_CODE(rc));
-        return 0;
-    }
     return 1;
 }
 
-int initializeGpio() {
+int openPin(uint8_t pin) {
+    if (pin >= MAX_PIN_NUM) {
+        fprintf(stderr, "Cannot open pin %u. Its number should be lesser than %d\n", pin, MAX_PIN_NUM);
+        return 0;
+    }
+
+    if (pinInit[pin])
+        return 1;
+
+    Retcode rc = GpioSetMode(gpioH, pin, GPIO_DIR_OUT);
+    if (rcOk != rc) {
+        fprintf(stderr, "GpioSetMode for pin %u failed, error code: %d\n", pin, RC_GET_CODE(rc));
+        return 0;
+    }
+    pinInit[pin] = 1;
+
+    return 1;
+}
+
+int initializeGpio(uint8_t pin) {
     if ((gpioH == NULL) && !openGpioChannel())
         return 0;
 
+    if (!openPin(pin))
+        return 0;
+
     return 1;
 }
 #endif
 
-void blinkLight(void) {
-    bool mode = true;
-    while (true) {
-        blinkMutex.lock();
-        if (blinkStop) {
-            blinkMutex.unlock();
-            break;
-        }
-        blinkMutex.unlock();
-        if (!setLight(mode)) {
-            fprintf(stderr, "Error: Light blink failed\n");
-            return;
-        }
-        mode = !mode;
-        sleep(blinkPeriod);
-    }
-}
-
-void setLightPin(uint8_t pin) {
-    lightPin = pin;
-}
-
-void setBlinkPeriod(uint32_t ms) {
-    blinkPeriod = ms;
-}
-
-int setLight(int turnOn) {
+int setGpioPin(uint8_t pin, int turnOn) {
 #ifndef FOR_SITL
-    if (!initializeGpio())
+    if (!initializeGpio(pin))
         return 0;
 
-    Retcode rc = GpioOut(gpioH, lightPin, turnOn ? GPIO_HIGH_LEVEL : GPIO_LOW_LEVEL);
+    Retcode rc = GpioOut(gpioH, pin, turnOn ? 1 : 0);
     if (rcOk != rc)
     {
-        fprintf(stderr, "GpioOut %d for pin %u failed, error code: %d\n", turnOn, lightPin, RC_GET_CODE(rc));
+        fprintf(stderr, "GpioOut %d for pin %u failed, error code: %d\n", turnOn, pin, RC_GET_CODE(rc));
         return 0;
     }
 #endif
 
     return 1;
-}
-
-void startBlinking(void) {
-#ifndef FOR_SITL
-    if (!initializeGpio())
-        return;
-
-    blinkStop = false;
-    blinkThread = std::thread(blinkLight);
-#endif
-}
-
-void stopBlinking(void) {
-#ifndef FOR_SITL
-    blinkMutex.lock();
-    blinkStop = true;
-    blinkMutex.unlock();
-    blinkThread.join();
-#endif
 }

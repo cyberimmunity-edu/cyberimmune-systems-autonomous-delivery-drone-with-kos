@@ -8,9 +8,10 @@ project_header_default ("STANDARD_GNU_11:YES" "STRICT_WARNINGS:YES")
 
 nk_build_edl_files (test_edl_files NK_MODULE "sdk" EDL "${CMAKE_SOURCE_DIR}/resources/Test.edl")
 
-set (SDK_FILES "sdk/sdk_firmware.cpp" "sdk/sdk_net.cpp" "sdk/sdk_gpio.cpp"
+set (SDK_FILES "sdk/sdk_firmware.cpp" "sdk/sdk_gpio.cpp" "sdk/sdk_net.cpp"
     "sdk/sdk_autopilot_communication.cpp" "sdk/sdk_compass_qmc5883.cpp"
-    "sdk/sdk_mpu_6050.cpp" "sdk/sdk_mission.cpp" "sdk/sdk_authenticity.cpp")
+    "sdk/sdk_mpu_6050.cpp" "sdk/sdk_mission.cpp" "sdk/sdk_authenticity.cpp"
+    "sdk/sdk_light.cpp" "sdk/sdk_kill_switch.cpp")
 
 add_executable (Test "src/main.cpp" ${SDK_FILES} ${EDL_FILES})
 add_dependencies (Test test_edl_files)

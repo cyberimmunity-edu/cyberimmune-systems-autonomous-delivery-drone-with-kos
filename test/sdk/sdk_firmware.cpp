@@ -1,5 +1,7 @@
 #include "sdk_firmware.h"
 #include "sdk_gpio.h"
+#include "sdk_light.h"
+#include "sdk_kill_switch.h"
 
 #ifdef FOR_SITL
 #include "sdk_autopilot_communication.h"
@@ -74,6 +76,7 @@ int initializeFirmware() {
         return 0;
     }
     fprintf(stderr, "GPIO is initialized\n");
+    setKillSwitch(0);
     setLight(1);
 
     fprintf(stderr, "Initializing UART\n");

@@ -1,7 +1,8 @@
 #include "../sdk/sdk_firmware.h"
 #include "../sdk/sdk_net.h"
-#include "../sdk/sdk_gpio.h"
 #include "../sdk/sdk_autopilot_communication.h"
+#include "../sdk/sdk_light.h"
+#include "../sdk/sdk_kill_switch.h"
 #include "../sdk/sdk_compass_qmc5883.h"
 #include "../sdk/sdk_mpu_6050.h"
 #include "../sdk/sdk_mission.h"
@@ -28,13 +29,14 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;
     fprintf(stderr, "MPU gyro calibration is finished\n");
 
+    fprintf(stderr, "Authenticating on the server\n");
     if (!shareRsaKey(serverResponse))
         return EXIT_FAILURE;
-
     if (!sendRequest("auth", serverResponse))
         return EXIT_FAILURE;
     fprintf(stderr, "Authentication message is sent to the server\n");
 
+    fprintf(stderr, "Requesting mission from the server\n");
     if (!requestMission())
         return EXIT_FAILURE;
     fprintf(stderr, "Correct mission is received from the server\n");
@@ -51,13 +53,14 @@ int main(int argc, char* argv[]) {
     if (!sendRequest("arm", serverResponse))
         return EXIT_FAILURE;
     fprintf(stderr, "Server response is received\n");
-    fprintf(stderr, "%s\n", serverResponse);
 
     if (strstr(serverResponse, "$Arm: 0#") != NULL) {
         stopBlinking();
         if (!setLight(true))
             return EXIT_FAILURE;
         fprintf(stderr, "Response from the server is received: arm is permitted\n");
+        if (!setKillSwitch(1))
+            return EXIT_FAILURE;
         if (!sendCommand(KOSCommand::ArmPermit))
             return EXIT_FAILURE;
         fprintf(stderr, "Arm permit is passed to ardupilot\n");
@@ -67,6 +70,8 @@ int main(int argc, char* argv[]) {
         if (!setLight(false))
             return EXIT_FAILURE;
         fprintf(stderr, "Response from the server is received: arm is prohibited\n");
+        if (!setKillSwitch(0))
+            return EXIT_FAILURE;
         if (!sendCommand(KOSCommand::ArmForbid))
             return EXIT_FAILURE;
         fprintf(stderr, "Arm prohibition is passed to ardupilot\n");
@@ -93,9 +98,11 @@ int main(int argc, char* argv[]) {
             //Continue fligt
         }
         else if (strstr(serverResponse, "$Arm: 1#") != NULL) {
-    //    if (tmpRep >= 20) {
-            fprintf(stderr, "A request to stop the flight was received from the server\n");
+        //if (tmpRep >= 20) {
             if (!setLight(false))
+                return EXIT_FAILURE;
+            fprintf(stderr, "A request to stop the flight was received from the server\n");
+            if (!setKillSwitch(0))
                 return EXIT_FAILURE;
             if (!sendCommand(KOSCommand::AbortFlight))
                 return EXIT_FAILURE;
@@ -106,7 +113,7 @@ int main(int argc, char* argv[]) {
             fprintf(stderr, "Failed to parse server response\n");
             return EXIT_FAILURE;
         }
-    //    tmpRep++;
+        //tmpRep++;
         sleep(1);
     };
 
