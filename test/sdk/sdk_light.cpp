@@ -6,7 +6,7 @@
 
 uint8_t lightPin = 8;
 
-int blinkStop = 0;
+int blinkStop = false;
 uint32_t blinkPeriod = 1;
 std::thread blinkThread;
 std::mutex blinkMutex;
@@ -21,7 +21,7 @@ void blinkLight(void) {
         }
         blinkMutex.unlock();
         if (!setLight(mode)) {
-            fprintf(stderr, "Error: Light blink failed\n");
+            fprintf(stderr, "Error: light blink process failed\n");
             return;
         }
         mode = !mode;
@@ -42,6 +42,8 @@ int setLight(int turnOn) {
 }
 
 void startBlinking(void) {
+    if (!blinkStop)
+        return;
 #ifndef FOR_SITL
     setLight(0);
     blinkStop = false;
@@ -50,6 +52,8 @@ void startBlinking(void) {
 }
 
 void stopBlinking(void) {
+    if (blinkStop)
+        return;
 #ifndef FOR_SITL
     blinkMutex.lock();
     blinkStop = true;

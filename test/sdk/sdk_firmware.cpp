@@ -31,123 +31,123 @@ int initializeFirmware() {
     char boardName[64] = {0};
     if (KnHalGetEnv("board", boardName, sizeof(boardName)) != rcOk)
     {
-        fprintf(stderr, "Failed to get board name\n");
+        fprintf(stderr, "Erro: failed to get board name\n");
         return 0;
     }
     char gpioConfig[128], uartConfig[128], compassConfig[128], mpuConfig[128];
     int ret = snprintf(gpioConfig, 128, "%s.%s", boardName, gpio_config_suffix);
     if (ret < 0) {
-        fprintf(stderr, "Failed to generate GPIO config name\n");
+        fprintf(stderr, "Error: failed to generate GPIO config name\n");
         return 0;
     }
     ret = snprintf(uartConfig, 128, "%s.%s", boardName, uart_config_suffix);
     if (ret < 0) {
-        fprintf(stderr, "Failed to generate UART config name\n");
+        fprintf(stderr, "Error: failed to generate UART config name\n");
         return 0;
     }
     ret = snprintf(compassConfig, 128, "%s.%s", boardName, i2c_compass_config_suffix);
     if (ret < 0) {
-        fprintf(stderr, "Failed to generate I2C compass config name\n");
+        fprintf(stderr, "Error: failed to generate I2C compass config name\n");
         return 0;
     }
     ret = snprintf(mpuConfig, 128, "%s.%s", boardName, i2c_mpu_config_suffix);
     if (ret < 0) {
-        fprintf(stderr, "Failed to generate I2C mpu config name\n");
+        fprintf(stderr, "Error: failed to generate I2C mpu config name\n");
         return 0;
     }
 
     Retcode rc = BspInit(NULL);
-    fprintf(stderr, "Initializing BSP\n");
+    fprintf(stderr, "Info: initializing BSP\n");
     if (rc != rcOk) {
-        fprintf(stderr, "BspInit() failed: "RETCODE_HR_FMT"\n", RETCODE_HR_PARAMS(rc));
+        fprintf(stderr, "Error: failed to initialize BSP ("RETCODE_HR_FMT")\n", RETCODE_HR_PARAMS(rc));
         return 0;
     }
-    fprintf(stderr, "BSP is initialized\n");
+    fprintf(stderr, "Info: BSP is initialized\n");
 
-    fprintf(stderr, "Initializing GPIO\n");
+    fprintf(stderr, "Info: initializing GPIO\n");
     rc = BspSetConfig(gpio_name, gpioConfig);
     if (rc != rcOk) {
-        fprintf(stderr, "Failed to set mux configuration for %s module, error code: %d\n", gpio_name, RC_GET_CODE(rc));
+        fprintf(stderr, "Error: failed to set BSP config for GPIO ("RETCODE_HR_FMT")\n", gpio_name, RETCODE_HR_PARAMS(rc));
         return 0;
     }
     rc = GpioInit();
     if (rc != rcOk) {
-        fprintf(stderr, "GpioInit failed, error code: %d\n", RC_GET_CODE(rc));
+        fprintf(stderr, "Error: failed to initialize GPIO ("RETCODE_HR_FMT")\n", RC_GET_CODE(rc));
         return 0;
     }
-    fprintf(stderr, "GPIO is initialized\n");
+    fprintf(stderr, "Info: GPIO is initialized\n");
     setKillSwitch(0);
     setLight(1);
 
-    fprintf(stderr, "Initializing UART\n");
+    fprintf(stderr, "Info: initializing UART\n");
     rc = BspEnableModule(uart_name);
     if (rc != rcOk) {
-        fprintf(stderr, "BspEnableModule() failed: "RETCODE_HR_FMT"\n", RETCODE_HR_PARAMS(rc));
+        fprintf(stderr, "Error: failed to enable UART module ("RETCODE_HR_FMT")\n", RETCODE_HR_PARAMS(rc));
         return 0;
     }
     rc = BspSetConfig(uart_name, uartConfig);
     if (rc != rcOk) {
-        fprintf(stderr, "BspSetConfig() failed: "RETCODE_HR_FMT"\n", RETCODE_HR_PARAMS(rc));
+        fprintf(stderr, "Error: failed to set BSP config for UART ("RETCODE_HR_FMT")\n", RETCODE_HR_PARAMS(rc));
         return 0;
     }
     rc = UartInit();
     if (rc != rcOk) {
-        fprintf(stderr, "UartInit() failed: "RETCODE_HR_FMT"\n", RETCODE_HR_PARAMS(rc));
+        fprintf(stderr, "Error: failed to initialize UART ("RETCODE_HR_FMT")\n", RETCODE_HR_PARAMS(rc));
         return 0;
     }
-    fprintf(stderr, "UART is initialized\n");
+    fprintf(stderr, "Info: UART is initialized\n");
 
-    fprintf(stderr, "Initializing I2C\n");
+    fprintf(stderr, "Info: initializing I2C\n");
     rc = I2cInit();
     if (rc != rcOk) {
-        fprintf(stderr, "Failed to initialize I2C\n");
+        fprintf(stderr, "Error: failed to initialize I2C\n");
         return 0;
     }
-    fprintf(stderr, "I2C is initialized\n");
+    fprintf(stderr, "Info: I2C is initialized\n");
 
-    fprintf(stderr, "Initializing QMC5883 compass\n");
+    fprintf(stderr, "Info: initializing QMC5883 compass\n");
     rc = BspEnableModule(i2c_compass_name);
     if (rc != rcOk) {
-        fprintf(stderr, "Failed to enable '%s' module\n", i2c_compass_name);
+        fprintf(stderr, "Error: failed to enable I2C module on channel '%s'\n", i2c_compass_name);
         return 0;
     }
     rc = BspSetConfig(i2c_compass_name, compassConfig);
     if (rc != rcOk) {
-        fprintf(stderr, "Failed to set pmux configuration for '%s' channel\n", i2c_compass_name);
+        fprintf(stderr, "Error: failed to set BSP config for I2C channel '%s'\n", i2c_compass_name);
         return 0;
     }
-    fprintf(stderr, "QMC5883 compass is initialized\n");
+    fprintf(stderr, "Info: QMC5883 compass is initialized\n");
 
-    fprintf(stderr, "Initializing MPU6050\n");
+    fprintf(stderr, "Info: initializing MPU6050\n");
     rc = BspEnableModule(i2c_mpu_name);
     if (rc != rcOk) {
-        fprintf(stderr, "Failed to enable '%s' module\n", i2c_mpu_name);
+        fprintf(stderr, "Error: failed to enable I2C module on channel '%s'\n", i2c_mpu_name);
         return 0;
     }
     rc = BspSetConfig(i2c_mpu_name, mpuConfig);
     if (rc != rcOk) {
-        fprintf(stderr, "Failed to set pmux configuration for '%s' channel\n", i2c_mpu_name);
+        fprintf(stderr, "Error: failed to set BSP config for I2C channel '%s'\n", i2c_mpu_name);
         return 0;
     }
-    fprintf(stderr, "MPU6050 is initialized\n");
+    fprintf(stderr, "Info: MPU6050 is initialized\n");
 #endif
 
-    fprintf(stderr, "Initializing network connection\n");
+    fprintf(stderr, "Info: all modules are initialized\n");
+    setLight(0);
+
+    fprintf(stderr, "Info: initializing network connection\n");
     if (!wait_for_network()) {
-        fprintf(stderr, "Failed to connect to network\n");
+        fprintf(stderr, "Error: failed to connect to network\n");
         return 0;
     }
-    fprintf(stderr, "Network connection is established\n");
+    fprintf(stderr, "Info: network connection is established\n");
 
 #ifdef FOR_SITL
     if (!initializeSitlUart()) {
-        fprintf(stderr, "Failed to open SITL socket\n");
+        fprintf(stderr, "Error: failed to open SITL socket\n");
         return 0;
     }
 #endif
-
-    fprintf(stderr, "All modules are initialized\n");
-    setLight(0);
 
     return 1;
 }

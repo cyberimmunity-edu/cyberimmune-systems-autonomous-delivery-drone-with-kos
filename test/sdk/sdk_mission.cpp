@@ -1,6 +1,5 @@
 #include "sdk_mission.h"
 #include "sdk_net.h"
-//#include "sdk_authenticity.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -47,7 +46,7 @@ int parseValue(uint32_t num, char* string, float* values) {
         char value[COMMAND_MAX_STRING_LEN];
         while (string[ptrG] != '_' && string[ptrG] != '&' && string[ptrG] != '#') {
             if (ptrL >= COMMAND_MAX_STRING_LEN) {
-                fprintf(stderr, "Error: value to parse is longer than COMMAND_MAX_STRING_LEN = %d\n", COMMAND_MAX_STRING_LEN);
+                fprintf(stderr, "Error: failed to parse mission command\n");
                 return 0;
             }
             value[ptrL] = string[ptrG];
@@ -160,22 +159,21 @@ int missionAvailable() {
 int requestMission() {
     char response[MISSION_RESPONSE_MAX_LENGTH] = {0};
     if (!sendRequest("fmission_kos", response))
-        return EXIT_FAILURE;
+        return 0;
 
     if (strstr(response, " No mission ") != NULL) {
-        fprintf(stderr, "Error: Server does not have an available mission\n");
+        fprintf(stderr, "Warning: no mission is available on the server\n");
         return 0;
     }
 
     char missionHeader[] = "$FlightMission ";
     char* missionStart = strstr(response, missionHeader);
     if (missionStart == NULL) {
-        fprintf(stderr, "Error: response from server does not contain mission\n");
+        fprintf(stderr, "Error: response from the server does not contain mission\n");
         return 0;
     }
     missionStart += strlen(missionHeader);
 
-    fprintf(stderr, "Flight mission is received from the server\n");
     if (!parseMission(missionStart)) {
         fprintf(stderr, "Error: failed to parse received mission\n");
         return 0;

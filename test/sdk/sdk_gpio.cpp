@@ -2,12 +2,13 @@
 #include "sdk_firmware.h"
 
 #ifndef FOR_SITL
+#include <rtl/retcode_hr.h>
 #include <gpio/gpio.h>
 #endif
 
 #include <stdio.h>
 
-#define MAX_PIN_NUM 40
+#define MAX_PIN_NUM 28
 
 #ifndef FOR_SITL
 GpioHandle gpioH = NULL;
@@ -20,11 +21,7 @@ int openGpioChannel() {
     char* channel = getChannelName(firmwareChannel::GPIO);
     Retcode rc = GpioOpenPort(channel, &gpioH);
     if (rcOk != rc) {
-        fprintf(stderr, "GpioOpenPort port %s failed, error code: %d\n", channel, RC_GET_CODE(rc));
-        return 0;
-    }
-    else if (gpioH == GPIO_INVALID_HANDLE) {
-        fprintf(stderr, "GPIO module %s handle is invalid\n", channel);
+        fprintf(stderr, "Error: failed top open GPIO port ("RETCODE_HR_FMT")\n", RETCODE_HR_PARAMS(rc));
         return 0;
     }
     return 1;
@@ -32,7 +29,7 @@ int openGpioChannel() {
 
 int openPin(uint8_t pin) {
     if (pin >= MAX_PIN_NUM) {
-        fprintf(stderr, "Cannot open pin %u. Its number should be lesser than %d\n", pin, MAX_PIN_NUM);
+        fprintf(stderr, "Error: cannot open pin %u -- it is larger than max available\n", pin);
         return 0;
     }
 
@@ -41,7 +38,7 @@ int openPin(uint8_t pin) {
 
     Retcode rc = GpioSetMode(gpioH, pin, GPIO_DIR_OUT);
     if (rcOk != rc) {
-        fprintf(stderr, "GpioSetMode for pin %u failed, error code: %d\n", pin, RC_GET_CODE(rc));
+        fprintf(stderr, "Error: failed to set GPIO pin %u mode ("RETCODE_HR_FMT")\n", pin, RETCODE_HR_PARAMS(rc));
         return 0;
     }
     pinInit[pin] = 1;
@@ -68,7 +65,7 @@ int setGpioPin(uint8_t pin, int turnOn) {
     Retcode rc = GpioOut(gpioH, pin, turnOn ? 1 : 0);
     if (rcOk != rc)
     {
-        fprintf(stderr, "GpioOut %d for pin %u failed, error code: %d\n", turnOn, pin, RC_GET_CODE(rc));
+        fprintf(stderr, "Error: failed to set GPIO pin %d to %d ("RETCODE_HR_FMT")\n", pin, turnOn, RETCODE_HR_PARAMS(rc));
         return 0;
     }
 #endif

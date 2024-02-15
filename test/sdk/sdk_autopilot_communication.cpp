@@ -41,7 +41,7 @@ int openUartChannel() {
 
     uartSocket = socket(AF_INET, SOCK_STREAM, 0);
     if (uartSocket == -1) {
-        fprintf(stderr, "Failed to create socket\n");
+        fprintf(stderr, "Error: failed to create socket\n");
         return 0;
     }
 
@@ -50,14 +50,14 @@ int openUartChannel() {
     sitlAddress.sin_port = htons(sitlPort);
 
     if (connect(uartSocket, (struct sockaddr*)&sitlAddress, sizeof(sitlAddress)) != 0) {
-        fprintf(stderr, "Failed to connect to %s:%d\n", sitlIp, sitlPort);
+        fprintf(stderr, "Error: failed to connect to %s:%d\n", sitlIp, sitlPort);
         return 0;
     }
 #else
     char* channel = getChannelName(firmwareChannel::UART);
     Retcode rc = UartOpenPort(channel, &uartH);
     if (rc != rcOk) {
-        fprintf(stderr, "UartOpenPort() %s failed: "RETCODE_HR_FMT"\n", channel, RETCODE_HR_PARAMS(rc));
+        fprintf(stderr, "Error: failed to open UART port ("RETCODE_HR_FMT")\n", RETCODE_HR_PARAMS(rc));
         return 0;
     }
 #endif
@@ -87,18 +87,18 @@ int readNBytes(uint32_t expectedSize, void* readDestination) {
 #ifdef FOR_SITL
             ssize_t readBytes = read(uartSocket, readDestination, expectedSize);
             if (readBytes != expectedSize) {
-                fprintf(stderr, "Error reading message from Ardupilot. %d bytes were expected, %d bytes were received\n", expectedSize, readBytes);
+                fprintf(stderr, "Error: failed to read message from autopilot: %d bytes were expected, %d bytes were received\n", expectedSize, readBytes);
                 return 0;
             }
 #else
             rtl_size_t readBytes;
             Retcode rc = UartRead(uartH, (rtl_uint8_t*)readDestination, expectedSize, NULL, &readBytes);
             if (rc != rcOk) {
-                fprintf(stderr, "UartRead() failed: "RETCODE_HR_FMT"\n", RETCODE_HR_PARAMS(rc));
+                fprintf(stderr, "Error: failed to read from UART port ("RETCODE_HR_FMT")\n", RETCODE_HR_PARAMS(rc));
                 return 0;
             }
             else if (readBytes != expectedSize) {
-                fprintf(stderr, "Error reading message from Ardupilot. %d bytes were expected, %d bytes were received\n", expectedSize, readBytes);
+                fprintf(stderr, "Error: failed to read message from autopilot: %d bytes were expected, %d bytes were received\n", expectedSize, readBytes);
                 return 0;
             }
 #endif
@@ -120,7 +120,7 @@ int sendCommand(KOSCommand com) {
     for (int i = 0; i < sizeof(KOSCommandMessage); i++) {
         Retcode rc = UartWriteByte(uartH, message[i]);
         if (rc != rcOk) {
-            fprintf(stderr, "UartWriteByte is failed: "RETCODE_HR_FMT"\n", RETCODE_HR_PARAMS(rc));
+            fprintf(stderr, "Error: failed to write to UART port ("RETCODE_HR_FMT")\n", RETCODE_HR_PARAMS(rc));
             return 0;
         }
     }
@@ -141,19 +141,19 @@ int waitForCommand() {
 #ifdef FOR_SITL
             ssize_t readBytes = read(uartSocket, message + i, 1);
             if (readBytes != 1) {
-                fprintf(stderr, "Failed to read\n");
+                fprintf(stderr, "Error: failed to read from socket\n");
                 return 0;
             }
 #else
             Retcode rc = UartReadByte(uartH, message + i);
             if (rc != rcOk) {
-                fprintf(stderr, "UartReadByte() failed: "RETCODE_HR_FMT"\n", RETCODE_HR_PARAMS(rc));
+                fprintf(stderr, "Error: failed to read from UART port ("RETCODE_HR_FMT")\n", RETCODE_HR_PARAMS(rc));
                 return 0;
             }
 #endif
 
             if (message[i] != commandMessageHead[i]) {
-                fprintf(stderr, "KOS Message Error: Unknown message head %d at place %d\n", message[i], i);
+                fprintf(stderr, "Error: received message has an unknown header\n");
                 restart = true;
                 break;
             }
@@ -167,14 +167,13 @@ int waitForCommand() {
             memcpy(&commandMessage, message, sizeof(KOSCommandMessage));
             switch (commandMessage.command) {
                 case KOSCommand::ArmRequest:
-                    fprintf(stderr, "Arm request is received\n");
                     return 1;
-                    break;
                 default:
-                    fprintf(stderr, "KOS Command Message Error: Unknown command %d is received\n", (int)commandMessage.command);
+                    fprintf(stderr, "Warning: received command %d has no handler\n", (int)commandMessage.command);
                     break;
             }
         }
     }
-    return 1;
+
+    return 0;
 }

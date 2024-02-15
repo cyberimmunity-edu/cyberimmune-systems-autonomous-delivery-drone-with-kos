@@ -42,7 +42,7 @@ int openCompassChannel() {
     Retcode rc = I2cOpenChannel(channel, &i2cCompassH);
     if (rc != rcOk)
     {
-        fprintf(stderr, "Failed to open '%s' channel\n", channel);
+        fprintf(stderr, "Error: failed to open compass channel '%s'\n", channel);
         return 0;
     }
     return 1;
@@ -67,7 +67,7 @@ int startCompass() {
 
     Retcode rc = I2cXfer(i2cCompassH, compassFrequency, messages, 2);
     if (rc != rcOk) {
-        fprintf(stderr, "Failed to start compass\n");
+        fprintf(stderr, "Error: failed to start compass\n");
         return 0;
     }
 
@@ -93,7 +93,7 @@ int readCompass(CompassReading& res) {
 
     I2cError rc = I2cXfer(i2cCompassH, compassFrequency, messages, 2);
     if (rc != rcOk) {
-        fprintf(stderr, "Failed to read from compass\n");
+        fprintf(stderr, "Error: failed to read from compass\n");
         return 0;
     }
 
@@ -155,7 +155,7 @@ int calibrateCompass() {
 
     CompassReading r;
     if (!readCompass(r)) {
-        fprintf(stderr, "Failed to calibrate compass\n");
+        fprintf(stderr, "Error: failed to calibrate compass\n");
         return 0;
     }
 
@@ -163,7 +163,7 @@ int calibrateCompass() {
     int32_t calibrationData[3][2] = { { r.X, r.X }, { r.Y, r.Y }, { r.Z, r.Z } };
     for (int i = 0; i < num; i++) {
         if (!readCompass(r)) {
-            fprintf(stderr, "Failed to calibrate compass\n");
+            fprintf(stderr, "Error: failed to calibrate compass\n");
             return 0 ;
         }
 
@@ -193,9 +193,9 @@ int calibrateCompass() {
     for (int i = 0; i < 3; i++)
         compassCalibrationScales[i] = delta / compassCalibrationScales[i];
 
-    fprintf(stderr, "Compass is calibrated\n");
-    fprintf(stderr, "Calibration offsets: %f, %f, %f\n", compassCalibrationOffsets[0], compassCalibrationOffsets[1], compassCalibrationOffsets[2]);
-    fprintf(stderr, "Calibration scales: %f, %f, %f\n", compassCalibrationScales[0], compassCalibrationScales[1], compassCalibrationScales[2]);
+    fprintf(stderr, "Info: compass is calibrated\n");
+    fprintf(stderr, "Info: calibration offsets: %f, %f, %f\n", compassCalibrationOffsets[0], compassCalibrationOffsets[1], compassCalibrationOffsets[2]);
+    fprintf(stderr, "Info: calibration scales: %f, %f, %f\n", compassCalibrationScales[0], compassCalibrationScales[1], compassCalibrationScales[2]);
 #endif
 
     return 1;
@@ -210,7 +210,7 @@ float getAzimuth() {
 
     CompassReading r;
     if (!readCompass(r)) {
-        fprintf(stderr, "Failed to get an azimuth\n");
+        fprintf(stderr, "Error: failed to get an azimuth from compass\n");
         return NAN;
     }
     float azimuth = (float)(atan2(r.Y, r.X) * 180.0 / M_PI);

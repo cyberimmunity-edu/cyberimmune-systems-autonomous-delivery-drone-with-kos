@@ -6,6 +6,7 @@
 #include <mbedtls_v3/sha256.h>
 #include <string.h>
 
+int keysGenerated = false;
 mbedtls_rsa_context rsaSelf;
 mbedtls_rsa_context rsaServer;
 
@@ -55,6 +56,9 @@ void stringToBytes(char* source, uint32_t sourceSize, uint8_t* destination) {
 }
 
 int generateRsaKey(char* n, char* e) {
+    if (keysGenerated)
+        return 1;
+
     mbedtls_entropy_context entropy;
     mbedtls_ctr_drbg_context drbg;
     mbedtls_mpi N, E, D;
@@ -68,11 +72,21 @@ int generateRsaKey(char* n, char* e) {
 
     char pers[] = "id=1";
     if (mbedtls_ctr_drbg_seed(&drbg, mbedtls_entropy_func, &entropy, (unsigned char*)pers, strlen(pers)) != 0) {
-        fprintf(stderr, "Error: failed to generate RSA keys\n");
+        fprintf(stderr, "Error: failed to generate RSA key\n");
+        mbedtls_entropy_free(&entropy);
+        mbedtls_ctr_drbg_free(&drbg);
+        mbedtls_mpi_free(&N);
+        mbedtls_mpi_free(&E);
+        mbedtls_mpi_free(&D);
         return 0;
     }
     if(mbedtls_rsa_gen_key(&rsaSelf, mbedtls_ctr_drbg_random, &drbg, 1024, 65537) != 0) {
-        fprintf(stderr, "Error: failed to generate RSA keys\n");
+        fprintf(stderr, "Error: failed to generate RSA key\n");
+        mbedtls_entropy_free(&entropy);
+        mbedtls_ctr_drbg_free(&drbg);
+        mbedtls_mpi_free(&N);
+        mbedtls_mpi_free(&E);
+        mbedtls_mpi_free(&D);
         return 0;
     }
 
@@ -89,6 +103,8 @@ int generateRsaKey(char* n, char* e) {
     mbedtls_mpi_free(&N);
     mbedtls_mpi_free(&E);
     mbedtls_mpi_free(&D);
+
+    keysGenerated = true;
     return 1;
 }
 
@@ -96,21 +112,35 @@ int shareRsaKey(char* response) {
     char n[257] = {0};
     char e[257] = {0};
 
-    generateRsaKey(n, e);
+    if (!generateRsaKey(n, e))
+        return 0;
+
     char query[1024] = {0};
     snprintf(query, 1024, "n=0x%s&e=0x%s", n, e);
-    sendRequest("key", query, response, 0);
 
     uint8_t N[128] = {0};
     uint8_t E[128] = {0};
 
+    if (!sendRequest("key", query, response, 0))
+        return 0;
+
     char header[] = "$Key: ";
     char* nStart = strstr(response, header);
+
+    if (nStart == NULL) {
+        fprintf(stderr, "Error: failed to parse public RSA key from the server\n");
+        return 0;
+    }
+
     nStart += strlen(header);
-
     char* eStart = strstr(nStart, " ");
-    stringToBytes(nStart, eStart - nStart, N);
 
+    if (eStart == NULL) {
+        fprintf(stderr, "Error: failed to parse RSA key from the server\n");
+        return 0;
+    }
+
+    stringToBytes(nStart, eStart - nStart, N);
     eStart++;
     stringToBytes(eStart, strlen(eStart), E);
 
@@ -125,15 +155,15 @@ int signMessage(char* message, char* signature) {
     mbedtls_sha256_context sha256;
     mbedtls_sha256_init(&sha256);
     if (mbedtls_sha256_starts(&sha256, 0) != 0) {
-        fprintf(stderr, "Error: failed to calculate sha256 hash\n");
+        fprintf(stderr, "Error: failed to calculate message hash\n");
         return 0;
     }
     if (mbedtls_sha256_update(&sha256, (unsigned char*)message, strlen(message)) != 0) {
-        fprintf(stderr, "Error: failed to calculate sha256 hash\n");
+        fprintf(stderr, "Error: failed to calculate message hash\n");
         return 0;
     }
     if (mbedtls_sha256_finish(&sha256, hash) != 0) {
-        fprintf(stderr, "Error: failed to calculate sha256 hash\n");
+        fprintf(stderr, "Error: failed to calculate message hash\n");
         return 0;
     }
     mbedtls_sha256_free(&sha256);
@@ -143,7 +173,7 @@ int signMessage(char* message, char* signature) {
     hashToKey(hash, 32, content);
 
     if (mbedtls_rsa_public(&rsaSelf, content, result) != 0) {
-        fprintf(stderr, "Error: Failed to sign message\n");
+        fprintf(stderr, "Error: failed to sign message\n");
         return 0;
     }
 
@@ -164,15 +194,15 @@ int checkSignature(char* message) {
     mbedtls_sha256_context sha256;
     mbedtls_sha256_init(&sha256);
     if (mbedtls_sha256_starts(&sha256, 0) != 0) {
-        fprintf(stderr, "Error: failed to calculate sha256 hash\n");
+        fprintf(stderr, "Error: failed to calculate hash of received message\n");
         return 0;
     }
     if (mbedtls_sha256_update(&sha256, (unsigned char*)message, messageLength) != 0) {
-        fprintf(stderr, "Error: failed to calculate sha256 hash\n");
+        fprintf(stderr, "Error: failed to calculate hash of received message\n");
         return 0;
     }
     if (mbedtls_sha256_finish(&sha256, hash) != 0) {
-        fprintf(stderr, "Error: failed to calculate sha256 hash\n");
+        fprintf(stderr, "Error: failed to calculate hash of received message\n");
         return 0;
     }
     mbedtls_sha256_free(&sha256);
@@ -182,7 +212,7 @@ int checkSignature(char* message) {
     signatureStart++;
     stringToBytes(signatureStart, strlen(signatureStart), signature);
     if (mbedtls_rsa_public(&rsaServer, signature, result) != 0) {
-        fprintf(stderr, "Error: Failed to decode server signature\n");
+        fprintf(stderr, "Error: failed to decode server signature\n");
         return 0;
     }
 
@@ -190,7 +220,7 @@ int checkSignature(char* message) {
     for (int i = 127; i >= 0; i--) {
         int check = (j >= 0) ? (result[i] == hash[j]) : !result[i];
         if (!check) {
-            fprintf(stderr, "Error: authenticity is not confirmed\n");
+            fprintf(stderr, "Warning: authenticity is not confirmed\n");
             return 0;
         }
         j--;
