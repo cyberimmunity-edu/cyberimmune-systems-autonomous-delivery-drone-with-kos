@@ -5,6 +5,7 @@
 
 #ifdef FOR_SITL
 #include "sdk_autopilot_communication.h"
+#include "sdk_sim_sensors.h"
 #else
 #include <coresrv/hal/hal_api.h>
 #include <rtl/retcode_hr.h>
@@ -145,6 +146,10 @@ int initializeFirmware() {
 #ifdef FOR_SITL
     if (!initializeSitlUart()) {
         fprintf(stderr, "Error: failed to open SITL socket\n");
+        return 0;
+    }
+    if (!initializeSensorUart()) {
+        fprintf(stderr, "Error: failed to open socket for sensor data from SITL\n");
         return 0;
     }
 #endif

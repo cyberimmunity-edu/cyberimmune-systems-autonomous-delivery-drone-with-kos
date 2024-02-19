@@ -13,7 +13,11 @@ set (SDK_FILES "sdk/sdk_firmware.cpp" "sdk/sdk_gpio.cpp" "sdk/sdk_net.cpp"
     "sdk/sdk_mpu_6050.cpp" "sdk/sdk_mission.cpp" "sdk/sdk_authenticity.cpp"
     "sdk/sdk_light.cpp" "sdk/sdk_kill_switch.cpp")
 
-add_executable (Test "src/main.cpp" ${SDK_FILES} ${EDL_FILES})
+if (FOR_SITL)
+    set (SITL_FILES "sdk/sdk_sim_sensors.cpp")
+endif()
+
+add_executable (Test "src/main.cpp" ${SDK_FILES} ${EDL_FILES} ${SITL_FILES})
 add_dependencies (Test test_edl_files)
 target_compile_features (Test PRIVATE cxx_std_17)
 

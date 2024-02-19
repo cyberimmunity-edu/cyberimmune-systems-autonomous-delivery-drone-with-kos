@@ -1,7 +1,9 @@
 #include "sdk_compass_qmc5883.h"
 #include "sdk_firmware.h"
 
-#ifndef FOR_SITL
+#ifdef FOR_SITL
+#include "sdk_sim_sensors.h"
+#else
 #include <i2c/i2c.h>
 #endif
 
@@ -203,7 +205,7 @@ int calibrateCompass() {
 
 float getAzimuth() {
 #ifdef FOR_SITL
-    return 0.0f;
+    return getSitlAzimuth();
 #else
     if (!initializeCompass())
         return NAN;

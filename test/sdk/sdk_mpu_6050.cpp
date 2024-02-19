@@ -1,7 +1,9 @@
 #include "sdk_mpu_6050.h"
 #include "sdk_firmware.h"
 
-#ifndef FOR_SITL
+#ifdef FOR_SITL
+#include "sdk_sim_sensors.h"
+#else
 #include <i2c/i2c.h>
 #endif
 
@@ -218,7 +220,9 @@ int calibrateGyro() {
 
 Vector3f getAcceleration() {
 #ifdef FOR_SITL
-    return Vector3f(0.0f, 0.0f, 0.0f);
+    Vector3f acc = Vector3f(0.0f, 0.0f, 0.0f);
+    getSitlAcceleration(acc.X, acc.Y, acc.Z);
+    return acc;
 #else
     if (!initializeMpu())
         return Vector3f(NAN, NAN, NAN);
@@ -237,7 +241,9 @@ Vector3f getAcceleration() {
 
 Vector3f getGyro() {
 #ifdef FOR_SITL
-    return Vector3f(0.0f, 0.0f, 0.0f);
+    Vector3f gyro = Vector3f(0.0f, 0.0f, 0.0f);
+    getSitlGyro(gyro.X, gyro.Y, gyro.Z);
+    return gyro;
 #else
     if (!initializeMpu())
         return Vector3f(NAN, NAN, NAN);
@@ -257,7 +263,7 @@ Vector3f getGyro() {
 
 float getTemperature() {
 #ifdef FOR_SITL
-    return 0.0f;
+    return getSitlTemperature();
 #else
     if (!initializeMpu())
         return NAN;
