@@ -2,10 +2,12 @@
 Cyberimmune autonomous delivery drone prototype
 
 ## Разворот клиента ОРВД
+```
 cd orvd_client
 python -m venv .\.venv
 .\.venv\Scripts\activate
 pip install -r requirements.txt
+```
 
 Для python >=3.10 заменить collections.MutableMapping на collections.abc.MutableMapping в файле .\.venv\Lib\site-packages\dronekit\__init__.py строка 2689.
 
