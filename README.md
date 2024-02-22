@@ -9,7 +9,7 @@ python -m venv .\.venv
 pip install -r requirements.txt
 ```
 
-Для python >=3.10 заменить collections.MutableMapping на collections.abc.MutableMapping в файле .\.venv\Lib\site-packages\dronekit\__init__.py строка 2689.
+Для python >=3.10 заменить collections.MutableMapping на collections.abc.MutableMapping в файле `.\.venv\Lib\site-packages\dronekit\__init__.py` строка 2689.
 
 Запуск с помощью launch.bat
 
