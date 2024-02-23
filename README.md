@@ -68,7 +68,7 @@ sudo nano /etc/apache2/sites-available/orvd.conf
 Копируем сюда содержимое orvd.conf и сохраняем.
 ```
 sudo a2ensite orvd.conf
-sudo rm sudo rm /etc/apache2/sites-available/000-default.conf
+sudo rm /etc/apache2/sites-available/000-default.conf
 sudo systemctl restart apache2
 ```
 Теперь сервер доступен по IP виртуальной машины.
