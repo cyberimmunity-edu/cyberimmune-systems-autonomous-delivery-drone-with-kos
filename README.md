@@ -1,7 +1,7 @@
 # cyberimmune-systems-autonomous-delivery-drone-with-kos
 Cyberimmune autonomous delivery drone prototype
 
-## Разворот клиента ОРВД
+## Развертывание клиента ОРВД
 ```
 cd orvd_client
 python -m venv .\.venv
@@ -13,7 +13,7 @@ pip install -r requirements.txt
 
 Запуск с помощью launch.bat
 
-## Разворот HTTP-сервера ОРВД на виртуальной машине
+## Развертывание HTTP-сервера ОРВД на виртуальной машине
 ```
 cd orvd_server
 ```
