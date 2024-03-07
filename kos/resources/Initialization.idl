@@ -1,0 +1,5 @@
+package drone_controller.Initialization
+
+interface {
+    WaitForInit(out UInt8 success);
+}

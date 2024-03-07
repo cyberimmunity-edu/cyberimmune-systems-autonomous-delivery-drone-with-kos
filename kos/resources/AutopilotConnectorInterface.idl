@@ -1,0 +1,6 @@
+package drone_controller.AutopilotConnectorInterface
+
+interface {
+    GetAutopilotCommand(out UInt8 success, out UInt8 command);
+    SendAutopilotCommand(in UInt8 command, out UInt8 success);
+}

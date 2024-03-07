@@ -1,0 +1,8 @@
+package drone_controller.ServerConnectorInterface
+
+const UInt16 MaxQueryLength = 1024;
+const UInt16 MaxResponseLength = 1024;
+
+interface {
+    SendRequest(in string<MaxQueryLength> query, out UInt8 success, out string<MaxResponseLength> response);
+}

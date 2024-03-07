@@ -1,0 +1,51 @@
+entities:
+
+- name: drone_controller.AutopilotConnector
+  connections:
+  - target: drone_controller.AutopilotConnector
+    id: ap_pc_connection
+@INIT_AutopilotConnector_ENTITY_CONNECTIONS@
+
+- name: drone_controller.CredentialManager
+  env:
+    VFS_FILESYSTEM_BACKEND: client:kl.VfsNet
+  connections:
+  - target: kl.VfsNet
+    id: kl.VfsNet
+@INIT_CredentialManager_ENTITY_CONNECTIONS@
+
+- name: drone_controller.FlightController
+  connections:
+  - target: drone_controller.AutopilotConnector
+    id: autopilot_connector_connection
+  - target: drone_controller.CredentialManager
+    id: credential_manager_connection
+  - target: drone_controller.NavigationSystem
+    id: navigation_system_connection
+  - target: drone_controller.PeripheryController
+    id: periphery_controller_connection
+  - target: drone_controller.ServerConnector
+    id: server_connector_connection
+@INIT_FlightController_ENTITY_CONNECTIONS@
+
+- name: drone_controller.NavigationSystem
+  connections:
+  - target: drone_controller.NavigationSystem
+    id: ns_pc_connection
+@INIT_NavigationSystem_ENTITY_CONNECTIONS@
+
+- name: drone_controller.PeripheryController
+@INIT_PeripheryController_ENTITY_CONNECTIONS@
+
+- name: drone_controller.ServerConnector
+  env:
+    VFS_FILESYSTEM_BACKEND: client:kl.VfsNet
+    VFS_NETWORK_BACKEND: client:kl.VfsNet
+  args:
+    - -sV4
+  connections:
+  - target: kl.VfsNet
+    id: kl.VfsNet
+@INIT_ServerConnector_ENTITY_CONNECTIONS@
+
+@INIT_EXTERNAL_ENTITIES@

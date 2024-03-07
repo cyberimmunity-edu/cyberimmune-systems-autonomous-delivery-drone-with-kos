@@ -1,0 +1,6 @@
+package drone_controller.PeripheryControllerInterface
+
+interface {
+    SetLightMode(in UInt8 mode, out UInt8 success);
+    SetMotorKillSwitch(in UInt8 permit, out UInt8 success);
+}

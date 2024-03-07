@@ -3,9 +3,9 @@ pip install --target mavproxy/ mavproxy
 cd kos
 if [[ $* == '--no-server' ]]
 	then
-		./cross-build-sim-no-server.sh &
+		./cross-build-sim-offline.sh &
 	else
-		./cross-build-sim.sh &
+		./cross-build-sim-online.sh &
 fi
 cd ../ardupilot
 ./run_in_terminal_window.sh ArduCopter sitl/bin/arducopter -S --model + --speedup 1 --slave 0 --serial5=tcp:5765:wait --serial6=tcp:5766:wait --defaults copter.parm --sim-address=127.0.0.1 -I0

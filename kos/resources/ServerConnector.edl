@@ -1,0 +1,6 @@
+entity drone_controller.ServerConnector
+
+endpoints {
+    waitForInit : drone_controller.Initialization
+    interface : drone_controller.ServerConnectorInterface
+}
