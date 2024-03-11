@@ -45,6 +45,14 @@ entities:
 @INIT_NavigationSystem_ENTITY_CONNECTIONS@
 
 - name: drone_controller.PeripheryController
+  env:
+    VFS_FILESYSTEM_BACKEND: client:kl.VfsNet
+    VFS_NETWORK_BACKEND: client:kl.VfsNet
+  args:
+    - -sV4
+  connections:
+  - target: kl.VfsNet
+    id: kl.VfsNet
 @INIT_PeripheryController_ENTITY_CONNECTIONS@
 
 - name: drone_controller.ServerConnector

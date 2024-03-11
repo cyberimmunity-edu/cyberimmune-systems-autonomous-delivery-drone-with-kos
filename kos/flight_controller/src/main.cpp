@@ -158,6 +158,7 @@ int main(void) {
         }
         else
             fprintf(stderr, "[%s] Warning: Failed to parse server response\n", ENTITY_NAME);
+        sleep(1);
     }
 
     while (true) {

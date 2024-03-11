@@ -17,9 +17,4 @@ add_dependencies (CredentialManager credential_manager_edl_files)
 
 target_compile_definitions (CredentialManager PRIVATE ENTITY_NAME="Credential Manager")
 target_compile_definitions (CredentialManager PRIVATE BOARD_ID="id=${BOARD_ID}")
-
-if (NOT SERVER)
-    target_compile_definitions (CredentialManager PRIVATE NO_SERVER)
-endif()
-
 target_link_libraries (CredentialManager ${vfs_CLIENT_LIB} MbedTLS::mbedtls ${CMAKE_THREAD_LIBS_INIT})

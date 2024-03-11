@@ -17,7 +17,7 @@ add_dependencies (NavigationSystem navigation_system_edl_files)
 target_compile_definitions (NavigationSystem PRIVATE ENTITY_NAME="Navigation System")
 
 if (SIMULATION)
-    target_compile_definitions (NavigationSystem PRIVATE SIMULATION)
+    target_compile_definitions (NavigationSystem PRIVATE SIMULATOR_IP="${SIMULATOR_IP}")
     target_link_libraries (NavigationSystem ${vfs_CLIENT_LIB} ${CMAKE_THREAD_LIBS_INIT})
 else ()
     target_link_libraries (NavigationSystem ${bsp_CLIENT_LIB} ${i2c_CLIENT_LIB})

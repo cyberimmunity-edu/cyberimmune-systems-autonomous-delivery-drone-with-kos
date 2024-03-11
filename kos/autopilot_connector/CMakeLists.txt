@@ -17,7 +17,7 @@ add_dependencies (AutopilotConnector autopilot_connector_edl_files)
 target_compile_definitions (AutopilotConnector PRIVATE ENTITY_NAME="Autopilot Connector")
 
 if (SIMULATION)
-    target_compile_definitions (AutopilotConnector PRIVATE SIMULATION)
+    target_compile_definitions (AutopilotConnector PRIVATE SIMULATOR_IP="${SIMULATOR_IP}")
     target_link_libraries (AutopilotConnector ${vfs_CLIENT_LIB})
 else()
     target_link_libraries (AutopilotConnector ${bsp_CLIENT_LIB} ${uart_CLIENT_LIB})

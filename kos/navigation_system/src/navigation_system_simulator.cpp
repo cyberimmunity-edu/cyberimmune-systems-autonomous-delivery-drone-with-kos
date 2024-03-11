@@ -1,4 +1,5 @@
 #include "../include/navigation_system.h"
+#include "../include/sim_sensor_data_message.h"
 
 #include <kos_net.h>
 
@@ -7,7 +8,6 @@
 #include <math.h>
 
 int simSensorSocket = NULL;
-char simSensorIp[] = "172.28.65.87";
 uint16_t simSensorPort = 5766;
 
 std::thread sensorThread;
@@ -75,11 +75,11 @@ int initSensors() {
 
     struct sockaddr_in address = { 0 };
     address.sin_family = AF_INET;
-    address.sin_addr.s_addr = inet_addr(simSensorIp);
+    address.sin_addr.s_addr = inet_addr(SIMULATOR_IP);
     address.sin_port = htons(simSensorPort);
 
     if (connect(simSensorSocket, (struct sockaddr*)&address, sizeof(address)) != 0) {
-        fprintf(stderr, "[%s] Warning: Connection to %s:%d has failed\n", ENTITY_NAME, simSensorIp, simSensorPort);
+        fprintf(stderr, "[%s] Warning: Connection to %s:%d has failed\n", ENTITY_NAME, SIMULATOR_IP, simSensorPort);
         return 0;
     }
 

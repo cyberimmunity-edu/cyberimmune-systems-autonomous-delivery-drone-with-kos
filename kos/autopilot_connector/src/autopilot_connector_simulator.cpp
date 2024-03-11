@@ -3,7 +3,6 @@
 #include <kos_net.h>
 
 int autopilotSocket = NULL;
-char autopilotIp[] = "172.28.65.87";
 uint16_t autopilotPort = 5765;
 
 int initAutopilotConnector() {
@@ -26,11 +25,11 @@ int initConnection() {
 
     struct sockaddr_in address = { 0 };
     address.sin_family = AF_INET;
-    address.sin_addr.s_addr = inet_addr(autopilotIp);
+    address.sin_addr.s_addr = inet_addr(SIMULATOR_IP);
     address.sin_port = htons(autopilotPort);
 
     if (connect(autopilotSocket, (struct sockaddr*)&address, sizeof(address)) != 0) {
-        fprintf(stderr, "[%s] Warning: Connection to %s:%d has failed\n", ENTITY_NAME, autopilotIp, autopilotPort);
+        fprintf(stderr, "[%s] Warning: Connection to %s:%d has failed\n", ENTITY_NAME, SIMULATOR_IP, autopilotPort);
         return 0;
     }
 

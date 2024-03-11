@@ -20,7 +20,8 @@ target_compile_definitions (PeripheryController PRIVATE ENTITY_NAME="Periphery C
 target_link_libraries (PeripheryController ${CMAKE_THREAD_LIBS_INIT})
 
 if (SIMULATION)
-    target_compile_definitions (PeripheryController PRIVATE SIMULATION)
+    target_compile_definitions (PeripheryController PRIVATE SIMULATOR_IP="${SIMULATOR_IP}")
+    target_link_libraries (PeripheryController ${vfs_CLIENT_LIB})
 else ()
     target_link_libraries (PeripheryController ${bsp_CLIENT_LIB} ${gpio_CLIENT_LIB})
 endif()

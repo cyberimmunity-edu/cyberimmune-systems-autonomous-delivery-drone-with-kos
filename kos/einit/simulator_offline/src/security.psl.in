@@ -46,6 +46,7 @@ request {
         match src=drone_controller.AutopilotConnector { grant () }
         match src=drone_controller.CredentialManager { grant () }
         match src=drone_controller.NavigationSystem { grant () }
+        match src=drone_controller.PeripheryController { grant () }
     }
 
     match src=drone_controller.FlightController interface=drone_controller.Initialization method=WaitForInit {
@@ -101,6 +102,7 @@ response {
         match dst=drone_controller.AutopilotConnector { grant () }
         match dst=drone_controller.CredentialManager { grant () }
         match dst=drone_controller.NavigationSystem { grant () }
+        match dst=drone_controller.PeripheryController { grant () }
     }
 
     match dst=drone_controller.FlightController interface=drone_controller.Initialization method=WaitForInit {
