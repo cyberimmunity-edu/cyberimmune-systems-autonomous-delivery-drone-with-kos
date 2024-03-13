@@ -19761,9 +19761,12 @@
       "-DUAVCAN_CPP_VERSION=UAVCAN_CPP03",
       "-DUAVCAN_NO_ASSERTIONS=1",
       "-DUAVCAN_NULLPTR=nullptr",
+      "-DAPM_BUILD_DIRECTORY=APM_BUILD_ArduCopter",
+      "-DSKETCH=\"ArduCopter\"",
+      "-DSKETCHNAME=\"ArduCopter\"",
       "../../libraries/AP_Mission/AP_Mission_Commands.cpp",
       "-c",
-      "-olibraries/AP_Mission/AP_Mission_Commands.cpp.0.o"
+      "-olibraries/AP_Mission/AP_Mission_Commands.cpp.3.o"
     ],
     "file": "../../libraries/AP_Mission/AP_Mission_Commands.cpp"
   },

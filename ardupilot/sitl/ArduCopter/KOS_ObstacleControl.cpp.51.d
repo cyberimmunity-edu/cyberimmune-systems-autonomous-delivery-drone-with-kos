@@ -415,4 +415,257 @@ ArduCopter/KOS_ObstacleControl.cpp.51.o: \
  ../../libraries/AP_Mount/AP_Mount_config.h \
  ../../libraries/AP_Mount/AP_Mount_Params.h \
  ../../libraries/AP_SerialManager/AP_SerialManager.h \
- ../../libraries/GCS_MAVLink/ap_message.h
+ ../../libraries/GCS_MAVLink/ap_message.h ../../ArduCopter/Copter.h \
+ ../../libraries/AP_Logger/AP_Logger.h \
+ ../../libraries/AP_Logger/AP_Logger_config.h \
+ ../../libraries/AC_Fence/AC_Fence_config.h \
+ ../../libraries/AP_Logger/LogStructure.h \
+ ../../libraries/AP_Beacon/LogStructure.h \
+ ../../libraries/AP_DAL/LogStructure.h \
+ ../../libraries/AP_NavEKF2/LogStructure.h \
+ ../../libraries/AP_AHRS/AP_AHRS.h \
+ ../../libraries/AP_AHRS/AP_AHRS_config.h \
+ ../../libraries/AP_NavEKF2/AP_NavEKF2.h \
+ ../../libraries/AP_NavEKF3/AP_NavEKF3.h \
+ ../../libraries/AP_NavEKF/AP_NavEKF_Source.h \
+ ../../libraries/AP_AHRS/AP_AHRS_DCM.h \
+ ../../libraries/AP_AHRS/AP_AHRS_Backend.h \
+ ../../libraries/AP_Airspeed/AP_Airspeed.h \
+ ../../libraries/AP_Airspeed/AP_Airspeed_config.h \
+ ../../libraries/AP_InertialSensor/AP_InertialSensor.h \
+ ../../libraries/AP_InertialSensor/AP_InertialSensor_config.h \
+ ../../libraries/AP_AccelCal/AP_AccelCal.h \
+ ../../libraries/AP_AccelCal/AccelCalibrator.h \
+ ../../libraries/AP_Math/vectorN.h ../../libraries/AP_Math/matrixN.h \
+ ../../libraries/Filter/LowPassFilter.h \
+ ../../libraries/Filter/FilterClass.h \
+ ../../libraries/Filter/HarmonicNotchFilter.h \
+ ../../libraries/Filter/NotchFilter.h \
+ ../../libraries/AP_InertialSensor/AP_InertialSensor_Params.h \
+ ../../libraries/AP_InertialSensor/AP_InertialSensor_tempcal.h \
+ ../../libraries/AP_Math/polyfit.h \
+ ../../libraries/Filter/LowPassFilter2p.h \
+ ../../libraries/AP_AHRS/AP_AHRS_SIM.h ../../libraries/SITL/SITL.h \
+ ../../libraries/AP_Baro/AP_Baro.h \
+ ../../libraries/AP_Baro/AP_Baro_config.h \
+ ../../libraries/Filter/DerivativeFilter.h \
+ ../../libraries/Filter/FilterWithBuffer.h \
+ ../../libraries/AP_Compass/AP_Compass.h \
+ ../../libraries/AP_Compass/AP_Compass_config.h \
+ ../../libraries/AP_Declination/AP_Declination.h \
+ ../../libraries/AP_Compass/AP_Compass_Backend.h \
+ ../../libraries/AP_Compass/Compass_PerMotor.h \
+ ../../libraries/AP_Common/TSIndex.h \
+ ../../libraries/AP_Compass/CompassCalibrator.h \
+ ../../libraries/SITL/SIM_Buzzer.h ../../libraries/SITL/SITL_Input.h \
+ ../../libraries/SITL/SIM_Gripper_EPM.h \
+ ../../libraries/SITL/SIM_Gripper_Servo.h ../../libraries/SITL/SIM_I2C.h \
+ ../../libraries/SITL/SIM_SPI.h ../../libraries/SITL/SIM_Parachute.h \
+ ../../libraries/SITL/SIM_Precland.h ../../libraries/SITL/SIM_Sprayer.h \
+ ../../libraries/SITL/SIM_ToneAlarm.h \
+ ../../libraries/SITL/SIM_EFI_MegaSquirt.h \
+ ../../libraries/AP_HAL/utility/Socket.h \
+ ../../libraries/SITL/SIM_RichenPower.h \
+ ../../libraries/SITL/SIM_FETtecOneWireESC.h \
+ ../../libraries/SITL/SIM_IntelligentEnergy24.h \
+ ../../libraries/SITL/SIM_IntelligentEnergy.h \
+ ../../libraries/SITL/SIM_Ship.h \
+ ../../libraries/AP_NavEKF3/LogStructure.h \
+ ../../libraries/AP_GPS/LogStructure.h \
+ ../../libraries/AP_GPS/LogStructure_SBP.h \
+ ../../libraries/AP_GPS/AP_GPS_config.h \
+ ../../libraries/AP_NavEKF/LogStructure.h \
+ ../../libraries/AP_BattMonitor/LogStructure.h \
+ ../../libraries/AP_InertialSensor/LogStructure.h \
+ ../../libraries/AP_AHRS/LogStructure.h \
+ ../../libraries/AP_Camera/LogStructure.h \
+ ../../libraries/AP_Baro/LogStructure.h \
+ ../../libraries/AP_VisualOdom/LogStructure.h \
+ ../../libraries/AP_VisualOdom/AP_VisualOdom_config.h \
+ ../../libraries/AC_PrecLand/LogStructure.h \
+ ../../libraries/AP_Proximity/LogStructure.h \
+ ../../libraries/AP_Proximity/AP_Proximity_config.h \
+ ../../libraries/AC_Avoidance/LogStructure.h \
+ ../../libraries/AP_ESC_Telem/LogStructure.h \
+ ../../libraries/AP_AIS/LogStructure.h \
+ ../../libraries/AP_AIS/AP_AIS_config.h \
+ ../../libraries/AP_HAL_ChibiOS/LogStructure.h \
+ ../../libraries/AP_RPM/LogStructure.h \
+ ../../libraries/AC_Fence/LogStructure.h \
+ ../../libraries/AP_Vehicle/ModeReason.h \
+ ../../libraries/AC_Fence/AC_Fence.h \
+ ../../libraries/AC_Fence/AC_PolyFence_loader.h \
+ ../../libraries/AP_Logger/LoggerMessageWriter.h \
+ ../../libraries/AP_Logger/AP_Logger_Backend.h \
+ ../../libraries/AP_Rally/AP_Rally.h \
+ ../../libraries/AP_Mission/AP_Mission_ChangeDetector.h \
+ ../../libraries/AC_AttitudeControl/AC_AttitudeControl_Multi.h \
+ ../../libraries/AC_AttitudeControl/AC_AttitudeControl.h \
+ ../../libraries/AP_AHRS/AP_AHRS_View.h \
+ ../../libraries/AP_Motors/AP_Motors.h \
+ ../../libraries/AP_Motors/AP_Motors_Class.h \
+ ../../libraries/Filter/Filter.h ../../libraries/Filter/AverageFilter.h \
+ ../../libraries/Filter/ModeFilter.h ../../libraries/Filter/Butter.h \
+ ../../libraries/AP_Motors/AP_MotorsMulticopter.h \
+ ../../libraries/AP_Motors/AP_MotorsMatrix.h \
+ ../../libraries/RC_Channel/RC_Channel.h \
+ ../../libraries/AP_Motors/AP_MotorsTri.h \
+ ../../libraries/AP_Motors/AP_MotorsHeli_Single.h \
+ ../../libraries/SRV_Channel/SRV_Channel.h \
+ ../../libraries/AP_Volz_Protocol/AP_Volz_Protocol.h \
+ ../../libraries/AP_RobotisServo/AP_RobotisServo.h \
+ ../../libraries/AP_SBusOut/AP_SBusOut.h \
+ ../../libraries/AP_BLHeli/AP_BLHeli.h \
+ ../../libraries/AP_FETtecOneWire/AP_FETtecOneWire.h \
+ ../../libraries/AP_ESC_Telem/AP_ESC_Telem.h \
+ ../../libraries/SRV_Channel/SRV_Channel_config.h \
+ ../../libraries/AP_ESC_Telem/AP_ESC_Telem_Backend.h \
+ ../../libraries/AP_ESC_Telem/AP_ESC_Telem_config.h \
+ ../../libraries/AP_Motors/AP_MotorsHeli.h \
+ ../../libraries/AP_Motors/AP_MotorsHeli_RSC.h \
+ ../../libraries/AP_Motors/AP_MotorsHeli_Swash.h \
+ ../../libraries/AP_Motors/AP_MotorsHeli_Dual.h \
+ ../../libraries/AP_Motors/AP_MotorsHeli_Quad.h \
+ ../../libraries/AP_Motors/AP_MotorsSingle.h \
+ ../../libraries/AP_Motors/AP_MotorsCoax.h \
+ ../../libraries/AP_Motors/AP_MotorsTailsitter.h \
+ ../../libraries/AP_Motors/AP_Motors6DOF.h \
+ ../../libraries/AP_Motors/AP_MotorsMatrix_6DoF_Scripting.h \
+ ../../libraries/AP_Motors/AP_MotorsMatrix_Scripting_Dynamic.h \
+ ../../libraries/AC_PID/AC_PID.h ../../libraries/Filter/SlewLimiter.h \
+ ../../libraries/AC_PID/AP_PIDInfo.h ../../libraries/AC_PID/AC_P.h \
+ ../../libraries/AP_Vehicle/AP_MultiCopter.h \
+ ../../libraries/AC_AttitudeControl/AC_AttitudeControl_Multi_6DoF.h \
+ ../../libraries/AC_AttitudeControl/AC_AttitudeControl_Heli.h \
+ ../../libraries/AC_PID/AC_HELI_PID.h \
+ ../../libraries/AC_AttitudeControl/AC_PosControl.h \
+ ../../libraries/AC_PID/AC_P_1D.h ../../libraries/AC_PID/AC_P_2D.h \
+ ../../libraries/AC_PID/AC_PI_2D.h ../../libraries/AC_PID/AC_PID_Basic.h \
+ ../../libraries/AC_PID/AC_PID_2D.h \
+ ../../libraries/Filter/SlewCalculator2D.h \
+ ../../libraries/AP_InertialNav/AP_InertialNav.h \
+ ../../libraries/AC_AttitudeControl/AC_CommandModel.h \
+ ../../libraries/AP_Stats/AP_Stats.h \
+ ../../libraries/AP_Vehicle/AP_Vehicle.h \
+ ../../libraries/AP_BoardConfig/AP_BoardConfig.h \
+ ../../libraries/AP_RTC/AP_RTC.h ../../libraries/AC_PID/AC_PI.h \
+ ../../libraries/AP_CANManager/AP_CANManager.h \
+ ../../libraries/AP_CANManager/AP_CANManager_config.h \
+ ../../libraries/AP_CANManager/AP_SLCANIface.h \
+ ../../libraries/AP_CANManager/AP_CANDriver.h \
+ ../../libraries/AP_Button/AP_Button.h ../../libraries/AP_EFI/AP_EFI.h \
+ ../../libraries/AP_EFI/AP_EFI_config.h \
+ ../../libraries/AP_CANManager/AP_CANSensor.h \
+ ../../libraries/AP_EFI/AP_EFI_Backend.h \
+ ../../libraries/AP_EFI/AP_EFI_State.h \
+ ../../libraries/AP_Generator/AP_Generator.h \
+ ../../libraries/AP_Generator/AP_Generator_config.h \
+ ../../libraries/AP_BattMonitor/AP_BattMonitor.h \
+ ../../libraries/AP_TemperatureSensor/AP_TemperatureSensor_config.h \
+ ../../libraries/AP_BattMonitor/AP_BattMonitor_Params.h \
+ ../../libraries/AP_BattMonitor/AP_BattMonitor_config.h \
+ ../../libraries/AP_Torqeedo/AP_Torqeedo_config.h \
+ ../../libraries/AP_Notify/AP_Notify.h \
+ ../../libraries/AP_Notify/AP_Notify_config.h \
+ ../../libraries/AP_SerialLED/AP_SerialLED_config.h \
+ ../../libraries/AP_Notify/NotifyDevice.h \
+ ../../libraries/AP_RangeFinder/AP_RangeFinder.h \
+ ../../libraries/AP_RangeFinder/AP_RangeFinder_Params.h \
+ ../../libraries/AP_Relay/AP_Relay.h ../../libraries/AP_RSSI/AP_RSSI.h \
+ ../../libraries/AP_Scheduler/AP_Scheduler.h \
+ ../../libraries/AP_Scheduler/PerfInfo.h \
+ ../../libraries/AP_Common/ExpandingString.h \
+ ../../libraries/AP_ServoRelayEvents/AP_ServoRelayEvents.h \
+ ../../libraries/AP_Camera/AP_RunCam.h \
+ ../../libraries/AP_RCMapper/AP_RCMapper.h \
+ ../../libraries/AP_Arming/AP_Arming.h ../../libraries/AP_OSD/AP_OSD.h \
+ ../../libraries/AP_OSD/AP_OSD_config.h ../../libraries/AP_OLC/AP_OLC.h \
+ ../../libraries/AP_OpenDroneID/AP_OpenDroneID.h \
+ ../../libraries/AP_OpenDroneID/AP_OpenDroneID_config.h \
+ ../../libraries/AP_Hott_Telem/AP_Hott_Telem.h \
+ ../../libraries/AP_GyroFFT/AP_GyroFFT.h \
+ ../../libraries/AP_VisualOdom/AP_VisualOdom.h \
+ ../../libraries/AP_VideoTX/AP_VideoTX.h \
+ ../../libraries/AP_VideoTX/AP_VideoTX_config.h \
+ ../../libraries/AP_MSP/AP_MSP.h \
+ ../../libraries/AP_MSP/AP_MSP_Telem_Backend.h \
+ ../../libraries/AP_RCTelemetry/AP_RCTelemetry.h \
+ ../../libraries/AP_Frsky_Telem/AP_Frsky_Parameters.h \
+ ../../libraries/AP_Frsky_Telem/AP_Frsky_Telem.h \
+ ../../libraries/AP_Frsky_Telem/AP_Frsky_Backend.h \
+ ../../libraries/AP_Frsky_Telem/AP_Frsky_SPort.h \
+ ../../libraries/AP_VideoTX/AP_SmartAudio.h \
+ ../../libraries/AP_VideoTX/AP_Tramp.h \
+ ../../libraries/AP_TemperatureSensor/AP_TemperatureSensor.h \
+ ../../libraries/AP_TemperatureSensor/AP_TemperatureSensor_Params.h \
+ ../../libraries/AP_CustomRotations/AP_CustomRotations.h \
+ ../../libraries/AP_AIS/AP_AIS.h \
+ ../../libraries/AP_Common/AP_ExpandingArray.h \
+ ../../libraries/AP_NMEA_Output/AP_NMEA_Output.h \
+ ../../libraries/AP_NMEA_Output/AP_NMEA_Output_config.h \
+ ../../libraries/AP_CheckFirmware/AP_CheckFirmware.h \
+ ../../libraries/AP_Vehicle/AP_Vehicle_Type.h \
+ ../../libraries/AC_WPNav/AC_WPNav.h ../../libraries/AP_Math/SCurve.h \
+ ../../libraries/AP_Math/SplineCurve.h \
+ ../../libraries/AP_Terrain/AP_Terrain.h \
+ ../../libraries/AC_Avoidance/AC_Avoid.h \
+ ../../libraries/AC_WPNav/AC_Loiter.h \
+ ../../libraries/AC_WPNav/AC_Circle.h \
+ ../../libraries/AP_LandingGear/AP_LandingGear.h \
+ ../../libraries/AP_LandingGear/AP_LandingGear_config.h \
+ ../../libraries/AC_InputManager/AC_InputManager.h \
+ ../../libraries/AC_InputManager/AC_InputManager_Heli.h \
+ ../../libraries/AP_SmartRTL/AP_SmartRTL.h \
+ ../../libraries/AP_TempCalibration/AP_TempCalibration.h \
+ ../../libraries/AC_AutoTune/AC_AutoTune_Multi.h \
+ ../../libraries/AC_AutoTune/AC_AutoTune.h \
+ ../../libraries/AC_AutoTune/AC_AutoTune_FreqResp.h \
+ ../../libraries/AC_AutoTune/AC_AutoTune_Heli.h \
+ ../../libraries/AP_Math/chirp.h \
+ ../../libraries/AP_Parachute/AP_Parachute.h \
+ ../../libraries/AC_Sprayer/AC_Sprayer.h \
+ ../../libraries/AP_ADSB/AP_ADSB.h \
+ ../../libraries/AP_ADSB/AP_ADSB_config.h \
+ ../../libraries/AP_Proximity/AP_Proximity.h \
+ ../../libraries/AP_Proximity/AP_Proximity_Params.h \
+ ../../libraries/AP_Proximity/AP_Proximity_Boundary_3D.h \
+ ../../libraries/AP_OpticalFlow/AP_OpticalFlow.h \
+ ../../libraries/AP_OpticalFlow/AP_OpticalFlow_Calibrator.h \
+ ../../libraries/AP_OpticalFlow/AP_OpticalFlow_Backend.h \
+ ../../libraries/AP_Winch/AP_Winch_config.h ../../ArduCopter/KOS_module.h \
+ ../../ArduCopter/KOS_SIM_module.h ../../ArduCopter/defines.h \
+ ../../ArduCopter/config.h ../../ArduCopter/APM_Config.h \
+ ../../ArduCopter/RC_Channel.h ../../ArduCopter/mode.h \
+ ../../ArduCopter/GCS_Mavlink.h ../../ArduCopter/GCS_Copter.h \
+ ../../ArduCopter/AP_Rally.h ../../ArduCopter/AP_Arming.h \
+ ../../libraries/AP_Beacon/AP_Beacon.h \
+ ../../libraries/AP_Beacon/AP_Beacon_config.h \
+ ../../libraries/AC_WPNav/AC_WPNav_OA.h \
+ ../../libraries/AC_Avoidance/AP_OAPathPlanner.h \
+ ../../libraries/AC_Avoidance/AP_OABendyRuler.h \
+ ../../libraries/AC_Avoidance/AP_OADijkstra.h \
+ ../../libraries/AC_Avoidance/AP_OAVisGraph.h \
+ ../../libraries/AC_Avoidance/AP_OADatabase.h \
+ ../../libraries/AP_Gripper/AP_Gripper_config.h \
+ ../../libraries/AP_Gripper/AP_Gripper.h \
+ ../../libraries/AC_PrecLand/AC_PrecLand.h \
+ ../../libraries/AC_PrecLand/PosVelEKF.h \
+ ../../libraries/AC_PrecLand/AC_PrecLand_StateMachine.h \
+ ../../libraries/AP_Follow/AP_Follow.h \
+ ../../libraries/AP_Camera/AP_Camera.h \
+ ../../libraries/AP_Camera/AP_Camera_config.h \
+ ../../libraries/AP_Camera/AP_Camera_Params.h \
+ ../../libraries/AP_Winch/AP_Winch.h ../../libraries/AP_RPM/AP_RPM.h \
+ ../../libraries/AP_RPM/AP_RPM_config.h \
+ ../../libraries/AP_RPM/AP_RPM_Params.h \
+ ../../libraries/AP_Scripting/AP_Scripting.h \
+ ../../libraries/AP_Filesystem/AP_Filesystem.h \
+ ../../libraries/AP_Filesystem/AP_Filesystem_posix.h \
+ ../../libraries/AP_Filesystem/AP_Filesystem_backend.h \
+ ../../libraries/AP_HAL/I2CDevice.h \
+ ../../libraries/AP_Scripting/AP_Scripting_CANSensor.h \
+ ../../libraries/AC_CustomControl/AC_CustomControl.h \
+ ../../ArduCopter/Parameters.h \
+ ../../libraries/AC_AttitudeControl/AC_WeatherVane.h \
+ ../../ArduCopter/avoidance_adsb.h \
+ ../../libraries/AP_Avoidance/AP_Avoidance.h
