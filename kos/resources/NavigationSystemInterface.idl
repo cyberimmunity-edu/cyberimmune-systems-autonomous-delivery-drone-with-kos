@@ -1,8 +1,5 @@
 package drone_controller.NavigationSystemInterface
 
 interface {
-    GetAzimuth(out UInt8 success, out UInt32 azimuth);
-    GetAcceleration(out UInt8 success, out UInt32 accelerationX, out UInt32 accelerationY, out UInt32 accelerationZ);
-    GetGyroscope(out UInt8 success, out UInt32 gyroscopeX, out UInt32 gyroscopeY, out UInt32 gyroscopeZ);
-    GetTemperature(out UInt8 success, out UInt32 temperature);
+    GetCoords(out UInt8 success, out SInt32 lat, out SInt32 lng, out SInt32 alt);
 }

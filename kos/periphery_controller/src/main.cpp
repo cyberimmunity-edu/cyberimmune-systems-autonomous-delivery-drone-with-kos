@@ -21,18 +21,18 @@ int main(void) {
         sleep(RETRY_DELAY_SEC);
     }
 
-    while (!setMotorKillSwitch(false)) {
-        fprintf(stderr, "[%s] Info: Trying again to turn off motor kill-switch in %ds\n", ENTITY_NAME, RETRY_DELAY_SEC);
+    while (!setKillSwitch(false)) {
+        fprintf(stderr, "[%s] Info: Trying again to turn off kill-switch in %ds\n", ENTITY_NAME, RETRY_DELAY_SEC);
         sleep(RETRY_DELAY_SEC);
     }
 
-    while (!setCargoKillSwitch(false)) {
-        fprintf(stderr, "[%s] Info: Trying again to turn off cargo kill-switch in %ds\n", ENTITY_NAME, RETRY_DELAY_SEC);
+    while (!setCargoLock(true)) {
+        fprintf(stderr, "[%s] Info: Trying again to turn on cargo lock in %ds\n", ENTITY_NAME, RETRY_DELAY_SEC);
         sleep(RETRY_DELAY_SEC);
     }
 
-    while (!setLightMode(LightMode::Off)) {
-        fprintf(stderr, "[%s] Info: Trying again to turn off light in %ds\n", ENTITY_NAME, RETRY_DELAY_SEC);
+    while (!setBuzzer(true)) {
+        fprintf(stderr, "[%s] Info: Trying again to turn on buzzer in %ds\n", ENTITY_NAME, RETRY_DELAY_SEC);
         sleep(RETRY_DELAY_SEC);
     }
 

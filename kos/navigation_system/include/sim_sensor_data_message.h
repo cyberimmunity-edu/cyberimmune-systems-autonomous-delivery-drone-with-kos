@@ -8,8 +8,7 @@ static const uint8_t SimSensorDataMessageHead[SIM_SENSOR_DATA_MESSAGE_HEAD_SIZE]
 
 struct SimSensorDataMessage {
     uint8_t head[SIM_SENSOR_DATA_MESSAGE_HEAD_SIZE];
-    float azimuth;
-    float temperature;
-    float acceleration[3];
-    float gyroscope[3];
+    int32_t latitude;
+    int32_t longitude;
+    int32_t altitude;
 };

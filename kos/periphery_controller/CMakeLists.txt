@@ -10,9 +10,8 @@ else()
     set (PERIPHERY_CONTROLLER_SRC "src/periphery_controller_real.cpp" "src/gpio.cpp")
 endif()
 
-add_executable (PeripheryController "src/main.cpp" ${PERIPHERY_CONTROLLER_SRC} "src/periphery_controller_shared.cpp"
-    "src/periphery_controller_interface.cpp" "../ipc_messages/src/transport_interface.cpp"
-    "../ipc_messages/src/initialization_interface.cpp")
+add_executable (PeripheryController "src/main.cpp" ${PERIPHERY_CONTROLLER_SRC} "src/periphery_controller_interface.cpp"
+    "../ipc_messages/src/transport_interface.cpp" "../ipc_messages/src/initialization_interface.cpp")
 add_dependencies (PeripheryController periphery_controller_edl_files)
 
 target_compile_definitions (PeripheryController PRIVATE ENTITY_NAME="Periphery Controller")

@@ -13,10 +13,9 @@ uint16_t simSensorPort = 5766;
 std::thread sensorThread;
 std::mutex sensorMutex;
 
-float simAzimuth = NAN;
-float simTemperature = NAN;
-float simAcceleration[3] = { NAN, NAN, NAN };
-float simGyroscope[3] = { NAN, NAN, NAN };
+int32_t simLatitude = 0;
+int32_t simLongitude = 0;
+int32_t simAltitude = 0;
 
 void getSensors() {
     while (true) {
@@ -42,12 +41,9 @@ void getSensors() {
             if (readBytes == expectedSize) {
                 SimSensorDataMessage *data = (SimSensorDataMessage*)message;
                 sensorMutex.lock();
-                simAzimuth = data->azimuth;
-                simTemperature = data->azimuth;
-                for (int i = 0; i < 3; i++) {
-                    simAcceleration[i] = data->acceleration[i];
-                    simGyroscope[i] = data->gyroscope[i];
-                }
+                simLatitude = data->latitude;
+                simLongitude = data->longitude;
+                simAltitude = data->altitude;
                 sensorMutex.unlock();
             }
             else
@@ -88,45 +84,11 @@ int initSensors() {
     return 1;
 }
 
-int calibrateCompass() {
-    return 1;
-}
-
-int calibrateMpu() {
-    return 1;
-}
-
-int getAzimuth(float &azimuth) {
+int getCoords(int32_t &latitude, int32_t &longitude, int32_t &altitude) {
     sensorMutex.lock();
-    azimuth = simAzimuth;
-    sensorMutex.unlock();
-
-    return 1;
-}
-
-int getAcceleration(float &x, float &y, float &z) {
-    sensorMutex.lock();
-    x = simAcceleration[0];
-    y = simAcceleration[1];
-    z = simAcceleration[2];
-    sensorMutex.unlock();
-
-    return 1;
-}
-
-int getGyroscope(float &x, float &y, float &z) {
-    sensorMutex.lock();
-    x = simGyroscope[0];
-    y = simGyroscope[1];
-    z = simGyroscope[2];
-    sensorMutex.unlock();
-
-    return 1;
-}
-
-int getTemperature(float &temperature) {
-    sensorMutex.lock();
-    temperature = simTemperature;
+    latitude = simLatitude;
+    longitude = simLongitude;
+    altitude = simAltitude;
     sensorMutex.unlock();
 
     return 1;

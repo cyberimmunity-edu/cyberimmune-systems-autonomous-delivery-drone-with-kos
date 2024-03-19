@@ -21,9 +21,9 @@
 char gpio[] = "gpio0";
 char gpioConfigSuffix[] = "default";
 
-uint8_t pinLight = 8;
-uint8_t pinMotorKsFirst = 20;
-uint8_t pinMotorKsSecond = 21;
+uint8_t pinBuzzer = 21;
+uint8_t pinKillSwitchFirst = 22;
+uint8_t pinKillSwitchSecond = 27;
 
 int initPeripheryController() {
     char boardName[NAME_MAX_LENGTH] = {0};
@@ -88,7 +88,7 @@ int initGpioPins() {
     if (!startGpio(gpio))
         return 0;
 
-    uint8_t pins[] = { pinLight, pinMotorKsFirst, pinMotorKsSecond };
+    uint8_t pins[] = { pinBuzzer, pinKillSwitchFirst, pinKillSwitchSecond };
     for (uint8_t pin : pins)
         if (!initPin(pin))
             return 0;
@@ -96,24 +96,24 @@ int initGpioPins() {
     return 1;
 }
 
-int setLight(bool turnOn) {
-    return setPin(pinLight, turnOn);
+int setBuzzer(bool enable) {
+    return setPin(pinBuzzer, enable);
 }
 
-int setMotorKillSwitch(bool permitted) {
-    if (permitted) {
-        if (!setPin(pinMotorKsFirst, false))
+int setKillSwitch(bool enable) {
+    if (enable) {
+        if (!setPin(pinKillSwitchFirst, false))
             return 0;
-        return setPin(pinMotorKsSecond, true);
+        return setPin(pinKillSwitchSecond, true);
     }
     else {
-        if (!setPin(pinMotorKsFirst, false))
+        if (!setPin(pinKillSwitchFirst, false))
             return 0;
-        return setPin(pinMotorKsSecond, false);
+        return setPin(pinKillSwitchSecond, false);
     }
 }
 
-int setCargoKillSwitch(bool permotted) {
+int setCargoLock(bool enable) {
     //Not implemented yet
 
     return 1;

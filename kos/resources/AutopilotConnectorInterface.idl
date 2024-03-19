@@ -1,6 +1,9 @@
 package drone_controller.AutopilotConnectorInterface
 
 interface {
-    GetAutopilotCommand(out UInt8 success, out UInt8 command);
-    SendAutopilotCommand(in UInt8 command, out UInt8 success);
+    WaitForArmRequest(out UInt8 success);
+    PermitArm(out UInt8 success);
+    ForbidArm(out UInt8 success);
+    PauseFlight(out UInt8 success);
+    ResumeFlight(out UInt8 success);
 }

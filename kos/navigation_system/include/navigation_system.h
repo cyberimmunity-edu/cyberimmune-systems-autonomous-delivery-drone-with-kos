@@ -1,11 +1,8 @@
 #pragma once
 
+#include <stdint.h>
+
 int initNavigationSystem();
 int initSensors();
-int calibrateCompass();
-int calibrateMpu();
 
-int getAzimuth(float &azimuth);
-int getAcceleration(float &x, float &y, float &z);
-int getGyroscope(float &x, float &y, float &z);
-int getTemperature(float &temperature);
+int getCoords(int32_t &latitude, int32_t &longitude, int32_t &altitude);

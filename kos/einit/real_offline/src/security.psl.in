@@ -32,6 +32,9 @@ execute {
 request {
     match src=Einit { grant () }
     match src=kl.core.Core { grant () }
+    match src=kl.drivers.BSP { grant () }
+    match src=kl.drivers.GPIO { grant () }
+    match src=kl.drivers.UART { grant () }
 
     match dst=kl.core.Core {
         match src=drone_controller.AutopilotConnector { grant () }
@@ -41,6 +44,19 @@ request {
         match src=drone_controller.PeripheryController { grant () }
         match src=drone_controller.ServerConnector { grant () }
     }
+
+    match dst=kl.drivers.BSP {
+        match src=drone_controller.AutopilotConnector { grant () }
+        match src=drone_controller.NavigationSystem { grant () }
+        match src=drone_controller.PeripheryController { grant () }
+    }
+
+    match dst=kl.drivers.UART {
+        match src=drone_controller.AutopilotConnector { grant () }
+        match src=drone_controller.NavigationSystem { grant () }
+    }
+
+    match src=drone_controller.PeripheryController dst=kl.drivers.GPIO { grant () }
 
     match src=drone_controller.CredentialManager dst=kl.VfsRamFs { grant () }
 
@@ -60,8 +76,11 @@ request {
 
     match src=drone_controller.FlightController {
         match dst=drone_controller.AutopilotConnector interface=drone_controller.AutopilotConnectorInterface {
-            match method=GetAutopilotCommand { grant () }
-            match method=SendAutopilotCommand { grant () }
+            match method=WaitForArmRequest { grant () }
+            match method=PermitArm { grant () }
+            match method=ForbidArm { grant () }
+            match method=PauseFlight { grant () }
+            match method=ResumeFlight { grant () }
         }
         match dst=drone_controller.CredentialManager interface=drone_controller.CredentialManagerInterface {
             match method=GetRsaKey { grant () }
@@ -70,14 +89,12 @@ request {
             match method=CheckSignature { grant () }
         }
         match dst=drone_controller.NavigationSystem interface=drone_controller.NavigationSystemInterface {
-            match method=GetAzimuth { grant () }
-            match method=GetAcceleration { grant () }
-            match method=GetGyroscope { grant () }
-            match method=GetTemperature { grant () }
+            match method=GetCoords { grant () }
         }
         match dst=drone_controller.PeripheryController interface=drone_controller.PeripheryControllerInterface {
-            match method=SetLightMode { grant () }
-            match method=SetMotorKillSwitch { grant () }
+            match method=SetBuzzer { grant () }
+            match method=SetKillSwitch { grant () }
+            match method=SetCargoLock { grant () }
         }
         match dst=drone_controller.ServerConnector interface=drone_controller.ServerConnectorInterface {
             match method=SendRequest { grant () }
@@ -89,6 +106,9 @@ request {
 response {
     match dst=Einit { grant () }
     match dst=kl.core.Core { grant () }
+    match dst=kl.drivers.BSP { grant () }
+    match dst=kl.drivers.GPIO { grant () }
+    match dst=kl.drivers.UART { grant () }
 
     match src=kl.core.Core {
         match dst=drone_controller.AutopilotConnector { grant () }
@@ -98,6 +118,19 @@ response {
         match dst=drone_controller.PeripheryController { grant () }
         match dst=drone_controller.ServerConnector { grant () }
     }
+
+    match src=kl.drivers.BSP {
+        match dst=drone_controller.AutopilotConnector { grant () }
+        match dst=drone_controller.NavigationSystem { grant () }
+        match dst=drone_controller.PeripheryController { grant () }
+    }
+
+    match src=kl.drivers.UART {
+        match dst=drone_controller.AutopilotConnector { grant () }
+        match dst=drone_controller.NavigationSystem { grant () }
+    }
+
+    match dst=drone_controller.PeripheryController src=kl.drivers.GPIO { grant () }
 
     match dst=drone_controller.CredentialManager src=kl.VfsRamFs { grant () }
 
@@ -117,8 +150,11 @@ response {
 
     match dst=drone_controller.FlightController {
         match src=drone_controller.AutopilotConnector interface=drone_controller.AutopilotConnectorInterface {
-            match method=GetAutopilotCommand { grant () }
-            match method=SendAutopilotCommand { grant () }
+            match method=WaitForArmRequest { grant () }
+            match method=PermitArm { grant () }
+            match method=ForbidArm { grant () }
+            match method=PauseFlight { grant () }
+            match method=ResumeFlight { grant () }
         }
         match src=drone_controller.CredentialManager interface=drone_controller.CredentialManagerInterface {
             match method=GetRsaKey { grant () }
@@ -127,14 +163,12 @@ response {
             match method=CheckSignature { grant () }
         }
         match src=drone_controller.NavigationSystem interface=drone_controller.NavigationSystemInterface {
-            match method=GetAzimuth { grant () }
-            match method=GetAcceleration { grant () }
-            match method=GetGyroscope { grant () }
-            match method=GetTemperature { grant () }
+            match method=GetCoords { grant () }
         }
         match src=drone_controller.PeripheryController interface=drone_controller.PeripheryControllerInterface {
-            match method=SetLightMode { grant () }
-            match method=SetMotorKillSwitch { grant () }
+            match method=SetBuzzer { grant () }
+            match method=SetKillSwitch { grant () }
+            match method=SetCargoLock { grant () }
         }
         match src=drone_controller.ServerConnector interface=drone_controller.ServerConnectorInterface {
             match method=SendRequest { grant () }

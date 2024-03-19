@@ -2,7 +2,7 @@ entities:
 
 - name: drone_controller.AutopilotConnector
   connections:
-  - target: drone_controller.AutopilotConnector
+  - target: drone_controller.PeripheryController
     id: ap_pc_connection
 @INIT_AutopilotConnector_ENTITY_CONNECTIONS@
 
@@ -30,7 +30,7 @@ entities:
 
 - name: drone_controller.NavigationSystem
   connections:
-  - target: drone_controller.NavigationSystem
+  - target: drone_controller.PeripheryController
     id: ns_pc_connection
 @INIT_NavigationSystem_ENTITY_CONNECTIONS@
 

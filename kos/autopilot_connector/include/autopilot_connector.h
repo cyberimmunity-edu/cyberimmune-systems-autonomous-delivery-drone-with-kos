@@ -1,10 +1,22 @@
 #pragma once
 
-#include "../../shared/include/autopilot_command.h"
+#include <stdint.h>
 
 #define AUTOPILOT_COMMAND_MESSAGE_HEAD_SIZE 4
 
 static const uint8_t AutopilotCommandMessageHead[AUTOPILOT_COMMAND_MESSAGE_HEAD_SIZE] = { 0x7a, 0xfe, 0xf0, 0x0d };
+
+enum AutopilotCommand : uint8_t {
+    ERROR = 0x00,
+    ArmRequest = 0x3A,
+    ArmPermit = 0xA5,
+    ArmForbid = 0xE4,
+    PauseFlight = 0xAB,
+    ResumeFlight = 0x47,
+    ChangeWaypoint = 0x10,
+    ChangeSpeed = 0xEE,
+    ChangeAltitude = 0xA1
+};
 
 struct AutopilotCommandMessage {
     uint8_t head[AUTOPILOT_COMMAND_MESSAGE_HEAD_SIZE];

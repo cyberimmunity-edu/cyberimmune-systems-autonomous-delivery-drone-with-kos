@@ -12,12 +12,12 @@
 #define NAME_MAX_LENGTH 64
 #define RETRY_DELAY_SEC 1
 
-char autopilotUart[] = "uart3";
+char autopilotUart[] = "uart2";
 char autopilotConfigSuffix[] = "default";
 UartHandle autopilotUartHandler = NULL;
 
 int initAutopilotConnector() {
-    if (!waitForInit("ap_pc_connection", "PeripheryController")) {
+    while (!waitForInit("ap_pc_connection", "PeripheryController")) {
         fprintf(stderr, "[%s] Warning: Failed to receive initialization notification from Periphery Controller. Trying again in %ds\n", ENTITY_NAME, RETRY_DELAY_SEC);
         sleep(RETRY_DELAY_SEC);
     }

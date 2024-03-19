@@ -4,7 +4,7 @@ include (platform/nk)
 
 project_header_default ("STANDARD_GNU_11:YES" "STRICT_WARNINGS:NO")
 
-add_executable (FlightController "src/main.cpp" "src/flight_controller.cpp" "src/flight_controller_interface.cpp" "src/mission.cpp"
+add_executable (FlightController "src/main.cpp" "src/flight_controller_interface.cpp" "src/mission.cpp"
     "../ipc_messages/src/transport_interface.cpp" "../ipc_messages/src/initialization_interface.cpp")
 add_dependencies (FlightController flight_controller_edl_files)
 

@@ -1,22 +1,22 @@
 #pragma once
 
-#include "../../shared/include/autopilot_command.h"
-#include "../../shared/include/light_mode.h"
+#include <stdint.h>
 
-int getAutopilotCommand(AutopilotCommand &command);
-int sendAutopilotCommand(AutopilotCommand command);
+int waitForArmRequest();
+int permitArm();
+int forbidArm();
+int pauseFlight();
+int resumeFlight();
 
 int getRsaKey(char* e, char* n);
 int setServerRsaKey(char* key);
 int signMessage(char* message, char* signature);
 int checkSignature(char* message);
 
-int getAzimuth(float &azimuth);
-int getAcceleration(float &x, float &y, float &z);
-int getGyroscope(float &x, float &y, float &z);
-int getTemperature(float &temperature);
+int getCoords(int32_t &latitude, int32_t &longitude, int32_t &altitude);
 
-int setLightMode(LightMode mode);
-int setMotorKillSwitch(uint8_t permit);
+int setBuzzer(uint8_t enable);
+int setMotorKillSwitch(uint8_t enable);
+int setCargoLock(uint8_t enable);
 
 int sendRequest(char* query, char* response);

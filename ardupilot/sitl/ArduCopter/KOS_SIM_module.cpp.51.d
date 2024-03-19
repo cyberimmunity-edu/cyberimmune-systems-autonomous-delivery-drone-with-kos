@@ -1,6 +1,8 @@
 ArduCopter/KOS_SIM_module.cpp.51.o: ../../ArduCopter/KOS_SIM_module.cpp \
  ap_config.h ../../ArduCopter/KOS_SIM_module.h \
- ../../libraries/SITL/SITL.h ../../libraries/AP_HAL/AP_HAL_Boards.h \
+ ../../libraries/AP_AHRS/AP_AHRS.h \
+ ../../libraries/AP_AHRS/AP_AHRS_config.h \
+ ../../libraries/AP_HAL/AP_HAL_Boards.h \
  ../../libraries/AP_HAL/board/sitl.h \
  ../../libraries/AP_HAL_SITL/Semaphores.h \
  ../../libraries/AP_HAL/AP_HAL_Macros.h \
@@ -11,7 +13,9 @@ ArduCopter/KOS_SIM_module.cpp.51.o: ../../ArduCopter/KOS_SIM_module.cpp \
  ../../libraries/AP_Common/missing/type_traits \
  ../../libraries/AP_Common/AP_Common.h \
  ../../libraries/AP_HAL_SITL/AP_HAL_SITL_Namespace.h \
- ../../libraries/AP_HAL/EventHandle.h ../../libraries/AP_Math/AP_Math.h \
+ ../../libraries/AP_HAL/EventHandle.h \
+ ../../libraries/AP_NavEKF2/AP_NavEKF2.h \
+ ../../libraries/AP_Common/Location.h ../../libraries/AP_Math/AP_Math.h \
  ../../libraries/AP_Param/AP_Param.h ../../libraries/AP_HAL/AP_HAL.h \
  ../../libraries/AP_HAL/AP_HAL_Main.h ../../libraries/AP_HAL/HAL.h \
  ../../libraries/AP_HAL/AnalogIn.h ../../libraries/AP_HAL/GPIO.h \
@@ -36,6 +40,23 @@ ArduCopter/KOS_SIM_module.cpp.51.o: ../../ArduCopter/KOS_SIM_module.cpp \
  ../../libraries/AP_Math/vector2.h ../../libraries/AP_Math/polygon.h \
  ../../libraries/AP_Math/quaternion.h ../../libraries/AP_Math/spline5.h \
  ../../libraries/AP_Math/location.h ../../libraries/AP_Math/control.h \
+ ../../libraries/AP_NavEKF/AP_Nav_Common.h \
+ ../../libraries/AP_NavEKF3/AP_NavEKF3.h \
+ ../../libraries/AP_NavEKF/AP_NavEKF_Source.h \
+ ../../libraries/AP_AHRS/AP_AHRS_DCM.h \
+ ../../libraries/AP_AHRS/AP_AHRS_Backend.h \
+ ../../libraries/AP_Airspeed/AP_Airspeed.h \
+ ../../libraries/AP_Airspeed/AP_Airspeed_config.h \
+ ../../libraries/AP_MSP/msp.h ../../libraries/AP_MSP/msp_osd.h \
+ ../../libraries/AP_MSP/msp_protocol.h ../../libraries/AP_MSP/msp_sbuf.h \
+ ../../libraries/AP_MSP/msp_version.h \
+ ../../libraries/AP_MSP/msp_sensors.h \
+ ../../libraries/AP_InertialSensor/AP_InertialSensor.h \
+ ../../libraries/AP_InertialSensor/AP_InertialSensor_config.h \
+ ../../libraries/AP_Logger/AP_Logger_config.h \
+ ../../libraries/AC_Fence/AC_Fence_config.h \
+ ../../libraries/AP_AccelCal/AP_AccelCal.h \
+ ../../libraries/GCS_MAVLink/GCS_config.h \
  ../../libraries/GCS_MAVLink/GCS_MAVLink.h \
  libraries/GCS_MAVLink/include/mavlink/v2.0/all/version.h \
  libraries/GCS_MAVLink/include/mavlink/v2.0/mavlink_types.h \
@@ -387,73 +408,23 @@ ArduCopter/KOS_SIM_module.cpp.51.o: ../../ArduCopter/KOS_SIM_module.cpp \
  libraries/GCS_MAVLink/include/mavlink/v2.0/all/../AVSSUAS/./mavlink_msg_avss_drone_imu.h \
  libraries/GCS_MAVLink/include/mavlink/v2.0/all/../AVSSUAS/./mavlink_msg_avss_drone_operation_mode.h \
  libraries/GCS_MAVLink/include/mavlink/v2.0/all/../mavlink_get_info.h \
- ../../libraries/AP_Baro/AP_Baro.h \
- ../../libraries/AP_Baro/AP_Baro_config.h ../../libraries/AP_MSP/msp.h \
- ../../libraries/AP_MSP/msp_osd.h ../../libraries/AP_MSP/msp_protocol.h \
- ../../libraries/AP_MSP/msp_sbuf.h ../../libraries/AP_MSP/msp_version.h \
- ../../libraries/AP_MSP/msp_sensors.h \
- ../../libraries/AP_ExternalAHRS/AP_ExternalAHRS.h \
- ../../libraries/AP_ExternalAHRS/AP_ExternalAHRS_config.h \
- ../../libraries/AP_Common/Location.h \
- ../../libraries/AP_NavEKF/AP_Nav_Common.h \
- ../../libraries/Filter/DerivativeFilter.h \
- ../../libraries/Filter/FilterClass.h \
- ../../libraries/Filter/FilterWithBuffer.h \
- ../../libraries/AP_Airspeed/AP_Airspeed.h \
- ../../libraries/AP_Airspeed/AP_Airspeed_config.h \
- ../../libraries/AP_Compass/AP_Compass.h \
- ../../libraries/AP_Compass/AP_Compass_config.h \
- ../../libraries/AP_Declination/AP_Declination.h \
- ../../libraries/AP_Compass/AP_Compass_Backend.h \
- ../../libraries/AP_Compass/Compass_PerMotor.h \
- ../../libraries/AP_Common/TSIndex.h \
- ../../libraries/AP_Compass/CompassCalibrator.h \
- ../../libraries/AP_InertialSensor/AP_InertialSensor.h \
- ../../libraries/AP_InertialSensor/AP_InertialSensor_config.h \
- ../../libraries/AP_Logger/AP_Logger_config.h \
- ../../libraries/AC_Fence/AC_Fence_config.h \
- ../../libraries/AP_AccelCal/AP_AccelCal.h \
- ../../libraries/GCS_MAVLink/GCS_config.h \
  ../../libraries/AP_AccelCal/AccelCalibrator.h \
  ../../libraries/AP_Math/vectorN.h ../../libraries/AP_Math/matrixN.h \
+ ../../libraries/AP_ExternalAHRS/AP_ExternalAHRS.h \
+ ../../libraries/AP_ExternalAHRS/AP_ExternalAHRS_config.h \
  ../../libraries/Filter/LowPassFilter.h \
+ ../../libraries/Filter/FilterClass.h \
  ../../libraries/Filter/HarmonicNotchFilter.h \
  ../../libraries/Filter/NotchFilter.h \
  ../../libraries/AP_InertialSensor/AP_InertialSensor_Params.h \
  ../../libraries/AP_InertialSensor/AP_InertialSensor_tempcal.h \
  ../../libraries/AP_Math/polyfit.h \
  ../../libraries/Filter/LowPassFilter2p.h \
- ../../libraries/SITL/SIM_Buzzer.h ../../libraries/SITL/SITL_Input.h \
- ../../libraries/SITL/SIM_Gripper_EPM.h \
- ../../libraries/SITL/SIM_Gripper_Servo.h ../../libraries/SITL/SIM_I2C.h \
- ../../libraries/SITL/SIM_SPI.h ../../libraries/SITL/SIM_Parachute.h \
- ../../libraries/SITL/SIM_Precland.h ../../libraries/SITL/SIM_Sprayer.h \
- ../../libraries/SITL/SIM_ToneAlarm.h \
- ../../libraries/SITL/SIM_EFI_MegaSquirt.h \
- ../../libraries/AP_HAL/utility/Socket.h \
- ../../libraries/SITL/SIM_SerialDevice.h \
- ../../libraries/SITL/SIM_RichenPower.h \
- ../../libraries/SITL/SIM_FETtecOneWireESC.h \
- ../../libraries/SITL/SIM_IntelligentEnergy24.h \
- ../../libraries/SITL/SIM_IntelligentEnergy.h \
- ../../libraries/SITL/SIM_Ship.h ../../libraries/SITL/SIM_GPS.h \
- ../../ArduCopter/Copter.h ../../libraries/AP_Logger/AP_Logger.h \
+ ../../libraries/AP_AHRS/AP_AHRS_SIM.h ../../libraries/GCS_MAVLink/GCS.h \
+ ../../libraries/AP_AdvancedFailsafe/AP_AdvancedFailsafe_config.h \
  ../../libraries/AP_Mission/AP_Mission.h \
  ../../libraries/AP_Mission/AP_Mission_config.h \
  ../../libraries/AP_Common/float16.h \
- ../../libraries/AP_Logger/LogStructure.h \
- ../../libraries/AP_Beacon/LogStructure.h \
- ../../libraries/AP_DAL/LogStructure.h \
- ../../libraries/AP_NavEKF2/LogStructure.h \
- ../../libraries/AP_AHRS/AP_AHRS.h \
- ../../libraries/AP_AHRS/AP_AHRS_config.h \
- ../../libraries/AP_NavEKF2/AP_NavEKF2.h \
- ../../libraries/AP_NavEKF3/AP_NavEKF3.h \
- ../../libraries/AP_NavEKF/AP_NavEKF_Source.h \
- ../../libraries/AP_AHRS/AP_AHRS_DCM.h \
- ../../libraries/AP_AHRS/AP_AHRS_Backend.h \
- ../../libraries/AP_AHRS/AP_AHRS_SIM.h ../../libraries/GCS_MAVLink/GCS.h \
- ../../libraries/AP_AdvancedFailsafe/AP_AdvancedFailsafe_config.h \
  ../../libraries/GCS_MAVLink/MAVLink_routing.h \
  ../../libraries/AP_RTC/JitterCorrection.h \
  ../../libraries/AP_Common/Bitmask.h \
@@ -462,12 +433,42 @@ ArduCopter/KOS_SIM_module.cpp.51.o: ../../ArduCopter/KOS_SIM_module.cpp \
  ../../libraries/AP_Devo_Telem/AP_Devo_Telem.h \
  ../../libraries/AP_Frsky_Telem/AP_Frsky_config.h \
  ../../libraries/AP_GPS/AP_GPS.h \
- ../../libraries/AP_GPS/GPS_detect_state.h \
+ ../../libraries/AP_GPS/GPS_detect_state.h ../../libraries/SITL/SIM_GPS.h \
+ ../../libraries/SITL/SIM_SerialDevice.h \
  ../../libraries/AP_GPS/MovingBase.h ../../libraries/AP_Mount/AP_Mount.h \
  ../../libraries/AP_Mount/AP_Mount_config.h \
  ../../libraries/AP_Mount/AP_Mount_Params.h \
  ../../libraries/AP_SerialManager/AP_SerialManager.h \
- ../../libraries/GCS_MAVLink/ap_message.h \
+ ../../libraries/GCS_MAVLink/ap_message.h ../../libraries/SITL/SITL.h \
+ ../../libraries/AP_Baro/AP_Baro.h \
+ ../../libraries/AP_Baro/AP_Baro_config.h \
+ ../../libraries/Filter/DerivativeFilter.h \
+ ../../libraries/Filter/FilterWithBuffer.h \
+ ../../libraries/AP_Compass/AP_Compass.h \
+ ../../libraries/AP_Compass/AP_Compass_config.h \
+ ../../libraries/AP_Declination/AP_Declination.h \
+ ../../libraries/AP_Compass/AP_Compass_Backend.h \
+ ../../libraries/AP_Compass/Compass_PerMotor.h \
+ ../../libraries/AP_Common/TSIndex.h \
+ ../../libraries/AP_Compass/CompassCalibrator.h \
+ ../../libraries/SITL/SIM_Buzzer.h ../../libraries/SITL/SITL_Input.h \
+ ../../libraries/SITL/SIM_Gripper_EPM.h \
+ ../../libraries/SITL/SIM_Gripper_Servo.h ../../libraries/SITL/SIM_I2C.h \
+ ../../libraries/SITL/SIM_SPI.h ../../libraries/SITL/SIM_Parachute.h \
+ ../../libraries/SITL/SIM_Precland.h ../../libraries/SITL/SIM_Sprayer.h \
+ ../../libraries/SITL/SIM_ToneAlarm.h \
+ ../../libraries/SITL/SIM_EFI_MegaSquirt.h \
+ ../../libraries/AP_HAL/utility/Socket.h \
+ ../../libraries/SITL/SIM_RichenPower.h \
+ ../../libraries/SITL/SIM_FETtecOneWireESC.h \
+ ../../libraries/SITL/SIM_IntelligentEnergy24.h \
+ ../../libraries/SITL/SIM_IntelligentEnergy.h \
+ ../../libraries/SITL/SIM_Ship.h ../../ArduCopter/Copter.h \
+ ../../libraries/AP_Logger/AP_Logger.h \
+ ../../libraries/AP_Logger/LogStructure.h \
+ ../../libraries/AP_Beacon/LogStructure.h \
+ ../../libraries/AP_DAL/LogStructure.h \
+ ../../libraries/AP_NavEKF2/LogStructure.h \
  ../../libraries/AP_NavEKF3/LogStructure.h \
  ../../libraries/AP_GPS/LogStructure.h \
  ../../libraries/AP_GPS/LogStructure_SBP.h \

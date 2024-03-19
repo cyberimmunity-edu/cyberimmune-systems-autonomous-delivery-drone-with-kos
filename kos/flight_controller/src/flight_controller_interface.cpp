@@ -10,7 +10,7 @@
 #include <drone_controller/PeripheryControllerInterface.idl.h>
 #include <drone_controller/ServerConnectorInterface.idl.h>
 
-int getAutopilotCommand(AutopilotCommand &command) {
+int waitForArmRequest() {
     NkKosTransport transport;
     nk_iid_t riid;
     initSenderInterface("autopilot_connector_connection", "drone_controller.AutopilotConnector.interface", transport, riid);
@@ -18,17 +18,16 @@ int getAutopilotCommand(AutopilotCommand &command) {
     struct AutopilotConnectorInterface_proxy proxy;
     AutopilotConnectorInterface_proxy_init(&proxy, &transport.base, riid);
 
-    AutopilotConnectorInterface_GetAutopilotCommand_req req;
-    AutopilotConnectorInterface_GetAutopilotCommand_res res;
+    AutopilotConnectorInterface_WaitForArmRequest_req req;
+    AutopilotConnectorInterface_WaitForArmRequest_res res;
 
-    if ((AutopilotConnectorInterface_GetAutopilotCommand(&proxy.base, &req, NULL, &res, NULL) != rcOk) || !res.success)
+    if ((AutopilotConnectorInterface_WaitForArmRequest(&proxy.base, &req, NULL, &res, NULL) != rcOk) || !res.success)
         return 0;
 
-    command = (AutopilotCommand)res.command;
     return 1;
 }
 
-int sendAutopilotCommand(AutopilotCommand command) {
+int permitArm() {
     NkKosTransport transport;
     nk_iid_t riid;
     initSenderInterface("autopilot_connector_connection", "drone_controller.AutopilotConnector.interface", transport, riid);
@@ -36,12 +35,64 @@ int sendAutopilotCommand(AutopilotCommand command) {
     struct AutopilotConnectorInterface_proxy proxy;
     AutopilotConnectorInterface_proxy_init(&proxy, &transport.base, riid);
 
-    AutopilotConnectorInterface_SendAutopilotCommand_req req;
-    AutopilotConnectorInterface_SendAutopilotCommand_res res;
+    AutopilotConnectorInterface_PermitArm_req req;
+    AutopilotConnectorInterface_PermitArm_res res;
 
-    req.command = (uint8_t)command;
+    if ((AutopilotConnectorInterface_PermitArm(&proxy.base, &req, NULL, &res, NULL) != rcOk) || !res.success)
+        return 0;
 
-    return ((AutopilotConnectorInterface_SendAutopilotCommand(&proxy.base, &req, NULL, &res, NULL) == rcOk) && res.success);
+    return 1;
+}
+
+int forbidArm() {
+    NkKosTransport transport;
+    nk_iid_t riid;
+    initSenderInterface("autopilot_connector_connection", "drone_controller.AutopilotConnector.interface", transport, riid);
+
+    struct AutopilotConnectorInterface_proxy proxy;
+    AutopilotConnectorInterface_proxy_init(&proxy, &transport.base, riid);
+
+    AutopilotConnectorInterface_ForbidArm_req req;
+    AutopilotConnectorInterface_ForbidArm_res res;
+
+    if ((AutopilotConnectorInterface_ForbidArm(&proxy.base, &req, NULL, &res, NULL) != rcOk) || !res.success)
+        return 0;
+
+    return 1;
+}
+
+int pauseFlight() {
+    NkKosTransport transport;
+    nk_iid_t riid;
+    initSenderInterface("autopilot_connector_connection", "drone_controller.AutopilotConnector.interface", transport, riid);
+
+    struct AutopilotConnectorInterface_proxy proxy;
+    AutopilotConnectorInterface_proxy_init(&proxy, &transport.base, riid);
+
+    AutopilotConnectorInterface_PauseFlight_req req;
+    AutopilotConnectorInterface_PauseFlight_res res;
+
+    if ((AutopilotConnectorInterface_PauseFlight(&proxy.base, &req, NULL, &res, NULL) != rcOk) || !res.success)
+        return 0;
+
+    return 1;
+}
+
+int resumeFlight() {
+    NkKosTransport transport;
+    nk_iid_t riid;
+    initSenderInterface("autopilot_connector_connection", "drone_controller.AutopilotConnector.interface", transport, riid);
+
+    struct AutopilotConnectorInterface_proxy proxy;
+    AutopilotConnectorInterface_proxy_init(&proxy, &transport.base, riid);
+
+    AutopilotConnectorInterface_ResumeFlight_req req;
+    AutopilotConnectorInterface_ResumeFlight_res res;
+
+    if ((AutopilotConnectorInterface_ResumeFlight(&proxy.base, &req, NULL, &res, NULL) != rcOk) || !res.success)
+        return 0;
+
+    return 1;
 }
 
 int getRsaKey(char* e, char* n) {
@@ -153,7 +204,7 @@ int checkSignature(char* message) {
     return ((CredentialManagerInterface_CheckSignature(&proxy.base, &req, &reqArena, &res, NULL) == rcOk) && res.success && res.correct);
 }
 
-int getAzimuth(float &azimuth) {
+int getCoords(int32_t &latitude, int32_t &longitude, int32_t &altitude) {
     NkKosTransport transport;
     nk_iid_t riid;
     initSenderInterface("navigation_system_connection", "drone_controller.NavigationSystem.interface", transport, riid);
@@ -161,79 +212,20 @@ int getAzimuth(float &azimuth) {
     struct NavigationSystemInterface_proxy proxy;
     NavigationSystemInterface_proxy_init(&proxy, &transport.base, riid);
 
-    NavigationSystemInterface_GetAzimuth_req req;
-    NavigationSystemInterface_GetAzimuth_res res;
+    NavigationSystemInterface_GetCoords_req req;
+    NavigationSystemInterface_GetCoords_res res;
 
-    if ((NavigationSystemInterface_GetAzimuth(&proxy.base, &req, NULL, &res, NULL) != rcOk) || !res.success)
+    if ((NavigationSystemInterface_GetCoords(&proxy.base, &req, NULL, &res, NULL) != rcOk) || !res.success)
         return 0;
 
-    memcpy(&azimuth, &res.azimuth, sizeof(float));
+    memcpy(&latitude, &res.lat, sizeof(int32_t));
+    memcpy(&longitude, &res.lng, sizeof(int32_t));
+    memcpy(&altitude, &res.alt, sizeof(int32_t));
 
     return 1;
 }
 
-int getAcceleration(float &x, float &y, float &z) {
-    NkKosTransport transport;
-    nk_iid_t riid;
-    initSenderInterface("navigation_system_connection", "drone_controller.NavigationSystem.interface", transport, riid);
-
-    struct NavigationSystemInterface_proxy proxy;
-    NavigationSystemInterface_proxy_init(&proxy, &transport.base, riid);
-
-    NavigationSystemInterface_GetAcceleration_req req;
-    NavigationSystemInterface_GetAcceleration_res res;
-
-    if ((NavigationSystemInterface_GetAcceleration(&proxy.base, &req, NULL, &res, NULL) != rcOk) || !res.success)
-        return 0;
-
-    memcpy(&x, &res.accelerationX, sizeof(float));
-    memcpy(&y, &res.accelerationY, sizeof(float));
-    memcpy(&z, &res.accelerationZ, sizeof(float));
-
-    return 1;
-}
-
-int getGyroscope(float &x, float &y, float &z) {
-    NkKosTransport transport;
-    nk_iid_t riid;
-    initSenderInterface("navigation_system_connection", "drone_controller.NavigationSystem.interface", transport, riid);
-
-    struct NavigationSystemInterface_proxy proxy;
-    NavigationSystemInterface_proxy_init(&proxy, &transport.base, riid);
-
-    NavigationSystemInterface_GetGyroscope_req req;
-    NavigationSystemInterface_GetGyroscope_res res;
-
-    if ((NavigationSystemInterface_GetGyroscope(&proxy.base, &req, NULL, &res, NULL) != rcOk) || !res.success)
-        return 0;
-
-    memcpy(&x, &res.gyroscopeX, sizeof(float));
-    memcpy(&y, &res.gyroscopeY, sizeof(float));
-    memcpy(&z, &res.gyroscopeZ, sizeof(float));
-
-    return 1;
-}
-
-int getTemperature(float &temperature) {
-    NkKosTransport transport;
-    nk_iid_t riid;
-    initSenderInterface("navigation_system_connection", "drone_controller.NavigationSystem.interface", transport, riid);
-
-    struct NavigationSystemInterface_proxy proxy;
-    NavigationSystemInterface_proxy_init(&proxy, &transport.base, riid);
-
-    NavigationSystemInterface_GetTemperature_req req;
-    NavigationSystemInterface_GetTemperature_res res;
-
-    if ((NavigationSystemInterface_GetTemperature(&proxy.base, &req, NULL, &res, NULL) != rcOk) || !res.success)
-        return 0;
-
-    memcpy(&temperature, &res.temperature, sizeof(float));
-
-    return 1;
-}
-
-int setLightMode(LightMode mode) {
+int setBuzzer(uint8_t enable) {
     NkKosTransport transport;
     nk_iid_t riid;
     initSenderInterface("periphery_controller_connection", "drone_controller.PeripheryController.interface", transport, riid);
@@ -241,15 +233,15 @@ int setLightMode(LightMode mode) {
     struct PeripheryControllerInterface_proxy proxy;
     PeripheryControllerInterface_proxy_init(&proxy, &transport.base, riid);
 
-    PeripheryControllerInterface_SetLightMode_req req;
-    PeripheryControllerInterface_SetLightMode_res res;
+    PeripheryControllerInterface_SetBuzzer_req req;
+    PeripheryControllerInterface_SetBuzzer_res res;
 
-    req.mode = (uint8_t)mode;
+    req.enable = enable;
 
-    return ((PeripheryControllerInterface_SetLightMode(&proxy.base, &req, NULL, &res, NULL) == rcOk) && res.success);
+    return ((PeripheryControllerInterface_SetBuzzer(&proxy.base, &req, NULL, &res, NULL) == rcOk) && res.success);
 }
 
-int setMotorKillSwitch(uint8_t permit) {
+int setMotorKillSwitch(uint8_t enable) {
     NkKosTransport transport;
     nk_iid_t riid;
     initSenderInterface("periphery_controller_connection", "drone_controller.PeripheryController.interface", transport, riid);
@@ -257,12 +249,28 @@ int setMotorKillSwitch(uint8_t permit) {
     struct PeripheryControllerInterface_proxy proxy;
     PeripheryControllerInterface_proxy_init(&proxy, &transport.base, riid);
 
-    PeripheryControllerInterface_SetMotorKillSwitch_req req;
-    PeripheryControllerInterface_SetMotorKillSwitch_res res;
+    PeripheryControllerInterface_SetKillSwitch_req req;
+    PeripheryControllerInterface_SetKillSwitch_res res;
 
-    req.permit = permit;
+    req.enable = enable;
 
-    return ((PeripheryControllerInterface_SetMotorKillSwitch(&proxy.base, &req, NULL, &res, NULL) == rcOk) && res.success);
+    return ((PeripheryControllerInterface_SetKillSwitch(&proxy.base, &req, NULL, &res, NULL) == rcOk) && res.success);
+}
+
+int setCargoLock(uint8_t enable) {
+    NkKosTransport transport;
+    nk_iid_t riid;
+    initSenderInterface("periphery_controller_connection", "drone_controller.PeripheryController.interface", transport, riid);
+
+    struct PeripheryControllerInterface_proxy proxy;
+    PeripheryControllerInterface_proxy_init(&proxy, &transport.base, riid);
+
+    PeripheryControllerInterface_SetCargoLock_req req;
+    PeripheryControllerInterface_SetCargoLock_res res;
+
+    req.enable = enable;
+
+    return ((PeripheryControllerInterface_SetCargoLock(&proxy.base, &req, NULL, &res, NULL) == rcOk) && res.success);
 }
 
 int sendRequest(char* query, char* response) {

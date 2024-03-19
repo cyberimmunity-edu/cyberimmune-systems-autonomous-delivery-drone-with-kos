@@ -40,20 +40,20 @@ int initGpioPins() {
     return 1;
 }
 
-int setLight(bool turnOn) {
-    light = turnOn;
-    fprintf(stderr, "[%s] Info: Light is turned %s\n", ENTITY_NAME, light ? "on" : "off");
+int setBuzzer(bool enable) {
+    fprintf(stderr, "[%s] Info: Buzzer is %s\n", ENTITY_NAME, enable ? "enabled" : "disabled");
+
     return 1;
 }
 
-int setMotorKillSwitch(bool permitted) {
-    SimPeripheryMessage message = SimPeripheryMessage(permitted ? SimPeripheryCommand::MotorPermit : SimPeripheryCommand::MotorForbid);
+int setKillSwitch(bool enable) {
+    SimPeripheryMessage message = SimPeripheryMessage(enable ? SimPeripheryCommand::MotorPermit : SimPeripheryCommand::MotorForbid);
     write(peripherySocket, &message, sizeof(SimPeripheryMessage));
     return 1;
 }
 
-int setCargoKillSwitch(bool permitted) {
-    SimPeripheryMessage message = SimPeripheryMessage(permitted ? SimPeripheryCommand::CargoPermit : SimPeripheryCommand::CargoForbid);
+int setCargoLock(bool enable) {
+    SimPeripheryMessage message = SimPeripheryMessage(enable ? SimPeripheryCommand::CargoPermit : SimPeripheryCommand::CargoForbid);
     write(peripherySocket, &message, sizeof(SimPeripheryMessage));
     return 1;
 }

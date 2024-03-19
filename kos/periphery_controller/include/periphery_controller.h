@@ -1,11 +1,8 @@
 #pragma once
 
-#include "../../shared/include/light_mode.h"
-
 int initPeripheryController();
 int initGpioPins();
 
-int setLight(bool turnOn);
-int setLightMode(LightMode mode);
-int setMotorKillSwitch(bool permitted);
-int setCargoKillSwitch(bool permitted);
+int setBuzzer(bool enable);
+int setKillSwitch(bool enable);
+int setCargoLock(bool enable);
