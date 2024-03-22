@@ -6,4 +6,7 @@ interface {
     ForbidArm(out UInt8 success);
     PauseFlight(out UInt8 success);
     ResumeFlight(out UInt8 success);
+    ChangeSpeed(in SInt32 speed, out UInt8 success);
+    ChangeAltitude(in SInt32 altitude, out UInt8 success);
+    ChangeWaypoint(in SInt32 latitude, in SInt32 longitude, in SInt32 altitude, out UInt8 success);
 }

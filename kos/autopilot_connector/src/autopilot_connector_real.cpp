@@ -16,6 +16,22 @@ char autopilotUart[] = "uart2";
 char autopilotConfigSuffix[] = "default";
 UartHandle autopilotUartHandler = NULL;
 
+int writeIntValue(int32_t value) {
+    rtl_size_t writtenBytes;
+    ssize_t expectedSize = sizeof(int32_t);
+    Retcode rc = UartWrite(autopilotUartHandler, (uint8_t*)(&value), expectedSize, NULL, &writtenBytes);
+    if (rc != rcOk) {
+        fprintf(stderr, "[%s] Warning: Failed to write to UART %s ("RETCODE_HR_FMT")\n", ENTITY_NAME, autopilotUart, RETCODE_HR_PARAMS(rc));
+        return 0;
+    }
+    else if (writtenBytes != expectedSize) {
+        fprintf(stderr, "[%s] Warning: Failed to write message to autopilot: %ld bytes were expected, %ld bytes were sent\n", ENTITY_NAME, expectedSize, writtenBytes);
+        return 0;
+    }
+
+    return 1;
+}
+
 int initAutopilotConnector() {
     while (!waitForInit("ap_pc_connection", "PeripheryController")) {
         fprintf(stderr, "[%s] Warning: Failed to receive initialization notification from Periphery Controller. Trying again in %ds\n", ENTITY_NAME, RETRY_DELAY_SEC);
@@ -116,4 +132,20 @@ int sendAutopilotCommand(AutopilotCommand command) {
     }
 
     return 1;
+}
+
+int sendAutopilotCommand(AutopilotCommand command, int32_t value) {
+    sendAutopilotCommand(command);
+
+    return writeIntValue(value);
+}
+
+int sendAutopilotCommand(AutopilotCommand command, int32_t valueFirst, int32_t valueSecond, int32_t valueThird) {
+    sendAutopilotCommand(command);
+
+    int fst = writeIntValue(valueFirst);
+    int snd = writeIntValue(valueSecond);
+    int trd = writeIntValue(valueThird);
+
+    return (fst && snd && trd);
 }

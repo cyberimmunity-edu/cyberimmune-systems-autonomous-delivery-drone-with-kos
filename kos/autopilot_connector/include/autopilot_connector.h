@@ -40,3 +40,5 @@ int initConnection();
 
 int getAutopilotCommand(uint8_t& command);
 int sendAutopilotCommand(AutopilotCommand command);
+int sendAutopilotCommand(AutopilotCommand command, int32_t value);
+int sendAutopilotCommand(AutopilotCommand command, int32_t valueFirst, int32_t valueSecond, int32_t valueThird);

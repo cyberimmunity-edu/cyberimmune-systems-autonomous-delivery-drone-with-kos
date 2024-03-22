@@ -41,3 +41,27 @@ nk_err_t ResumeFlightImpl(struct AutopilotConnectorInterface *self,
 
     return NK_EOK;
 }
+
+nk_err_t ChangeSpeedImpl(struct AutopilotConnectorInterface *self,
+                    const AutopilotConnectorInterface_ChangeSpeed_req *req, const struct nk_arena *reqArena,
+                    AutopilotConnectorInterface_ChangeSpeed_res *res, struct nk_arena *resArena) {
+    res->success = sendAutopilotCommand(AutopilotCommand::ChangeSpeed, req->speed);
+
+    return NK_EOK;
+}
+
+nk_err_t ChangeAltitudeImpl(struct AutopilotConnectorInterface *self,
+                    const AutopilotConnectorInterface_ChangeAltitude_req *req, const struct nk_arena *reqArena,
+                    AutopilotConnectorInterface_ChangeAltitude_res *res, struct nk_arena *resArena) {
+    res->success = sendAutopilotCommand(AutopilotCommand::ChangeAltitude, req->altitude);
+
+    return NK_EOK;
+}
+
+nk_err_t ChangeWaypointImpl(struct AutopilotConnectorInterface *self,
+                    const AutopilotConnectorInterface_ChangeWaypoint_req *req, const struct nk_arena *reqArena,
+                    AutopilotConnectorInterface_ChangeWaypoint_res *res, struct nk_arena *resArena) {
+    res->success = sendAutopilotCommand(AutopilotCommand::ChangeWaypoint, req->latitude, req->longitude, req->altitude);
+
+    return NK_EOK;
+}

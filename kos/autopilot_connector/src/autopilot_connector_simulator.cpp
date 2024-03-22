@@ -68,3 +68,21 @@ int sendAutopilotCommand(AutopilotCommand command) {
 
     return 1;
 }
+
+int sendAutopilotCommand(AutopilotCommand command, int32_t value) {
+    sendAutopilotCommand(command);
+
+    write(autopilotSocket, &value, sizeof(int32_t));
+
+    return 1;
+}
+
+int sendAutopilotCommand(AutopilotCommand command, int32_t valueFirst, int32_t valueSecond, int32_t valueThird) {
+    sendAutopilotCommand(command);
+
+    write(autopilotSocket, &valueFirst, sizeof(int32_t));
+    write(autopilotSocket, &valueSecond, sizeof(int32_t));
+    write(autopilotSocket, &valueThird, sizeof(int32_t));
+
+    return 1;
+}

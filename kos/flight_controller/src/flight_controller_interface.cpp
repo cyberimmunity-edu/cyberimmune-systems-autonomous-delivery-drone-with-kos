@@ -95,6 +95,65 @@ int resumeFlight() {
     return 1;
 }
 
+int changeSpeed(int32_t speed) {
+    NkKosTransport transport;
+    nk_iid_t riid;
+    initSenderInterface("autopilot_connector_connection", "drone_controller.AutopilotConnector.interface", transport, riid);
+
+    struct AutopilotConnectorInterface_proxy proxy;
+    AutopilotConnectorInterface_proxy_init(&proxy, &transport.base, riid);
+
+    AutopilotConnectorInterface_ChangeSpeed_req req;
+    AutopilotConnectorInterface_ChangeSpeed_res res;
+
+    req.speed = speed;
+
+    if ((AutopilotConnectorInterface_ChangeSpeed(&proxy.base, &req, NULL, &res, NULL) != rcOk) || !res.success)
+        return 0;
+
+    return 1;
+}
+
+int changeAltitude(int32_t altitude) {
+    NkKosTransport transport;
+    nk_iid_t riid;
+    initSenderInterface("autopilot_connector_connection", "drone_controller.AutopilotConnector.interface", transport, riid);
+
+    struct AutopilotConnectorInterface_proxy proxy;
+    AutopilotConnectorInterface_proxy_init(&proxy, &transport.base, riid);
+
+    AutopilotConnectorInterface_ChangeAltitude_req req;
+    AutopilotConnectorInterface_ChangeAltitude_res res;
+
+    req.altitude = altitude;
+
+    if ((AutopilotConnectorInterface_ChangeAltitude(&proxy.base, &req, NULL, &res, NULL) != rcOk) || !res.success)
+        return 0;
+
+    return 1;
+}
+
+int changeWaypoint(int32_t latitude, int32_t longitude, int32_t altitude) {
+    NkKosTransport transport;
+    nk_iid_t riid;
+    initSenderInterface("autopilot_connector_connection", "drone_controller.AutopilotConnector.interface", transport, riid);
+
+    struct AutopilotConnectorInterface_proxy proxy;
+    AutopilotConnectorInterface_proxy_init(&proxy, &transport.base, riid);
+
+    AutopilotConnectorInterface_ChangeWaypoint_req req;
+    AutopilotConnectorInterface_ChangeWaypoint_res res;
+
+    req.latitude = latitude;
+    req.longitude = longitude;
+    req.altitude = altitude;
+
+    if ((AutopilotConnectorInterface_ChangeWaypoint(&proxy.base, &req, NULL, &res, NULL) != rcOk) || !res.success)
+        return 0;
+
+    return 1;
+}
+
 int getRsaKey(char* e, char* n) {
     NkKosTransport transport;
     nk_iid_t riid;
@@ -218,9 +277,9 @@ int getCoords(int32_t &latitude, int32_t &longitude, int32_t &altitude) {
     if ((NavigationSystemInterface_GetCoords(&proxy.base, &req, NULL, &res, NULL) != rcOk) || !res.success)
         return 0;
 
-    memcpy(&latitude, &res.lat, sizeof(int32_t));
-    memcpy(&longitude, &res.lng, sizeof(int32_t));
-    memcpy(&altitude, &res.alt, sizeof(int32_t));
+    latitude = res.lat;
+    longitude = res.lng;
+    altitude = res.alt;
 
     return 1;
 }

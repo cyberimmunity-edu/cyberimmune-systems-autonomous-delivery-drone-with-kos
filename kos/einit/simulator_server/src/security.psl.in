@@ -65,6 +65,9 @@ request {
             match method=ForbidArm { grant () }
             match method=PauseFlight { grant () }
             match method=ResumeFlight { grant () }
+            match method=ChangeSpeed { grant () }
+            match method=ChangeAltitude { grant () }
+            match method=ChangeWaypoint { grant () }
         }
         match dst=drone_controller.CredentialManager interface=drone_controller.CredentialManagerInterface {
             match method=GetRsaKey { grant () }
@@ -123,6 +126,9 @@ response {
             match method=ForbidArm { grant () }
             match method=PauseFlight { grant () }
             match method=ResumeFlight { grant () }
+            match method=ChangeSpeed { grant () }
+            match method=ChangeAltitude { grant () }
+            match method=ChangeWaypoint { grant () }
         }
         match src=drone_controller.CredentialManager interface=drone_controller.CredentialManagerInterface {
             match method=GetRsaKey { grant () }
