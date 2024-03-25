@@ -1,7 +1,7 @@
 package drone_controller.PeripheryControllerInterface
 
 interface {
-    SetBuzzer(in UInt8 enable, out UInt8 success);
+    EnableBuzzer(out UInt8 success);
     SetKillSwitch(in UInt8 enable, out UInt8 success);
     SetCargoLock(in UInt8 enable, out UInt8 success);
 }

@@ -1,6 +1,11 @@
 #include "../include/mission.h"
-#include "../include/flight_controller_interface.h"
-#include "../../ipc_messages/include/initialization_interface.h"
+#include "../../shared/include/initialization_interface.h"
+#include "../../shared/include/ipc_messages_initialization.h"
+#include "../../shared/include/ipc_messages_autopilot_connector.h"
+#include "../../shared/include/ipc_messages_credential_manager.h"
+#include "../../shared/include/ipc_messages_navigation_system.h"
+#include "../../shared/include/ipc_messages_periphery_controller.h"
+#include "../../shared/include/ipc_messages_server_connector.h"
 
 #include <math.h>
 #include <stdio.h>
@@ -42,46 +47,37 @@ int sendSignedMessage(char* method, char* response, char* errorMessage, uint8_t 
 }
 
 int main(void) {
-    while (!waitForInit("autopilot_connector_connection", "AutopilotConnector")) {
-        fprintf(stderr, "[%s] Warning: Failed to receive initialization notification from Autopilot Connector. Trying again in %ds\n", ENTITY_NAME, RETRY_DELAY_SEC);
+    while (!waitForInit("periphery_controller_connection", "PeripheryController")) {
+        fprintf(stderr, "[%s] Warning: Failed to receive initialization notification from Periphery Controller. Trying again in %ds\n", ENTITY_NAME, RETRY_DELAY_SEC);
         sleep(RETRY_DELAY_SEC);
     }
-    while (!waitForInit("credential_manager_connection", "CredentialManager")) {
-        fprintf(stderr, "[%s] Warning: Failed to receive initialization notification from Credential Manager. Trying again in %ds\n", ENTITY_NAME, RETRY_DELAY_SEC);
+    while (!setCargoLock(false)) {
+        fprintf(stderr, "[%s] Warning: Failed to lock cargo at Periphery Controller. Trying again in %ds\n", ENTITY_NAME, RETRY_DELAY_SEC);
+        sleep(RETRY_DELAY_SEC);
+    }
+
+    while (!waitForInit("autopilot_connector_connection", "AutopilotConnector")) {
+        fprintf(stderr, "[%s] Warning: Failed to receive initialization notification from Autopilot Connector. Trying again in %ds\n", ENTITY_NAME, RETRY_DELAY_SEC);
         sleep(RETRY_DELAY_SEC);
     }
     while (!waitForInit("navigation_system_connection", "NavigationSystem")) {
         fprintf(stderr, "[%s] Warning: Failed to receive initialization notification from Navigation System. Trying again in %ds\n", ENTITY_NAME, RETRY_DELAY_SEC);
         sleep(RETRY_DELAY_SEC);
     }
-    while (!waitForInit("periphery_controller_connection", "PeripheryController")) {
-        fprintf(stderr, "[%s] Warning: Failed to receive initialization notification from Periphery Controller. Trying again in %ds\n", ENTITY_NAME, RETRY_DELAY_SEC);
-        sleep(RETRY_DELAY_SEC);
-    }
+
     while (!waitForInit("server_connector_connection", "ServerConnector")) {
         fprintf(stderr, "[%s] Warning: Failed to receive initialization notification from Server Connector. Trying again in %ds\n", ENTITY_NAME, RETRY_DELAY_SEC);
         sleep(RETRY_DELAY_SEC);
     }
+    while (!waitForInit("credential_manager_connection", "CredentialManager")) {
+        fprintf(stderr, "[%s] Warning: Failed to receive initialization notification from Credential Manager. Trying again in %ds\n", ENTITY_NAME, RETRY_DELAY_SEC);
+        sleep(RETRY_DELAY_SEC);
+    }
+
     fprintf(stderr, "[%s] Info: Initialization is finished\n", ENTITY_NAME);
 
-    char rsaKeyE[257] = {0};
-    char rsaKeyN[257] = {0};
-    char rsaServerRequest[1024] = {0};
-    char rsaServerResponse[1024] = {0};
-    while (!getRsaKey(rsaKeyE, rsaKeyN)) {
-        fprintf(stderr, "[%s] Warning: Failed to get RSA key from Credential Manager. Trying again in %ds\n", ENTITY_NAME, RETRY_DELAY_SEC);
-        sleep(RETRY_DELAY_SEC);
-    }
-    snprintf(rsaServerRequest, 1024, "key?%s&e=0x%s&n=0x%s", BOARD_ID, rsaKeyE, rsaKeyN);
-    while (!sendRequest(rsaServerRequest, rsaServerResponse)) {
-        fprintf(stderr, "[%s] Warning: Failed to send request through Server Connector. Trying again in %ds\n", ENTITY_NAME, RETRY_REQUEST_DELAY_SEC);
-        sleep(RETRY_REQUEST_DELAY_SEC);
-    }
-    while (!setServerRsaKey(rsaServerResponse)) {
-        fprintf(stderr, "[%s] Warning: Failed to request server RSA key setting from Credential Manager. Trying again in %ds\n", ENTITY_NAME, RETRY_DELAY_SEC);
-        sleep(RETRY_DELAY_SEC);
-    }
-    fprintf(stderr, "[%s] Info: Successfully exchanged RSA keys with the server\n", ENTITY_NAME);
+    if (!enableBuzzer())
+        fprintf(stderr, "[%s] Warning: Failed to enable buzzer at Periphery Controller\n", ENTITY_NAME);
 
     char authResponse[1024] = {0};
     sendSignedMessage("auth", authResponse, "authentication", RETRY_DELAY_SEC, true);
@@ -110,9 +106,7 @@ int main(void) {
 
         if (strstr(armRespone, "$Arm: 0#") != NULL) {
             fprintf(stderr, "[%s] Info: Arm is permitted\n", ENTITY_NAME);
-            if (!setBuzzer(false))
-                fprintf(stderr, "[%s] Warning: Failed to turn off buzzer at Periphery Controller\n", ENTITY_NAME);
-            while (!setMotorKillSwitch(true)) {
+            while (!setKillSwitch(true)) {
                 fprintf(stderr, "[%s] Warning: Failed to permit motor usage at Periphery Controller. Trying again in %ds\n", ENTITY_NAME, RETRY_DELAY_SEC);
                 sleep(RETRY_DELAY_SEC);
             }

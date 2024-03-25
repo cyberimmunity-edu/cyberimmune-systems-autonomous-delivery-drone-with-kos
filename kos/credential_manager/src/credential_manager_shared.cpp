@@ -1,4 +1,5 @@
 #include "../include/credential_manager.h"
+#include "../../shared/include/ipc_messages_server_connector.h"
 
 #include <mbedtls_v3/ctr_drbg.h>
 #include <mbedtls_v3/entropy.h>
@@ -6,6 +7,9 @@
 #include <mbedtls_v3/sha256.h>
 
 #include <string.h>
+#include <unistd.h>
+
+#define RETRY_REQUEST_DELAY_SEC 1
 
 mbedtls_rsa_context rsaSelf;
 char keyE[257] = {0};
@@ -80,10 +84,15 @@ int generateRsaKey() {
     return 1;
 }
 
-int getRsaKey(char* e, char* n) {
-    strcpy(e, keyE);
-    strcpy(n, keyN);
-    return 1;
+int shareRsaKey() {
+    char rsaServerRequest[1024] = {0};
+    char rsaServerResponse[1024] = {0};
+    snprintf(rsaServerRequest, 1024, "key?%s&e=0x%s&n=0x%s", BOARD_ID, keyE, keyN);
+    while (!sendRequest(rsaServerRequest, rsaServerResponse)) {
+        fprintf(stderr, "[%s] Warning: Failed to share RSA key. Trying again in %ds\n", ENTITY_NAME, RETRY_REQUEST_DELAY_SEC);
+        sleep(RETRY_REQUEST_DELAY_SEC);
+    }
+    return setRsaKey(rsaServerResponse);
 }
 
 int signMessage(char* message, char* sign) {

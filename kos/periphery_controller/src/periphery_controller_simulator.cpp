@@ -8,8 +8,6 @@
 int peripherySocket = NULL;
 uint16_t peripheryPort = 5767;
 
-bool light = false;
-
 int initPeripheryController() {
     if (!wait_for_network()) {
         fprintf(stderr, "[%s] Error: Connection to network has failed\n", ENTITY_NAME);

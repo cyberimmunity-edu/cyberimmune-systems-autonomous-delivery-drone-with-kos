@@ -1,10 +1,10 @@
 #include "../include/periphery_controller.h"
 #include "../include/periphery_controller_interface.h"
 
-nk_err_t SetBuzzerImpl(struct PeripheryControllerInterface *self,
-                    const PeripheryControllerInterface_SetBuzzer_req *req, const struct nk_arena *reqArena,
-                    PeripheryControllerInterface_SetBuzzer_res *res, struct nk_arena *resArena) {
-    res->success = setBuzzer(req->enable);
+nk_err_t EnableBuzzerImpl(struct PeripheryControllerInterface *self,
+                    const PeripheryControllerInterface_EnableBuzzer_req *req, const struct nk_arena *reqArena,
+                    PeripheryControllerInterface_EnableBuzzer_res *res, struct nk_arena *resArena) {
+    res->success = enableBuzzer();
 
     return NK_EOK;
 }

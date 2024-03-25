@@ -1,7 +1,6 @@
 #include "../include/periphery_controller.h"
 #include "../include/periphery_controller_interface.h"
-#include "../../ipc_messages/include/transport_interface.h"
-#include "../../ipc_messages/include/initialization_interface.h"
+#include "../../shared/include/initialization_interface.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -26,13 +25,13 @@ int main(void) {
         sleep(RETRY_DELAY_SEC);
     }
 
-    while (!setCargoLock(true)) {
-        fprintf(stderr, "[%s] Info: Trying again to turn on cargo lock in %ds\n", ENTITY_NAME, RETRY_DELAY_SEC);
+    while (!setBuzzer(false)) {
+        fprintf(stderr, "[%s] Info: Trying again to turn off buzzer in %ds\n", ENTITY_NAME, RETRY_DELAY_SEC);
         sleep(RETRY_DELAY_SEC);
     }
 
-    while (!setBuzzer(true)) {
-        fprintf(stderr, "[%s] Info: Trying again to turn on buzzer in %ds\n", ENTITY_NAME, RETRY_DELAY_SEC);
+    while (!setCargoLock(true)) {
+        fprintf(stderr, "[%s] Info: Trying again to lock cargo in %ds\n", ENTITY_NAME, RETRY_DELAY_SEC);
         sleep(RETRY_DELAY_SEC);
     }
 

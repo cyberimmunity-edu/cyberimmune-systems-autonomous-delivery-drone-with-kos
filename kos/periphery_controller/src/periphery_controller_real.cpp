@@ -1,7 +1,5 @@
 #include "../include/periphery_controller.h"
 #include "../include/gpio.h"
-#include "../../ipc_messages/include/transport_interface.h"
-#include "../../ipc_messages/include/initialization_interface.h"
 
 #include <coresrv/hal/hal_api.h>
 #include <rtl/retcode_hr.h>
@@ -21,7 +19,8 @@
 char gpio[] = "gpio0";
 char gpioConfigSuffix[] = "default";
 
-uint8_t pinBuzzer = 21;
+uint8_t pinBuzzer = 20;
+uint8_t pinCargoLock = 21;
 uint8_t pinKillSwitchFirst = 22;
 uint8_t pinKillSwitchSecond = 27;
 
@@ -54,33 +53,6 @@ int initPeripheryController() {
         return 0;
     }
 
-    NkKosTransport transportAutopilotConnector, transportNavigationSystem;
-    initReceiverInterface("ap_pc_connection", transportAutopilotConnector);
-    initReceiverInterface("ns_pc_connection", transportNavigationSystem);
-
-    PeripheryController_entity entity;
-    PeripheryController_entity_init(&entity, CreateInitializationImpl(), NULL);
-    PeripheryController_entity_req req;
-    PeripheryController_entity_res res;
-
-    nk_req_reset(&req);
-    if (nk_transport_recv(&transportAutopilotConnector.base, &req.base_, NULL) == NK_EOK) {
-        PeripheryController_entity_dispatch(&entity, &req.base_, NULL, &res.base_, NULL);
-        if (nk_transport_reply(&transportAutopilotConnector.base, &res.base_, NULL) != NK_EOK)
-            fprintf(stderr, "[%s] Warning: Failed to send a reply to IPC-message\n", ENTITY_NAME);
-    }
-    else
-        fprintf(stderr, "[%s] Warning: Failed to receive IPC-message\n", ENTITY_NAME);
-
-    nk_req_reset(&req);
-    if (nk_transport_recv(&transportNavigationSystem.base, &req.base_, NULL) == NK_EOK) {
-        PeripheryController_entity_dispatch(&entity, &req.base_, NULL, &res.base_, NULL);
-        if (nk_transport_reply(&transportNavigationSystem.base, &res.base_, NULL) != NK_EOK)
-            fprintf(stderr, "[%s] Warning: Failed to send a reply to IPC-message\n", ENTITY_NAME);
-    }
-    else
-        fprintf(stderr, "[%s] Warning: Failed to receive IPC-message\n", ENTITY_NAME);
-
     return 1;
 }
 
@@ -88,7 +60,7 @@ int initGpioPins() {
     if (!startGpio(gpio))
         return 0;
 
-    uint8_t pins[] = { pinBuzzer, pinKillSwitchFirst, pinKillSwitchSecond };
+    uint8_t pins[] = { pinBuzzer, pinCargoLock, pinKillSwitchFirst, pinKillSwitchSecond };
     for (uint8_t pin : pins)
         if (!initPin(pin))
             return 0;
@@ -114,7 +86,5 @@ int setKillSwitch(bool enable) {
 }
 
 int setCargoLock(bool enable) {
-    //Not implemented yet
-
-    return 1;
+    return setPin(pinCargoLock, enable);
 }

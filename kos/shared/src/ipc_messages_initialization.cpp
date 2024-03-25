@@ -1,16 +1,12 @@
+#include "../include/ipc_messages_initialization.h"
 #include "../include/initialization_interface.h"
-#include "../include/transport_interface.h"
 
-#include <string.h>
+#include <stddef.h>
 
 #define MAX_METHOD_IMPL_LEN 128
 
-nk_err_t WaitForInitImpl(struct Initialization *self,
-                        const Initialization_WaitForInit_req *req, const struct nk_arena *reqArena,
-                        Initialization_WaitForInit_res *res, struct nk_arena *resArena) {
-    res->success = true;
-    return NK_EOK;
-}
+#define NK_USE_UNQUALIFIED_NAMES
+#include <drone_controller/Initialization.idl.h>
 
 int waitForInit(const char* connection, const char* receiverEntity) {
     char destination[MAX_METHOD_IMPL_LEN] = {0};

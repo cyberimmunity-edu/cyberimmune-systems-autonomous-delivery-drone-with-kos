@@ -1,5 +1,5 @@
 #include "../include/navigation_system.h"
-#include "../../ipc_messages/include/initialization_interface.h"
+#include "../../shared/include/ipc_messages_initialization.h"
 
 #include <coresrv/hal/hal_api.h>
 #include <rtl/retcode_hr.h>
@@ -30,7 +30,7 @@ void getSensors() {
 }
 
 int initNavigationSystem() {
-    while (!waitForInit("ns_pc_connection", "PeripheryController")) {
+    while (!waitForInit("periphery_controller_connection", "PeripheryController")) {
         fprintf(stderr, "[%s] Warning: Failed to receive initialization notification from Periphery Controller. Trying again in %ds\n", ENTITY_NAME, RETRY_DELAY_SEC);
         sleep(RETRY_DELAY_SEC);
     }
@@ -189,10 +189,10 @@ int getCoords(int32_t &latitude, int32_t &longitude, int32_t &altitude) {
     }
 
     altitude = round(100 * atof(altStr));
-    longitude = round(10000000 * atof(latStr + 3) / 60.0f);
-    latitude = round(10000000 * atof(lngStr + 2) / 60.0f);
-    latStr[2] = '\0';
+    longitude = round(10000000 * atof(lngStr + 3) / 60.0f);
+    latitude = round(10000000 * atof(latStr + 2) / 60.0f);
     lngStr[3] = '\0';
+    latStr[2] = '\0';
     longitude += 10000000 * atoi(lngStr);
     latitude += 10000000 * atoi(latStr);
 

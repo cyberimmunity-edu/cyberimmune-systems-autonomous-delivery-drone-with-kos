@@ -1,7 +1,6 @@
 #include "../include/server_connector.h"
 #include "../include/server_connector_interface.h"
-#include "../../ipc_messages/include/transport_interface.h"
-#include "../../ipc_messages/include/initialization_interface.h"
+#include "../../shared/include/initialization_interface.h"
 
 #include <stdio.h>
 #include <stdlib.h>

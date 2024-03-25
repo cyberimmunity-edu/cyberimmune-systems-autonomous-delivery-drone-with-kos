@@ -1,5 +1,5 @@
 #include "../include/autopilot_connector.h"
-#include "../../ipc_messages/include/initialization_interface.h"
+#include "../../shared/include/ipc_messages_initialization.h"
 
 #include <coresrv/hal/hal_api.h>
 #include <rtl/retcode_hr.h>
@@ -33,7 +33,7 @@ int writeIntValue(int32_t value) {
 }
 
 int initAutopilotConnector() {
-    while (!waitForInit("ap_pc_connection", "PeripheryController")) {
+    while (!waitForInit("periphery_controller_connection", "PeripheryController")) {
         fprintf(stderr, "[%s] Warning: Failed to receive initialization notification from Periphery Controller. Trying again in %ds\n", ENTITY_NAME, RETRY_DELAY_SEC);
         sleep(RETRY_DELAY_SEC);
     }

@@ -17,6 +17,8 @@ entities:
   connections:
   - target: kl.VfsNet
     id: kl.VfsNet
+  - target: drone_controller.ServerConnector
+    id: server_connector_connection
 @INIT_CredentialManager_ENTITY_CONNECTIONS@
 
 - name: drone_controller.FlightController

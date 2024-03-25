@@ -1,7 +1,6 @@
 #include "../include/credential_manager.h"
 #include "../include/credential_manager_interface.h"
-#include "../../ipc_messages/include/transport_interface.h"
-#include "../../ipc_messages/include/initialization_interface.h"
+#include "../../shared/include/initialization_interface.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -14,6 +13,9 @@
 
 int main(void) {
     if (!generateRsaKey())
+        return EXIT_FAILURE;
+
+    if (!shareRsaKey())
         return EXIT_FAILURE;
 
     fprintf(stderr, "[%s] Info: Initialization is finished\n", ENTITY_NAME);

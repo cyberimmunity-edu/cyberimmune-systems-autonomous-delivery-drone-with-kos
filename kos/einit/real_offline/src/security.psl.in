@@ -86,8 +86,6 @@ request {
             match method=ChangeWaypoint { grant () }
         }
         match dst=drone_controller.CredentialManager interface=drone_controller.CredentialManagerInterface {
-            match method=GetRsaKey { grant () }
-            match method=SetRsaKey { grant () }
             match method=SignMessage { grant () }
             match method=CheckSignature { grant () }
         }
@@ -95,13 +93,17 @@ request {
             match method=GetCoords { grant () }
         }
         match dst=drone_controller.PeripheryController interface=drone_controller.PeripheryControllerInterface {
-            match method=SetBuzzer { grant () }
+            match method=EnableBuzzer { grant () }
             match method=SetKillSwitch { grant () }
             match method=SetCargoLock { grant () }
         }
         match dst=drone_controller.ServerConnector interface=drone_controller.ServerConnectorInterface {
             match method=SendRequest { grant () }
         }
+    }
+
+    match src=drone_controller.CredentialManager dst=drone_controller.ServerConnector interface=drone_controller.ServerConnectorInterface {
+        match method=SendRequest { grant () }
     }
 }
 
@@ -163,8 +165,6 @@ response {
             match method=ChangeWaypoint { grant () }
         }
         match src=drone_controller.CredentialManager interface=drone_controller.CredentialManagerInterface {
-            match method=GetRsaKey { grant () }
-            match method=SetRsaKey { grant () }
             match method=SignMessage { grant () }
             match method=CheckSignature { grant () }
         }
@@ -172,13 +172,17 @@ response {
             match method=GetCoords { grant () }
         }
         match src=drone_controller.PeripheryController interface=drone_controller.PeripheryControllerInterface {
-            match method=SetBuzzer { grant () }
+            match method=EnableBuzzer { grant () }
             match method=SetKillSwitch { grant () }
             match method=SetCargoLock { grant () }
         }
         match src=drone_controller.ServerConnector interface=drone_controller.ServerConnectorInterface {
             match method=SendRequest { grant () }
         }
+    }
+
+    match dst=drone_controller.CredentialManager src=drone_controller.ServerConnector interface=drone_controller.ServerConnectorInterface {
+        match method=SendRequest { grant () }
     }
 }
 
