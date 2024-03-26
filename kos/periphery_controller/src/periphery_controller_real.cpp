@@ -1,5 +1,4 @@
 #include "../include/periphery_controller.h"
-#include "../include/gpio.h"
 
 #include <coresrv/hal/hal_api.h>
 #include <rtl/retcode_hr.h>
@@ -14,15 +13,27 @@
 #include <drone_controller/PeripheryController.edl.h>
 
 #define NAME_MAX_LENGTH 64
-#define RETRY_DELAY_SEC 1
 
 char gpio[] = "gpio0";
 char gpioConfigSuffix[] = "default";
+GpioHandle gpioHandler = NULL;
 
 uint8_t pinBuzzer = 20;
 uint8_t pinCargoLock = 21;
 uint8_t pinKillSwitchFirst = 22;
 uint8_t pinKillSwitchSecond = 27;
+
+bool killSwitchEnabled;
+
+int setPin(uint8_t pin, bool mode) {
+    Retcode rc = GpioOut(gpioHandler, pin, mode);
+    if (rcOk != rc) {
+        fprintf(stderr, "[%s] Warning: Failed to set GPIO pin %d to %d ("RETCODE_HR_FMT")\n", ENTITY_NAME, pin, mode, RETCODE_HR_PARAMS(rc));
+        return 0;
+    }
+
+    return 1;
+}
 
 int initPeripheryController() {
     char boardName[NAME_MAX_LENGTH] = {0};
@@ -57,15 +68,26 @@ int initPeripheryController() {
 }
 
 int initGpioPins() {
-    if (!startGpio(gpio))
+    Retcode rc = GpioOpenPort(gpio, &gpioHandler);
+    if (rcOk != rc) {
+        fprintf(stderr, "[%s] Warning: Failed top open GPIO %s ("RETCODE_HR_FMT")\n", ENTITY_NAME, gpio, RETCODE_HR_PARAMS(rc));
         return 0;
+    }
 
     uint8_t pins[] = { pinBuzzer, pinCargoLock, pinKillSwitchFirst, pinKillSwitchSecond };
-    for (uint8_t pin : pins)
-        if (!initPin(pin))
+    for (uint8_t pin : pins) {
+        rc = GpioSetMode(gpioHandler, pin, GPIO_DIR_OUT);
+        if (rcOk != rc) {
+            fprintf(stderr, "[%s] Warning: Failed to set GPIO pin %u mode ("RETCODE_HR_FMT")\n", ENTITY_NAME, pin, RETCODE_HR_PARAMS(rc));
             return 0;
+        }
+    }
 
     return 1;
+}
+
+bool isKillSwitchEnabled() {
+    return killSwitchEnabled;
 }
 
 int setBuzzer(bool enable) {
@@ -74,14 +96,20 @@ int setBuzzer(bool enable) {
 
 int setKillSwitch(bool enable) {
     if (enable) {
-        if (!setPin(pinKillSwitchFirst, false))
+        if (!setPin(pinKillSwitchFirst, false) || !setPin(pinKillSwitchSecond, true))
             return 0;
-        return setPin(pinKillSwitchSecond, true);
+        else {
+            killSwitchEnabled = true;
+            return 1;
+        }
     }
     else {
-        if (!setPin(pinKillSwitchFirst, false))
+        if (!setPin(pinKillSwitchFirst, false) || !setPin(pinKillSwitchSecond, false))
             return 0;
-        return setPin(pinKillSwitchSecond, false);
+        else {
+            killSwitchEnabled = false;
+            return 1;
+        }
     }
 }
 

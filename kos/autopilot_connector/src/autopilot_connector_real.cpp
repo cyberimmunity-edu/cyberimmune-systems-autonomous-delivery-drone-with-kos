@@ -10,7 +10,6 @@
 #include <unistd.h>
 
 #define NAME_MAX_LENGTH 64
-#define RETRY_DELAY_SEC 1
 
 char autopilotUart[] = "uart2";
 char autopilotConfigSuffix[] = "default";
@@ -34,8 +33,8 @@ int writeIntValue(int32_t value) {
 
 int initAutopilotConnector() {
     while (!waitForInit("periphery_controller_connection", "PeripheryController")) {
-        fprintf(stderr, "[%s] Warning: Failed to receive initialization notification from Periphery Controller. Trying again in %ds\n", ENTITY_NAME, RETRY_DELAY_SEC);
-        sleep(RETRY_DELAY_SEC);
+        fprintf(stderr, "[%s] Warning: Failed to receive initialization notification from Periphery Controller. Trying again in %ds\n", ENTITY_NAME, 1);
+        sleep(1);
     }
 
     char boardName[NAME_MAX_LENGTH] = {0};

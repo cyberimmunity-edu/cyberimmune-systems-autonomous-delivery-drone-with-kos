@@ -7,15 +7,16 @@ project_header_default ("STANDARD_GNU_11:YES" "STRICT_WARNINGS:NO")
 if (SIMULATION)
     set (PERIPHERY_CONTROLLER_SRC "src/periphery_controller_simulator.cpp")
 else()
-    set (PERIPHERY_CONTROLLER_SRC "src/periphery_controller_real.cpp" "src/gpio.cpp")
+    set (PERIPHERY_CONTROLLER_SRC "src/periphery_controller_real.cpp")
 endif()
 
-add_executable (PeripheryController "src/main.cpp" "src/periphery_controller_shared.cpp"
-    ${PERIPHERY_CONTROLLER_SRC} "src/periphery_controller_interface.cpp"
-    "../shared/src/initialization_interface.cpp")
+add_executable (PeripheryController "src/main.cpp" "src/periphery_controller_shared.cpp" ${PERIPHERY_CONTROLLER_SRC}
+    "src/periphery_controller_interface.cpp" "../shared/src/initialization_interface.cpp"
+    "../shared/src/ipc_messages_credential_manager.cpp" "../shared/src/ipc_messages_server_connector.cpp")
 add_dependencies (PeripheryController periphery_controller_edl_files)
 
 target_compile_definitions (PeripheryController PRIVATE ENTITY_NAME="Periphery Controller")
+target_compile_definitions (PeripheryController PRIVATE BOARD_ID="id=${BOARD_ID}")
 
 target_link_libraries (PeripheryController ${CMAKE_THREAD_LIBS_INIT})
 

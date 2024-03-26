@@ -9,8 +9,6 @@
 #define NK_USE_UNQUALIFIED_NAMES
 #include <drone_controller/ServerConnector.edl.h>
 
-#define RETRY_DELAY_SEC 1
-
 int main(void) {
     if (!initServerConnector())
         return EXIT_FAILURE;

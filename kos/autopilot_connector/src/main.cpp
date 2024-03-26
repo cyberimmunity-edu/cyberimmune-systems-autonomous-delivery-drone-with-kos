@@ -9,15 +9,13 @@
 #define NK_USE_UNQUALIFIED_NAMES
 #include <drone_controller/AutopilotConnector.edl.h>
 
-#define RETRY_DELAY_SEC 1
-
 int main(void) {
     if (!initAutopilotConnector())
         return EXIT_FAILURE;
 
     while (!initConnection()) {
-        fprintf(stderr, "[%s] Info: Trying again to connect in %ds\n", ENTITY_NAME, RETRY_DELAY_SEC);
-        sleep(RETRY_DELAY_SEC);
+        fprintf(stderr, "[%s] Info: Trying again to connect in %ds\n", ENTITY_NAME, 1);
+        sleep(1);
     }
 
     fprintf(stderr, "[%s] Info: Initialization is finished\n", ENTITY_NAME);

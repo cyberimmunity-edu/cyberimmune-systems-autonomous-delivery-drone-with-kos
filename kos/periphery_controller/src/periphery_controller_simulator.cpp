@@ -8,6 +8,8 @@
 int peripherySocket = NULL;
 uint16_t peripheryPort = 5767;
 
+bool killSwitchEnabled;
+
 int initPeripheryController() {
     if (!wait_for_network()) {
         fprintf(stderr, "[%s] Error: Connection to network has failed\n", ENTITY_NAME);
@@ -38,6 +40,10 @@ int initGpioPins() {
     return 1;
 }
 
+bool isKillSwitchEnabled() {
+    return killSwitchEnabled;
+}
+
 int setBuzzer(bool enable) {
     fprintf(stderr, "[%s] Info: Buzzer is %s\n", ENTITY_NAME, enable ? "enabled" : "disabled");
 
@@ -47,11 +53,14 @@ int setBuzzer(bool enable) {
 int setKillSwitch(bool enable) {
     SimPeripheryMessage message = SimPeripheryMessage(enable ? SimPeripheryCommand::MotorPermit : SimPeripheryCommand::MotorForbid);
     write(peripherySocket, &message, sizeof(SimPeripheryMessage));
+    killSwitchEnabled = enable;
+
     return 1;
 }
 
 int setCargoLock(bool enable) {
     SimPeripheryMessage message = SimPeripheryMessage(enable ? SimPeripheryCommand::CargoPermit : SimPeripheryCommand::CargoForbid);
     write(peripherySocket, &message, sizeof(SimPeripheryMessage));
+
     return 1;
 }

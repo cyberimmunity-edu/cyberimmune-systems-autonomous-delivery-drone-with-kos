@@ -3,24 +3,17 @@
 
 #include <kos_net.h>
 
-#include <thread>
-#include <mutex>
 #include <math.h>
 
 int simSensorSocket = NULL;
 uint16_t simSensorPort = 5766;
 
-std::thread sensorThread;
-std::mutex sensorMutex;
-
-int32_t simLatitude = 0;
-int32_t simLongitude = 0;
-int32_t simAltitude = 0;
-
 void getSensors() {
+    bool restart;
+    uint8_t message[sizeof(SimSensorDataMessage)];
+
     while (true) {
-        bool restart = false;
-        uint8_t message[sizeof(SimSensorDataMessage)];
+        restart = false;
         for (int i = 0; i < SIM_SENSOR_DATA_MESSAGE_HEAD_SIZE; i++) {
             if (read(simSensorSocket, message + i, 1) != 1) {
                 fprintf(stderr, "[%s] Warning: Failed to read from socket\n", ENTITY_NAME);
@@ -40,11 +33,7 @@ void getSensors() {
             ssize_t readBytes = read(simSensorSocket, message + SIM_SENSOR_DATA_MESSAGE_HEAD_SIZE, expectedSize);
             if (readBytes == expectedSize) {
                 SimSensorDataMessage *data = (SimSensorDataMessage*)message;
-                sensorMutex.lock();
-                simLatitude = data->latitude;
-                simLongitude = data->longitude;
-                simAltitude = data->altitude;
-                sensorMutex.unlock();
+                setCoords(data->latitude, data->longitude, data->altitude);
             }
             else
                 fprintf(stderr, "[%s] Warning: Failed to read message from autopilot: %ld bytes were expected, %ld bytes were received\n", ENTITY_NAME, expectedSize, readBytes);
@@ -78,18 +67,6 @@ int initSensors() {
         fprintf(stderr, "[%s] Warning: Connection to %s:%d has failed\n", ENTITY_NAME, SIMULATOR_IP, simSensorPort);
         return 0;
     }
-
-    sensorThread = std::thread(getSensors);
-
-    return 1;
-}
-
-int getCoords(int32_t &latitude, int32_t &longitude, int32_t &altitude) {
-    sensorMutex.lock();
-    latitude = simLatitude;
-    longitude = simLongitude;
-    altitude = simAltitude;
-    sensorMutex.unlock();
 
     return 1;
 }

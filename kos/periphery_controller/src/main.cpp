@@ -5,35 +5,38 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <thread>
 
 #define NK_USE_UNQUALIFIED_NAMES
 #include <drone_controller/PeripheryController.edl.h>
 
-#define RETRY_DELAY_SEC 1
+std::thread killSwitchCheckThread;
 
 int main(void) {
     if (!initPeripheryController())
         return EXIT_FAILURE;
 
     while (!initGpioPins()) {
-        fprintf(stderr, "[%s] Info: Trying again to initialize GPIO pins in %ds\n", ENTITY_NAME, RETRY_DELAY_SEC);
-        sleep(RETRY_DELAY_SEC);
+        fprintf(stderr, "[%s] Info: Trying again to initialize GPIO pins in 1s\n", ENTITY_NAME);
+        sleep(1);
     }
 
     while (!setKillSwitch(false)) {
-        fprintf(stderr, "[%s] Info: Trying again to turn off kill-switch in %ds\n", ENTITY_NAME, RETRY_DELAY_SEC);
-        sleep(RETRY_DELAY_SEC);
+        fprintf(stderr, "[%s] Info: Trying again to turn off kill-switch in 1s\n", ENTITY_NAME);
+        sleep(1);
     }
 
     while (!setBuzzer(false)) {
-        fprintf(stderr, "[%s] Info: Trying again to turn off buzzer in %ds\n", ENTITY_NAME, RETRY_DELAY_SEC);
-        sleep(RETRY_DELAY_SEC);
+        fprintf(stderr, "[%s] Info: Trying again to turn off buzzer in 1s\n", ENTITY_NAME);
+        sleep(1);
     }
 
     while (!setCargoLock(true)) {
-        fprintf(stderr, "[%s] Info: Trying again to lock cargo in %ds\n", ENTITY_NAME, RETRY_DELAY_SEC);
-        sleep(RETRY_DELAY_SEC);
+        fprintf(stderr, "[%s] Info: Trying again to lock cargo in 1s\n", ENTITY_NAME);
+        sleep(1);
     }
+
+    killSwitchCheckThread = std::thread(checkKillSwitchPermission);
 
     fprintf(stderr, "[%s] Info: Initialization is finished\n", ENTITY_NAME);
 

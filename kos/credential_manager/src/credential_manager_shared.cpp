@@ -9,8 +9,6 @@
 #include <string.h>
 #include <unistd.h>
 
-#define RETRY_REQUEST_DELAY_SEC 1
-
 mbedtls_rsa_context rsaSelf;
 char keyE[257] = {0};
 char keyN[257] = {0};
@@ -87,10 +85,10 @@ int generateRsaKey() {
 int shareRsaKey() {
     char rsaServerRequest[1024] = {0};
     char rsaServerResponse[1024] = {0};
-    snprintf(rsaServerRequest, 1024, "key?%s&e=0x%s&n=0x%s", BOARD_ID, keyE, keyN);
+    snprintf(rsaServerRequest, 1024, "/api/key?%s&e=0x%s&n=0x%s", BOARD_ID, keyE, keyN);
     while (!sendRequest(rsaServerRequest, rsaServerResponse)) {
-        fprintf(stderr, "[%s] Warning: Failed to share RSA key. Trying again in %ds\n", ENTITY_NAME, RETRY_REQUEST_DELAY_SEC);
-        sleep(RETRY_REQUEST_DELAY_SEC);
+        fprintf(stderr, "[%s] Warning: Failed to share RSA key. Trying again in 1s\n", ENTITY_NAME);
+        sleep(1);
     }
     return setRsaKey(rsaServerResponse);
 }

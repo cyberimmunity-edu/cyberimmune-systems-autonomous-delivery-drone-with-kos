@@ -17,15 +17,11 @@
 #define RETRY_REQUEST_DELAY_SEC 5
 #define FLY_ACCEPT_PERIOD_US 500000
 
-int sendSignedMessage(char* method, char* response, char* errorMessage, uint8_t delay, bool addId) {
+int sendSignedMessage(char* method, char* response, char* errorMessage, uint8_t delay) {
     char message[512] = {0};
     char signature[257] = {0};
     char request[1024] = {0};
-
-    if (addId)
-        snprintf(message, 512, "%s?%s", method, BOARD_ID);
-    else
-        strcpy(message, method);
+    snprintf(message, 512, "%s?%s", method, BOARD_ID);
 
     while (!signMessage(message, signature)) {
         fprintf(stderr, "[%s] Warning: Failed to sign %s message at Credential Manager. Trying again in %ds\n", ENTITY_NAME, errorMessage, delay);
@@ -49,10 +45,6 @@ int sendSignedMessage(char* method, char* response, char* errorMessage, uint8_t 
 int main(void) {
     while (!waitForInit("periphery_controller_connection", "PeripheryController")) {
         fprintf(stderr, "[%s] Warning: Failed to receive initialization notification from Periphery Controller. Trying again in %ds\n", ENTITY_NAME, RETRY_DELAY_SEC);
-        sleep(RETRY_DELAY_SEC);
-    }
-    while (!setCargoLock(false)) {
-        fprintf(stderr, "[%s] Warning: Failed to lock cargo at Periphery Controller. Trying again in %ds\n", ENTITY_NAME, RETRY_DELAY_SEC);
         sleep(RETRY_DELAY_SEC);
     }
 
@@ -80,12 +72,12 @@ int main(void) {
         fprintf(stderr, "[%s] Warning: Failed to enable buzzer at Periphery Controller\n", ENTITY_NAME);
 
     char authResponse[1024] = {0};
-    sendSignedMessage("auth", authResponse, "authentication", RETRY_DELAY_SEC, true);
+    sendSignedMessage("/api/auth", authResponse, "authentication", RETRY_DELAY_SEC);
     fprintf(stderr, "[%s] Info: Successfully authenticated on the server\n", ENTITY_NAME);
 
     while (true) {
-        char missionRespone[1024] = {0};
-        if (sendSignedMessage("fmission_kos", missionRespone, "mission", RETRY_DELAY_SEC, true) && parseMission(missionRespone)) {
+        char missionResponse[1024] = {0};
+        if (sendSignedMessage("/api/fmission_kos", missionResponse, "mission", RETRY_DELAY_SEC) && parseMission(missionResponse)) {
             fprintf(stderr, "[%s] Info: Successfully received mission from the server\n", ENTITY_NAME);
             printMission();
             break;
@@ -102,7 +94,7 @@ int main(void) {
         fprintf(stderr, "[%s] Info: Received arm request. Notifying the server\n", ENTITY_NAME);
 
         char armRespone[1024] = {0};
-        sendSignedMessage("arm", armRespone, "arm", RETRY_DELAY_SEC, true);
+        sendSignedMessage("/api/arm", armRespone, "arm", RETRY_DELAY_SEC);
 
         if (strstr(armRespone, "$Arm: 0#") != NULL) {
             fprintf(stderr, "[%s] Info: Arm is permitted\n", ENTITY_NAME);
@@ -124,27 +116,10 @@ int main(void) {
         fprintf(stderr, "[%s] Warning: Arm was not allowed. Waiting for another arm request from autopilot\n", ENTITY_NAME);
     };
 
-    int32_t prevLat, prevLng, lat, lng, alt, azimuth;
-    while (!getCoords(prevLat, prevLng, alt)) {
-        fprintf(stderr, "[%s] Warning: Failed to get coords from Navigation System. Trying again in %ds\n", ENTITY_NAME, RETRY_DELAY_SEC);
-        sleep(RETRY_DELAY_SEC);
-    }
-
     bool flightPaused = false;
     while (true) {
-        if (!getCoords(lat, lng, alt)) {
-            fprintf(stderr, "[%s] Warning: Failed to get coords from Navigation System. Trying again in %ds\n", ENTITY_NAME, RETRY_DELAY_SEC);
-            usleep(FLY_ACCEPT_PERIOD_US);
-            continue;
-        }
-        azimuth = round(atan2(lng - prevLng, lat - prevLat) * 1800000000 / M_PI);
-        prevLat = lat;
-        prevLng = lng;
-
-        char flyRequest[1024] = {0};
         char flyRespone[1024] = {0};
-        snprintf(flyRequest, 1024, "fly_accept?%s&lat=%d&lon=%d&alt=%d&azimuth=%d", BOARD_ID, lat, lng, alt, azimuth);
-        sendSignedMessage(flyRequest, flyRespone, "fly allowance", RETRY_DELAY_SEC, false);
+        sendSignedMessage("/api/fly_accept", flyRespone, "fly accept", RETRY_DELAY_SEC);
 
         if (strstr(flyRespone, "$Arm: 0#") != NULL) {
             if (flightPaused) {

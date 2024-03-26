@@ -5,20 +5,25 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <thread>
 
 #define NK_USE_UNQUALIFIED_NAMES
 #include <drone_controller/NavigationSystem.edl.h>
 
-#define RETRY_DELAY_SEC 1
+std::thread sensorThread;
+std::thread senderThread;
 
 int main(void) {
     if (!initNavigationSystem())
         return EXIT_FAILURE;
 
     while (!initSensors()) {
-        fprintf(stderr, "[%s] Info: Trying again to connect in %ds\n", ENTITY_NAME, RETRY_DELAY_SEC);
-        sleep(RETRY_DELAY_SEC);
+        fprintf(stderr, "[%s] Info: Trying again to connect in 1s\n", ENTITY_NAME);
+        sleep(1);
     }
+
+    sensorThread = std::thread(getSensors);
+    senderThread = std::thread(sendCoords);
 
     fprintf(stderr, "[%s] Info: Initialization is finished\n", ENTITY_NAME);
 
