@@ -9,6 +9,7 @@
 
 std::mutex sensorMutex;
 
+float sensorDop;
 int32_t sensorLatitude;
 int32_t sensorLongitude;
 int32_t sensorAltitude;
@@ -42,6 +43,19 @@ void sendCoords() {
         }
         usleep(500000);
     }
+}
+
+void setDop(float dop) {
+    sensorMutex.lock();
+    sensorDop = dop;
+    sensorMutex.unlock();
+}
+
+int getDop(float& dop) {
+    sensorMutex.lock();
+    dop = sensorDop;
+    sensorMutex.unlock();
+    return 1;
 }
 
 void setCoords(int32_t latitude, int32_t longitude, int32_t altitude) {

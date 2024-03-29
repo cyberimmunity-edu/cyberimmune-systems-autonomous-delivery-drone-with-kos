@@ -68,5 +68,7 @@ int initSensors() {
         return 0;
     }
 
+    setDop(1.2f);
+
     return 1;
 }

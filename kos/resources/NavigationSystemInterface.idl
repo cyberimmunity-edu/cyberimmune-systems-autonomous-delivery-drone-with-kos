@@ -2,4 +2,5 @@ package drone_controller.NavigationSystemInterface
 
 interface {
     GetCoords(out UInt8 success, out SInt32 lat, out SInt32 lng, out SInt32 alt);
+    GetDop(out UInt8 success, out SInt32 dop);
 }

@@ -21,7 +21,7 @@ void getSensors() {
     uint8_t value;
     int mode, idx, latSign, lngSign;
     int32_t latitude, longitude, altitude;
-    char head[6], latStr[33], lngStr[33], altStr[33];
+    char head[6], dopStr[9], latStr[33], lngStr[33], altStr[33];
 
     while (true) {
         read = true;
@@ -55,7 +55,6 @@ void getSensors() {
             case 2: //UTC time
             case 7: //Quality
             case 8: //Sats
-            case 9: //Hdop
                 if (value == ',')
                     mode++;
                 break;
@@ -101,6 +100,18 @@ void getSensors() {
                 else if (value == ',')
                     mode = 7;
                 break;
+            case 9:
+                //Hdop
+                if (value == ',') {
+                    dopStr[idx] = '\0';
+                    idx = 0;
+                    mode = 10;
+                }
+                else {
+                    dopStr[idx] = value;
+                    idx++;
+                }
+                break;
             case 10:
                 //Alt
                 if (value == ',') {
@@ -125,6 +136,7 @@ void getSensors() {
         latitude += 10000000 * atoi(latStr);
 
         setCoords(latitude, longitude, altitude);
+        setDop(atof(dopStr));
     }
 }
 
