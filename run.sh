@@ -1,13 +1,12 @@
 #! /usr/bin/bash
-pip install --target mavproxy/ mavproxy
 cd planner
 gnome-terminal -- ./APM_Planner.AppImage
 cd ../kos
 if [[ $* == '--no-server' ]]
 	then
-		gnome-terminal -- ./cross-build-sim-offline.sh &
+		gnome-terminal -- ./cross-build-sim-offline.sh
 	else
-		gnome-terminal -- ./cross-build-sim-online.sh &
+		gnome-terminal -- ./cross-build-sim-online.sh
 fi
 cd ../ardupilot
 gnome-terminal -- ./run_in_terminal_window.sh ArduCopter sitl/bin/arducopter -S --model + --speedup 1 --slave 0 --serial5=tcp:5765:wait --serial6=tcp:5766:wait --serial7=tcp:5767:wait --defaults copter.parm --sim-address=127.0.0.1 --home=-35.3633463,149.1652273,587.05,0 -I0

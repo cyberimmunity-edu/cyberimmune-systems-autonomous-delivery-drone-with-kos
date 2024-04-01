@@ -5,3 +5,4 @@ sudo pip3 install pyserial
 sudo pip3 install mavproxy
 sudo add-apt-repository universe
 sudo apt install libfuse2
+pip install --target mavproxy/ mavproxy
