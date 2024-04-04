@@ -4,7 +4,7 @@
 
 #define BUFFER_SIZE 1024
 
-char serverIp[] = "192.168.1.78";
+char serverIp[] = "10.0.2.2";
 uint8_t serverPort = 80;
 
 int initServerConnector() {
@@ -18,7 +18,7 @@ int initServerConnector() {
 
 int sendRequest(char* query, char* response) {
     char request[BUFFER_SIZE] = {0};
-    snprintf(request, BUFFER_SIZE, "GET /%s HTTP/1.1\r\nHost: %s\r\nConnection: close\r\n\r\n", query, serverIp);
+    snprintf(request, BUFFER_SIZE, "GET %s HTTP/1.1\r\nHost: %s\r\nConnection: close\r\n\r\n", query, serverIp);
 
     int socketDesc = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (socketDesc < 0) {
