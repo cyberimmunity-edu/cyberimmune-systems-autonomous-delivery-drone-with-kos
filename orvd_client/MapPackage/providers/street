@@ -1,9 +1,0 @@
-{
-	"UrlTemplate" : "http://a.tile.thunderforest.com/cycle/%z/%x/%y.png",
-    "ImageFormat" : "png",
-    "QImageFormat" : "Indexed8",
-    "ID" : "thf-street",
-    "MaximumZoomLevel" : 20,
-    "MapCopyRight" : "",
-    "DataCopyRight" : ""
-}

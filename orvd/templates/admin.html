@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ОРВД</title>
+	<script
+		src="https://cdn.jsdelivr.net/npm/ol@v9.0.0/dist/ol.js"
+		crossorigin=""
+		></script>
+	<link 
+		rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@v9.0.0/ol.css"
+		crossorigin="">
+  <link rel= "stylesheet" type= "text/css" href= "{{ url_for('static',filename='styles/style.css') }}">
+  <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+  </head>
+  <body>
+    <div id="map">
+      <div id="info"></div>
+    </div>
+
+    <div class="container">
+      <div class="horizontal-center">
+        <p id="id" class="id note">ID: </p>
+        <select id="id_select" style="display:inline-block;margin-left:10px;">
+        </select>
+        <p id="status" class="status note">Статус: - </p>
+        <p id="waiters" class="wait note">Ожидают: - </p>
+        <div class="marginb"></div>
+
+        <button id="arm" class="arm button" type="button">Arm</button>
+        <button id="disarm" class="disarm button" type="button">Disarm</button>
+        <div class="marginb"></div>
+
+        <form>
+          <label>
+            <input id="mission_checkbox" type="checkbox" name="languages" value="mission">
+            Подтверждение миссии
+          </label>
+        </form>
+        <div class="marginb"></div>
+
+        <button id="f_disarm" class="fdisarm button" type="button">Force disarm</button>
+        <button id="fa_disarm" class="fadisarm button" type="button">Force disarm all</button>
+        <button id="kill_switch" class="kill_switch button" type="button">Kill switch</button>
+      </div>
+    </div>
+    <script type="module" src="{{ url_for('static',filename='admin.js') }}"> </script>
+  </body>
+</html>
