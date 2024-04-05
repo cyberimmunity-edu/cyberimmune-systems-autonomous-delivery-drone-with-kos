@@ -25,17 +25,6 @@ sudo ufw allow Apache
 Включаем ВМ. Через ifconfig получаем IP адрес машины.
 Подключаемся по SSH по этому IP (например, через VS Code).
 
-Далее устанавливаем MySQL. Вместо exampleuser и examplepassword указываем желаемый логин и пароль от базы:
-```
-sudo apt install mysql-server
-sudo mysql_secure_installation
-
-sudo mysql
-CREATE USER 'exampleuser'@'localhost' IDENTIFIED BY 'examplepassword';
-CREATE DATABASE orvd;
-GRANT ALL PRIVILEGES ON *.* TO 'exampleuser'@'localhost' WITH GRANT OPTION;
-exit
-```
 Устанавливаем Python и формируем директорию.
 ```
 sudo apt-get install python3 python3-pip python3-venv
@@ -47,11 +36,10 @@ sudo chmod -R 777 /var/www
 Копируем файлы из orvd в `/var/www/orvd`. Далее прописываем:
 ```
 export FLASK_APP=orvd_server.py
-export DATABASE_URL=exampleuser:examplepassword@localhost:3306
 export ADMIN_LOGIN=admin
 export ADMIN_PASSW=passw
 ```
-Вместо exampleuser и examplepassword указываем логин и пароль от базы, вместо admin и passw - желаемые логин и пароль от ОРВД.
+Вместо admin и passw указываем желаемые логин и пароль от ОРВД.
 ```
 sudo python3 -m venv .venv
 source .venv/bin/activate
@@ -66,7 +54,6 @@ sudo cp ./orvd.conf /etc/apache2/sites-available/orvd.conf
 sudo a2ensite orvd.conf
 sudo rm /etc/apache2/sites-available/000-default.conf
 
-sudo sed -i '$a export DATABASE_URL='$DATABASE_URL /etc/apache2/envvars
 sudo sed -i '$a export ADMIN_LOGIN='$ADMIN_LOGIN /etc/apache2/envvars
 sudo sed -i '$a export ADMIN_PASSW='$ADMIN_PASSW /etc/apache2/envvars
 
