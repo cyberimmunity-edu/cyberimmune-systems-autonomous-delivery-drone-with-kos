@@ -59,6 +59,20 @@ services:
       cyberimmune:
         ipv4_address: 172.28.0.3
 #################################################
+  orvd:
+    image: orvd
+    build:
+      context: .
+      dockerfile: ./orvd.Dockerfile
+    container_name: orvd
+    working_dir: /home/user/orvd
+    restart: always
+    networks:
+      cyberimmune:
+        ipv4_address: 172.28.0.4
+    ports:
+      - "8080:80"
+#################################################
 networks:
   cyberimmune:
     ipam:
