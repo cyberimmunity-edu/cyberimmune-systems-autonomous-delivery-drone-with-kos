@@ -2,8 +2,8 @@ import math
 import os, sys
 import time
 from hashlib import sha256
-from Crypto import Random
-from Crypto.PublicKey import RSA
+from Cryptodome import Random
+from Cryptodome.PublicKey import RSA
 from models import *
 from utils.db_utils import *
 
