@@ -14,8 +14,7 @@ cd orvd
 Далее прописываем:
 ```
 sudo apt update
-sudo apt install apache2
-sudo apt install net-tools
+sudo apt install apache2 net-tools
 sudo ufw enable
 sudo ufw allow OpenSSH
 sudo ufw allow Apache
@@ -27,10 +26,24 @@ sudo ufw allow Apache
 
 Устанавливаем Python и формируем директорию.
 ```
-sudo apt-get install python3 python3-pip python3-venv
+sudo apt-get install python3 \
+        python3-pip \
+        python3-venv \
+        python3-blinker \
+        python3-flask \
+        python3-flask-migrate \
+        python3-flask-sqlalchemy \
+        python3-greenlet \
+        python3-itsdangerous \
+        python3-mako \
+        python3-markupsafe \
+        python3-pycryptodome \
+        python3-typing-extensions \
+        python3-werkzeug \
+        python3-jinja2
+
 sudo apt-get install libapache2-mod-wsgi-py3
-cd /var/www && sudo mkdir orvd
-cd orvd
+cd /var/www && sudo mkdir orvd && cd orvd
 sudo chmod -R 777 /var/www
 ```
 Копируем файлы из orvd в `/var/www/orvd`. Далее прописываем:
@@ -41,12 +54,8 @@ export ADMIN_PASSW=passw
 ```
 Вместо admin и passw указываем желаемые логин и пароль от ОРВД.
 ```
-sudo python3 -m venv .venv
-source .venv/bin/activate
-sudo chmod -R 777 /var/www
-pip3 install -r requirements.txt
 flask db init
-deactivate
+sudo chmod -R 777 /var/www/orvd
 ```
 Далее прописываем:
 ```

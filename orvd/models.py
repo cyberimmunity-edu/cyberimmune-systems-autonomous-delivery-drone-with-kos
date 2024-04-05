@@ -71,10 +71,10 @@ class MissionStep(db.Model):
 class UavTelemetry(db.Model):
     __tablename__ = 'uav_telemetry'
     uav_id = db.Column(db.Integer, db.ForeignKey('uav.id'), primary_key=True)
-    lat = db.Column(db.Double)
-    lon = db.Column(db.Double)
-    alt = db.Column(db.Double)
-    azimuth = db.Column(db.Double)
+    lat = db.Column(db.Float(precision=8))
+    lon = db.Column(db.Float(precision=8))
+    alt = db.Column(db.Float(precision=8))
+    azimuth = db.Column(db.Float(precision=8))
     
     def __repr__(self):
         return f'UAV id={self.uav_id}, lat={lat}, lon={lon}, alt={alt}, azimuth={azimuth}'

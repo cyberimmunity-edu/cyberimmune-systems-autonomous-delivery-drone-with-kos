@@ -5,12 +5,9 @@ from flask_migrate import Migrate
 
 db = SQLAlchemy()
 app = Flask(__name__)
-#app.config['SQLALCHEMY_DATABASE_URI'] = f'mysql+mysqlconnector://{os.getenv("DATABASE_URL")}/orvd'
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///orvd.db"
 app.config['SQLALCHEMY_ECHO'] = False
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SQLALCHEMY_POOL_SIZE'] = 20
-app.config['SQLALCHEMY_MAX_OVERFLOW'] = 100
 db.init_app(app)
 migrate = Migrate(app, db)
 
