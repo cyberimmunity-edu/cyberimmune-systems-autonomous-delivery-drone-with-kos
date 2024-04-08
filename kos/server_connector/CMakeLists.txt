@@ -17,6 +17,7 @@ add_dependencies (ServerConnector server_connector_edl_files)
 target_compile_definitions (ServerConnector PRIVATE ENTITY_NAME="Server Connector")
 
 if (SERVER)
+    target_compile_definitions (ServerConnector PRIVATE SERVER_IP="${SERVER_IP}")
     target_link_libraries (ServerConnector ${vfs_CLIENT_LIB} ${wpa_CLIENT_LIB})
 else ()
     target_compile_definitions (ServerConnector PRIVATE NO_SERVER)
