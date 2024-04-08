@@ -37,6 +37,7 @@ request {
     match src=kl.drivers.BSP { grant () }
     match src=kl.drivers.GPIO { grant () }
     match src=kl.drivers.UART { grant () }
+    match src=kl.drivers.I2C { grant () }
     match src=wpa.WpaSupplicant { grant () }
 
     match dst=kl.core.Core {
@@ -67,6 +68,8 @@ request {
     }
 
     match src=drone_controller.PeripheryController dst=kl.drivers.GPIO { grant () }
+
+    match src=drone_controller.NavigationSystem dst=kl.drivers.I2C { grant () }
 
     match src=drone_controller.FlightController {
         match interface=drone_controller.Initialization method=WaitForInit {
@@ -141,6 +144,7 @@ response {
     match dst=kl.drivers.BSP { grant () }
     match dst=kl.drivers.GPIO { grant () }
     match dst=kl.drivers.UART { grant () }
+    match dst=kl.drivers.I2C { grant () }
     match dst=wpa.WpaSupplicant { grant () }
 
     match src=kl.core.Core {
@@ -171,6 +175,8 @@ response {
     }
 
     match dst=drone_controller.PeripheryController src=kl.drivers.GPIO { grant () }
+
+    match dst=drone_controller.NavigationSystem src=kl.drivers.I2C { grant () }
 
     match dst=drone_controller.FlightController {
         match interface=drone_controller.Initialization method=WaitForInit {

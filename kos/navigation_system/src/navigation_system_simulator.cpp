@@ -33,7 +33,8 @@ void getSensors() {
             ssize_t readBytes = read(simSensorSocket, message + SIM_SENSOR_DATA_MESSAGE_HEAD_SIZE, expectedSize);
             if (readBytes == expectedSize) {
                 SimSensorDataMessage *data = (SimSensorDataMessage*)message;
-                setCoords(data->latitude, data->longitude, data->altitude);
+                setCoords(data->latitude, data->longitude);
+                setAltitude(data->altitude);
             }
             else
                 fprintf(stderr, "[%s] Warning: Failed to read message from autopilot: %ld bytes were expected, %ld bytes were received\n", ENTITY_NAME, expectedSize, readBytes);

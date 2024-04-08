@@ -58,11 +58,16 @@ int getDop(float& dop) {
     return 1;
 }
 
-void setCoords(int32_t latitude, int32_t longitude, int32_t altitude) {
+void setAltitude(int32_t altitude) {
+    sensorMutex.lock();
+    sensorAltitude = altitude;
+    sensorMutex.unlock();
+}
+
+void setCoords(int32_t latitude, int32_t longitude) {
     sensorMutex.lock();
     sensorLatitude = latitude;
     sensorLongitude = longitude;
-    sensorAltitude = altitude;
     sensorMutex.unlock();
 }
 

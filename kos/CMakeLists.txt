@@ -33,6 +33,8 @@ if (NOT SIMULATION)
     include_directories (${gpio_INCLUDE})
     find_package (uart REQUIRED)
     include_directories (${uart_INCLUDE})
+    find_package (i2c REQUIRED)
+    include_directories (${i2c_INCLUDE})
 endif ()
 
 find_package (MbedTLS REQUIRED COMPONENTS)

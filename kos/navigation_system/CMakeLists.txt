@@ -20,7 +20,9 @@ target_compile_definitions (NavigationSystem PRIVATE BOARD_ID="id=${BOARD_ID}")
 
 if (SIMULATION)
     target_compile_definitions (NavigationSystem PRIVATE SIMULATOR_IP="${SIMULATOR_IP}")
-    target_link_libraries (NavigationSystem ${vfs_CLIENT_LIB} ${CMAKE_THREAD_LIBS_INIT})
+    target_link_libraries (NavigationSystem ${vfs_CLIENT_LIB})
 else ()
-    target_link_libraries (NavigationSystem ${bsp_CLIENT_LIB} ${uart_CLIENT_LIB})
+    target_link_libraries (NavigationSystem ${bsp_CLIENT_LIB} ${uart_CLIENT_LIB} ${i2c_CLIENT_LIB})
 endif ()
+
+target_link_libraries (NavigationSystem ${CMAKE_THREAD_LIBS_INIT})
