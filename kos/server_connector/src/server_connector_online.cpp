@@ -4,7 +4,7 @@
 
 #define BUFFER_SIZE 1024
 
-uint8_t serverPort = 80;
+uint16_t serverPort = 8080;
 
 int initServerConnector() {
     if (!wait_for_network()) {
