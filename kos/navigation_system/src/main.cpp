@@ -18,7 +18,7 @@ int main(void) {
         return EXIT_FAILURE;
 
     while (!initSensors()) {
-        fprintf(stderr, "[%s] Info: Trying again to connect in 1s\n", ENTITY_NAME);
+        fprintf(stderr, "[%s] Info: Trying again to init sensors in 1s\n", ENTITY_NAME);
         sleep(1);
     }
 

@@ -1,4 +1,10 @@
 #! /usr/bin/bash
+rm -f mavproxy/mav.parm
+rm -f mavproxy/mav.tlog
+rm -f mavproxy/mav.tlog.raw
+rm -f ardupilot/eeprom.bin
+rm -rf ardupilot/logs
+rm -rf ardupilot/terrain
 cd planner
 gnome-terminal -- ./APM_Planner.AppImage
 cd ../kos

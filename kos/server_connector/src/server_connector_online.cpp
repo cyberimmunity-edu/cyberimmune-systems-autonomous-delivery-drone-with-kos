@@ -4,8 +4,7 @@
 
 #define BUFFER_SIZE 1024
 
-char serverIp[] = "10.0.2.2";
-uint8_t serverPort = 80;
+uint16_t serverPort = 8080;
 
 int initServerConnector() {
     if (!wait_for_network()) {
@@ -18,7 +17,7 @@ int initServerConnector() {
 
 int sendRequest(char* query, char* response) {
     char request[BUFFER_SIZE] = {0};
-    snprintf(request, BUFFER_SIZE, "GET %s HTTP/1.1\r\nHost: %s\r\nConnection: close\r\n\r\n", query, serverIp);
+    snprintf(request, BUFFER_SIZE, "GET %s HTTP/1.1\r\nHost: %s\r\nConnection: close\r\n\r\n", query, SERVER_IP);
 
     int socketDesc = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (socketDesc < 0) {
@@ -29,9 +28,9 @@ int sendRequest(char* query, char* response) {
     sockaddr_in serverAddress = {0};
     serverAddress.sin_family = AF_INET;
     serverAddress.sin_port = htons(serverPort);
-    serverAddress.sin_addr.s_addr = inet_addr(serverIp);
+    serverAddress.sin_addr.s_addr = inet_addr(SERVER_IP);
     if (connect(socketDesc, (struct sockaddr *)&serverAddress, sizeof(serverAddress)) < 0) {
-	    fprintf(stderr, "[%s] Warning: Connection to %s:%d has failed\n", ENTITY_NAME, serverIp, serverPort);
+	    fprintf(stderr, "[%s] Warning: Connection to %s:%d has failed\n", ENTITY_NAME, SERVER_IP, serverPort);
 		close(socketDesc);
         return 0;
 	}
