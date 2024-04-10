@@ -1,9 +1,5 @@
 FROM ubuntu:22.04
 
-# sudo add-apt-repository universe
-# sudo apt install libfuse2
-# pip install --target mavproxy/ mavproxy
-
 ENV DEBIAN_FRONTEND noninteractive
 ENV PATH="${PATH}:/opt/KasperskyOS-Community-Edition-1.2.0.45/toolchain/bin:/home/user/.local/bin"
 RUN apt-get update && \
@@ -44,9 +40,11 @@ COPY ./kos /home/user/kos
 COPY ./planner /home/user/planner
 
 # arducopter container IP is 172.28.0.2 (from docker-compose.yml)
+# orvd container IP is 172.28.0.4 (from docker-compose.yml)
 RUN sed -i -e 's/SIMULATOR_IP=.*$/SIMULATOR_IP="172.28.0.2" \\/g' /home/user/kos/cross-build-sim-offline.sh \
     && sed -i -e 's/SIMULATOR_IP=.*$/SIMULATOR_IP="172.28.0.2" \\/g' /home/user/kos/cross-build-sim-online.sh \
-    && sed -i "s/10\.0\.2\.2/172\.28\.0\.4/gi" /home/user/kos/server_connector/src/server_connector_online.cpp \
+    && sed -i -e 's/SERVER_IP=.*$/SERVER_IP="172.28.0.4" \\/g' /home/user/kos/cross-build-sim-offline.sh \
+    && sed -i -e 's/SERVER_IP=.*$/SERVER_IP="172.28.0.4" \\/g' /home/user/kos/cross-build-sim-online.sh \
     && chown -R 1000:1000 /home/user
 
 CMD ["bash"]
