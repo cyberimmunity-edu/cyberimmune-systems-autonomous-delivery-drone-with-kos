@@ -34,6 +34,7 @@ RUN cd /var/www/orvd \
     && echo export ADMIN_LOGIN=admin >> /etc/apache2/envvars \
     && echo export ADMIN_PASSW=passw >> /etc/apache2/envvars \
     && sed -i -e 's/ErrorLog.*$/ErrorLog \/dev\/stderr/g' /etc/apache2/apache2.conf \
+    && echo "Listen 8080" >> /etc/apache2/ports.conf \
     && chmod -R 777 /var/www/orvd
 
 CMD apachectl -D FOREGROUND
