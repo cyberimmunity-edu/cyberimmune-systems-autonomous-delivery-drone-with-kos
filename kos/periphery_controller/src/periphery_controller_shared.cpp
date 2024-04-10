@@ -52,6 +52,8 @@ void checkKillSwitchPermission() {
             else if (!checkSignature(response))
                 fprintf(stderr, "[%s] Warning: Failed to check signature of 'kill switch permission' response received through Server Connector. Trying again in 500ms\n", ENTITY_NAME);
             else if (strstr(response, "$KillSwitch: 0#") != NULL) {
+                if (!enableBuzzer())
+                    fprintf(stderr, "[%s] Warning: Failed to enable buzzer\n", ENTITY_NAME);
                 while (!setKillSwitch(false)) {
                     fprintf(stderr, "[%s] Warning: Failed to forbid motor usage. Trying again in 1s\n", ENTITY_NAME);
                     sleep(1);
