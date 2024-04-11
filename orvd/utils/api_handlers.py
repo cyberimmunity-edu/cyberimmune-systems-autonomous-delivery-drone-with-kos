@@ -249,7 +249,7 @@ def mission_decision_handler(id: int, decision: int):
         else:
             mission_entity.is_accepted = False
         commit_changes()
-        return '$Ok'
+        return OK
 
 def admin_kill_switch_handler(id: int):
     uav_entity = get_entity_by_key(Uav, id)
@@ -257,7 +257,7 @@ def admin_kill_switch_handler(id: int):
         return NOT_FOUND
     else:
         uav_entity.is_armed = False
-        uav_entity.kill_switch = True
+        uav_entity.kill_switch_state = True
         uav_entity.state = "Kill switch ON"
         commit_changes()
 
@@ -265,3 +265,27 @@ def get_id_list_handler():
     uav_entities = Uav.query.order_by(Uav.created_date).all()
     uav_ids = list(map(lambda e: e.id, uav_entities))
     return str(uav_ids)
+
+def get_mission_state_handler(id: int):
+    uav_entity = get_entity_by_key(Uav, id)
+    if uav_entity:
+        mission = get_entity_by_key(Mission, id)
+        if mission:
+            if mission.is_accepted:
+                return str(MISSION_ACCEPTED)
+            else:
+                return str(MISSION_NOT_ACCEPTED)
+    return NOT_FOUND
+
+def change_fly_accept_handler(id: int, decision: int):
+    uav_entity = get_entity_by_key(Uav, id)
+    if uav_entity:
+        if decision == 0:
+            uav_entity.is_armed = True
+            uav_entity.state = 'В полете'
+        else:
+            uav_entity.is_armed = False
+            uav_entity.state = 'В сети'
+        commit_changes()
+        return OK
+    return NOT_FOUND
