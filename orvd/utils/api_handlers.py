@@ -257,7 +257,7 @@ def admin_kill_switch_handler(id: int):
         return NOT_FOUND
     else:
         uav_entity.is_armed = False
-        uav_entity.kill_switch = True
+        uav_entity.kill_switch_state = True
         uav_entity.state = "Kill switch ON"
         commit_changes()
 
