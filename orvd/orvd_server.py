@@ -80,7 +80,13 @@ def get_state():
     id = int(request.args.get('id'))
     token = request.args.get('token')
     return authorized_request(handler_func=get_state_handler, token=token, id=id)
-    
+
+@app.route('/admin/get_mission_state')
+def get_mission_state():
+    id = int(request.args.get('id'))
+    token = request.args.get('token')
+    return authorized_request(handler_func=get_mission_state_handler, token=token, id=id)
+        
 @app.route('/admin/get_mission')
 def get_mission():
     id = int(request.args.get('id'))
@@ -102,6 +108,14 @@ def get_waiter_number():
 def get_id_list():
     token = request.args.get('token')
     return authorized_request(handler_func=get_id_list_handler, token=token)
+
+@app.route('/admin/change_fly_accept')
+def change_fly_accept():
+    id = int(request.args.get('id'))
+    decision = int(request.args.get('decision'))
+    token = request.args.get('token')
+    return authorized_request(handler_func=change_fly_accept_handler, token=token,
+                       id=id, decision=decision)
 
 
 @app.route('/mission_sender')
