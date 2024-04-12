@@ -44,11 +44,11 @@ int sendSignedMessage(char* method, char* response, char* errorMessage, uint8_t 
 }
 
 int main(void) {
+    //Before do anything, we need to ensure, that other modules are ready to work
     while (!waitForInit("periphery_controller_connection", "PeripheryController")) {
         fprintf(stderr, "[%s] Warning: Failed to receive initialization notification from Periphery Controller. Trying again in %ds\n", ENTITY_NAME, RETRY_DELAY_SEC);
         sleep(RETRY_DELAY_SEC);
     }
-
     while (!waitForInit("autopilot_connector_connection", "AutopilotConnector")) {
         fprintf(stderr, "[%s] Warning: Failed to receive initialization notification from Autopilot Connector. Trying again in %ds\n", ENTITY_NAME, RETRY_DELAY_SEC);
         sleep(RETRY_DELAY_SEC);
@@ -57,7 +57,6 @@ int main(void) {
         fprintf(stderr, "[%s] Warning: Failed to receive initialization notification from Navigation System. Trying again in %ds\n", ENTITY_NAME, RETRY_DELAY_SEC);
         sleep(RETRY_DELAY_SEC);
     }
-
     while (!waitForInit("server_connector_connection", "ServerConnector")) {
         fprintf(stderr, "[%s] Warning: Failed to receive initialization notification from Server Connector. Trying again in %ds\n", ENTITY_NAME, RETRY_DELAY_SEC);
         sleep(RETRY_DELAY_SEC);
@@ -66,16 +65,18 @@ int main(void) {
         fprintf(stderr, "[%s] Warning: Failed to receive initialization notification from Credential Manager. Trying again in %ds\n", ENTITY_NAME, RETRY_DELAY_SEC);
         sleep(RETRY_DELAY_SEC);
     }
-
     fprintf(stderr, "[%s] Info: Initialization is finished\n", ENTITY_NAME);
 
+    //Enable buzzer to indicate, that all modules has been initialized
     if (!enableBuzzer())
         fprintf(stderr, "[%s] Warning: Failed to enable buzzer at Periphery Controller\n", ENTITY_NAME);
 
+    //Copter need to be registered at ORVD
     char authResponse[1024] = {0};
     sendSignedMessage("/api/auth", authResponse, "authentication", RETRY_DELAY_SEC);
     fprintf(stderr, "[%s] Info: Successfully authenticated on the server\n", ENTITY_NAME);
 
+    //Constantly ask server, if mission for the drone is available. Parse it and ensure, that mission is correct
     while (true) {
         char missionResponse[1024] = {0};
         if (sendSignedMessage("/api/fmission_kos", missionResponse, "mission", RETRY_DELAY_SEC) && parseMission(missionResponse)) {
@@ -86,18 +87,22 @@ int main(void) {
         sleep(RETRY_REQUEST_DELAY_SEC);
     }
 
+    //The drone is ready to arm
     fprintf(stderr, "[%s] Info: Ready to arm\n", ENTITY_NAME);
     while (true) {
+        //Wait, until autopilot wants to arm (and fails so, as motors are disabled by default)
         while (!waitForArmRequest()) {
             fprintf(stderr, "[%s] Warning: Failed to receive an arm request from Autopilot Connector. Trying again in %ds\n", ENTITY_NAME, RETRY_DELAY_SEC);
             sleep(RETRY_DELAY_SEC);
         }
         fprintf(stderr, "[%s] Info: Received arm request. Notifying the server\n", ENTITY_NAME);
 
+        //When autopilot asked for arm, we need to receive permission from ORVD
         char armRespone[1024] = {0};
         sendSignedMessage("/api/arm", armRespone, "arm", RETRY_DELAY_SEC);
 
         if (strstr(armRespone, "$Arm: 0#") != NULL) {
+            //If arm was permitted, we enable motors
             fprintf(stderr, "[%s] Info: Arm is permitted\n", ENTITY_NAME);
             while (!setKillSwitch(true)) {
                 fprintf(stderr, "[%s] Warning: Failed to permit motor usage at Periphery Controller. Trying again in %ds\n", ENTITY_NAME, RETRY_DELAY_SEC);
@@ -117,39 +122,12 @@ int main(void) {
         fprintf(stderr, "[%s] Warning: Arm was not allowed. Waiting for another arm request from autopilot\n", ENTITY_NAME);
     };
 
-    bool flightPaused = false;
-    while (true) {
-        char flyRespone[1024] = {0};
-        sendSignedMessage("/api/fly_accept", flyRespone, "fly accept", RETRY_DELAY_SEC);
+    //If we get here, the drone is able to arm and start the mission
+    //The flight is need to be controlled from now on
+    //Also we need to check on ORVD, whether the flight is still allowed or it is need to be paused
 
-        if (strstr(flyRespone, "$Arm: 0#") != NULL) {
-            if (flightPaused) {
-                flightPaused = false;
-                while (!resumeFlight()) {
-                    fprintf(stderr, "[%s] Warning: Failed to resume flight through Autopilot Connector. Trying again in %ds\n", ENTITY_NAME, RETRY_DELAY_SEC);
-                    sleep(RETRY_DELAY_SEC);
-                }
-            }
-        }
-        else if (strstr(flyRespone, "$Arm: 1#") != NULL) {
-            if (!flightPaused) {
-                flightPaused = true;
-                while (!pauseFlight()) {
-                    fprintf(stderr, "[%s] Warning: Failed to pause flight through Autopilot Connector. Trying again in %ds\n", ENTITY_NAME, RETRY_DELAY_SEC);
-                    sleep(RETRY_DELAY_SEC);
-                }
-            }
-        }
-        else
-            fprintf(stderr, "[%s] Warning: Failed to parse server response\n", ENTITY_NAME);
-
-        usleep(FLY_ACCEPT_PERIOD_US);
-    }
-
-    while (true) {
-        fprintf(stderr, "[%s] Info: Finishing the flight\n", ENTITY_NAME);
-        sleep(RETRY_REQUEST_DELAY_SEC);
-    }
+    while (true)
+        sleep(1000);
 
     return EXIT_SUCCESS;
 }
