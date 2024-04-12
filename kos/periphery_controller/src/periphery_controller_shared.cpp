@@ -45,11 +45,13 @@ void checkKillSwitchPermission() {
     }
     snprintf(request, 1024, "%s&sig=0x%s", request, signature);
 
+    uint8_t authenticity;
     while (true) {
         if (isKillSwitchEnabled()) {
+            authenticity = 0;
             if (!sendRequest(request, response))
                 fprintf(stderr, "[%s] Warning: Failed to send 'kill switch permission' request through Server Connector. Trying again in 500ms\n", ENTITY_NAME);
-            else if (!checkSignature(response))
+            else if (!checkSignature(response, authenticity) || !authenticity)
                 fprintf(stderr, "[%s] Warning: Failed to check signature of 'kill switch permission' response received through Server Connector. Trying again in 500ms\n", ENTITY_NAME);
             else if (strstr(response, "$KillSwitch: 0#") != NULL) {
                 if (!enableBuzzer())

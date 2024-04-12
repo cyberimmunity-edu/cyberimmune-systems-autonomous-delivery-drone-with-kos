@@ -34,7 +34,8 @@ int sendSignedMessage(char* method, char* response, char* errorMessage, uint8_t 
         sleep(delay);
     }
 
-    while (!checkSignature(response)) {
+    uint8_t authenticity = 0;
+    while (!checkSignature(response, authenticity) || !authenticity) {
         fprintf(stderr, "[%s] Warning: Failed to check signature of %s response received through Server Connector. Trying again in %ds\n", ENTITY_NAME, errorMessage, delay);
         sleep(delay);
     }

@@ -41,7 +41,7 @@ int signMessage(char* message, char* signature) {
     return 1;
 }
 
-int checkSignature(char* message) {
+int checkSignature(char* message, uint8_t &authenticity) {
     NkKosTransport transport;
     nk_iid_t riid;
     initSenderInterface("credential_manager_connection", "drone_controller.CredentialManager.interface", transport, riid);
@@ -60,5 +60,10 @@ int checkSignature(char* message) {
         return 0;
     strcpy(msg, message);
 
-    return ((CredentialManagerInterface_CheckSignature(&proxy.base, &req, &reqArena, &res, NULL) == rcOk) && res.success && res.correct);
+    if ((CredentialManagerInterface_CheckSignature(&proxy.base, &req, &reqArena, &res, NULL) != rcOk) || !res.success)
+        return 0;
+
+    authenticity = res.correct;
+
+    return 1;
 }
