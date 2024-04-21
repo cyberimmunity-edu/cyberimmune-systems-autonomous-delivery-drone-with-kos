@@ -75,6 +75,8 @@ class UavTelemetry(db.Model):
     lon = db.Column(db.Float(precision=8))
     alt = db.Column(db.Float(precision=8))
     azimuth = db.Column(db.Float(precision=8))
+    dop = db.Column(db.Float(precision=8))
+    sats = db.Column(db.Integer)
     
     def __repr__(self):
         return f'UAV id={self.uav_id}, lat={lat}, lon={lon}, alt={alt}, azimuth={azimuth}'

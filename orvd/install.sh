@@ -1,3 +1,4 @@
+#!/bin/bash
 apt-get update
 apt install -y apache2 net-tools
 ufw enable

@@ -173,9 +173,11 @@ def telemetry():
     lon = request.args.get('lon')
     alt = request.args.get('alt')
     azimuth = request.args.get('azimuth')
+    dop = request.args.get('dop')
+    sats = request.args.get('sats')
     return signed_request(handler_func=telemetry_handler, verifier_func=verify, signer_func=sign,
-                          query_str=f'/api/telemetry?id={id}&lat={lat}&lon={lon}&alt={alt}&azimuth={azimuth}',
-                          key_group=f'kos{id}', sig=sig, id=id, lat=lat, lon=lon, alt=alt, azimuth=azimuth)
+                          query_str=f'/api/telemetry?id={id}&lat={lat}&lon={lon}&alt={alt}&azimuth={azimuth}&dop={dop}&sats={sats}',
+                          key_group=f'kos{id}', sig=sig, id=id, lat=lat, lon=lon, alt=alt, azimuth=azimuth, dop=dop, sats=sats)
     
 @app.route('/api/kill_switch')
 def kill_switch():
