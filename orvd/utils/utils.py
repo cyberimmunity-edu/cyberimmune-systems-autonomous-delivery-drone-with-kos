@@ -201,3 +201,11 @@ def haversine(lat1, lon1, lat2, lon2):
     meters = R * c
     meters = round(meters, 3)
     return meters
+
+def cast_wrapper(element, cast_function):
+    if element is None: 
+        return None
+    try:
+        return cast_function(element)
+    except ValueError:
+        return None
