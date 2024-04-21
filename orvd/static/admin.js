@@ -17,8 +17,6 @@ var params = getSearchParameters();
 
 document.getElementById('arm').onclick = arm;
 document.getElementById('disarm').onclick = disarm;
-document.getElementById('f_disarm').onclick = f_disarm;
-document.getElementById('fa_disarm').onclick = fa_disarm;
 document.getElementById("id_select").addEventListener("change", onChangeSelector, false);
 document.getElementById('mission_checkbox').onclick = mission_decision;
 document.getElementById('kill_switch').onclick = kill_switch;
@@ -182,6 +180,7 @@ function onChangeSelector() {
 }
 
 async function arm() {
+  console.log('arm')
   if (active_id != null) {
     let resp = await fetch("admin/arm_decision?id=" + active_id + "&decision=0" + "&token=" + access_token);
     console.log(await resp.text());
@@ -276,6 +275,14 @@ async function waiters_change() {
   let waiter_resp = await fetch("admin/get_waiter_number" + "?token=" + access_token);
   let waiter_text = await waiter_resp.text();
   document.getElementById("waiters").innerHTML="Ожидают: " + waiter_text;
+  let waiters_num = parseInt(waiter_text);
+  if (waiters_num > 0) {
+    document.getElementById('arm').disabled = false;
+    document.getElementById('disarm').disabled = false;
+  } else {
+    document.getElementById('arm').disabled = true;
+    document.getElementById('disarm').disabled = true;
+  }
 }
 
 async function get_mission() {
@@ -334,6 +341,10 @@ async function get_telemetry() {
     let lon = parseFloat(telemetry_list[1]);
     let alt = parseFloat(telemetry_list[2]);
     let azimuth = parseFloat(telemetry_list[3]);
+    let dop = parseFloat(telemetry_list[4]);
+    let sats = parseInt(telemetry_list[5]);
+    document.getElementById("dop").innerHTML="DOP: " + dop;
+    document.getElementById("sats").innerHTML="SATS: " + sats;
     if (uav == null) {
       add_marker(lat, lon, alt, 'uav');
     } else {

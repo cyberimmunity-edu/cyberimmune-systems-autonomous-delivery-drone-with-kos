@@ -111,24 +111,29 @@ def kill_switch_handler(id: int):
     else:
         return f'$KillSwitch: {KILL_SWITCH_OFF}'
     
-def telemetry_handler(id: int, lat: float, lon: float, alt: float, azimuth: float):
+def telemetry_handler(id: int, lat: float, lon: float, alt: float, azimuth: float, dop, sats):
     uav_entity = get_entity_by_key(Uav, id)
     if not uav_entity:
         return NOT_FOUND
     else:
         lat = float(lat) / 1e7
         lon = float(lon) / 1e7
-        alt = float(alt) / 1e2
+        alt = float(alt) / 1e7
         azimuth = float(azimuth) / 1e7
+        dop = float(dop)
+        sats = int(sats)
         uav_telemetry_entity = get_entity_by_key(UavTelemetry, uav_entity.id)
         if not uav_telemetry_entity:
-            uav_telemetry_entity = UavTelemetry(uav_id=uav_entity.id, lat=lat, lon=lon, alt=alt, azimuth=azimuth)
+            uav_telemetry_entity = UavTelemetry(uav_id=uav_entity.id, lat=lat, lon=lon, alt=alt,
+                                                azimuth=azimuth, dop=dop, sats=sats)
             add_and_commit(uav_telemetry_entity)
         else:
             uav_telemetry_entity.lat = lat
             uav_telemetry_entity.lon = lon
             uav_telemetry_entity.alt = alt
             uav_telemetry_entity.azimuth = azimuth
+            uav_telemetry_entity.dop = dop
+            uav_telemetry_entity.sats = sats
             commit_changes()
         if not uav_entity.is_armed:
             return f'$Arm: {DISARMED}'
@@ -232,7 +237,8 @@ def get_telemetry_handler(id: int):
         return NOT_FOUND
     else:
         telemetry = (str(uav_telemetry_entity.lat), str(uav_telemetry_entity.lon),
-                     str(uav_telemetry_entity.alt), str(uav_telemetry_entity.azimuth))
+                     str(uav_telemetry_entity.alt), str(uav_telemetry_entity.azimuth),
+                     str(uav_telemetry_entity.dop), str(uav_telemetry_entity.sats))
         return "&".join(telemetry)
         
 
