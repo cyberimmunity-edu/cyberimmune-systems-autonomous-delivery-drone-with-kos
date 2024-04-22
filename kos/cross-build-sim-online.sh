@@ -15,6 +15,7 @@ export BUILD_WITH_GCC=
 
 SIMULATOR_IP="${1:-"10.0.2.2"}"
 SERVER_IP="${2:-"10.0.2.2"}"
+BOARD_ID="${3:-"2"}"
 
 set -eu
 
@@ -70,7 +71,7 @@ fi
 "$SDK_PREFIX/toolchain/bin/cmake" -G "Unix Makefiles" -B "$BUILD" \
       -D SIMULATION="TRUE" \
       -D SERVER="TRUE" \
-      -D BOARD_ID="2" \
+      -D BOARD_ID=$BOARD_ID \
       -D SIMULATOR_IP=$SIMULATOR_IP \
       -D SERVER_IP=$SERVER_IP \
       -D CMAKE_BUILD_TYPE:STRING=Debug \
