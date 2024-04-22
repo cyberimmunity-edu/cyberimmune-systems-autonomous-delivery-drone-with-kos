@@ -31,6 +31,12 @@ offline: docker
 online: docker
 	docker-compose -f docker-compose-online.yml up
 
+offline-multi: docker
+	docker-compose -f docker-compose-offline-multi.yml up
+
+online-multi: docker
+	docker-compose -f docker-compose-online-multi.yml up
+
 docker-compose-stop:
 	docker-compose stop
 
