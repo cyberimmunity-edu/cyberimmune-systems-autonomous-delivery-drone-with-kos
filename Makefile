@@ -1,5 +1,7 @@
 .PHONY: docker-compose-stop
 
+docker: docker-image
+
 docker-image: docker-image-simulator docker-image-orvd
 
 docker-image-simulator:
