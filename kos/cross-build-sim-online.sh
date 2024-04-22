@@ -13,6 +13,9 @@ export PATH="$SDK_PREFIX/toolchain/bin:$PATH"
 export BUILD_WITH_CLANG=
 export BUILD_WITH_GCC=
 
+SIMULATOR_IP="${1:-"10.0.2.2"}"
+SERVER_IP="${2:-"10.0.2.2"}"
+
 set -eu
 
 function help
@@ -68,8 +71,8 @@ fi
       -D SIMULATION="TRUE" \
       -D SERVER="TRUE" \
       -D BOARD_ID="2" \
-      -D SIMULATOR_IP="10.0.2.2" \
-      -D SERVER_IP="10.0.2.2" \
+      -D SIMULATOR_IP=$SIMULATOR_IP \
+      -D SERVER_IP=$SERVER_IP \
       -D CMAKE_BUILD_TYPE:STRING=Debug \
       -D CMAKE_INSTALL_PREFIX:STRING="$INSTALL_PREFIX" \
       -D CMAKE_FIND_ROOT_PATH="${SDK_PREFIX}/sysroot-$TARGET" \
