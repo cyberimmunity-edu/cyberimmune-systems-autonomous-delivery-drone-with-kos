@@ -34,6 +34,12 @@ html, body {
     border: 2px solid #04AA6D;
   }
 
+  .button:disabled {
+    background-color: grey; 
+    color: black;
+    border: 1px solid white;
+  }
+
   .container {
     position: absolute;
     top: 0px;
