@@ -367,6 +367,7 @@ async function get_mission_state() {
 
 async function change_active_id(new_id) {
   active_id = new_id;
+  current_mission = null;
   clear_markers()
   status_change();
   get_mission();
