@@ -47,7 +47,7 @@ def arm_decision():
     id = cast_wrapper(request.args.get('id'), int)
     decision = cast_wrapper(request.args.get('decision'), int)
     token = request.args.get('token')
-    if id and decision:
+    if id:
         return authorized_request(handler_func=arm_decision_handler, token=token,
                        id=id, decision=decision)
     else:
@@ -58,7 +58,7 @@ def mission_decision():
     id = cast_wrapper(request.args.get('id'), int)
     decision = cast_wrapper(request.args.get('decision'), int)
     token = request.args.get('token')
-    if id and decision:
+    if id:
         return authorized_request(handler_func=mission_decision_handler, token=token,
                        id=id, decision=decision)
     else:
@@ -138,7 +138,7 @@ def change_fly_accept():
     id = cast_wrapper(request.args.get('id'), int)
     decision = cast_wrapper(request.args.get('decision'), int)
     token = request.args.get('token')
-    if id and decision:
+    if id:
         return authorized_request(handler_func=change_fly_accept_handler, token=token,
                        id=id, decision=decision)
     else:
