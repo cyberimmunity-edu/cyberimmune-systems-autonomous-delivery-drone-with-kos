@@ -274,6 +274,9 @@ void getSensors() {
         }
 
         if (update) {
+            if (lngStr[0] == '\0' || latStr[0] == '\0')
+                fprintf(stderr, "[%s] Warning: No coordinates were received from GPS\n", ENTITY_NAME);
+
             longitude = round(10000000 * atof(lngStr + 3) / 60.0f);
             latitude = round(10000000 * atof(latStr + 2) / 60.0f);
             lngStr[3] = '\0';
@@ -284,6 +287,8 @@ void getSensors() {
             setCoords(latitude, longitude);
             setGpsInfo(atof(dopStr), atoi(satsStr));
         }
+        else
+            fprintf(stderr, "[%s] Warning: Failed to parse NMEA string from GPS\n", ENTITY_NAME);
     }
 }
 
