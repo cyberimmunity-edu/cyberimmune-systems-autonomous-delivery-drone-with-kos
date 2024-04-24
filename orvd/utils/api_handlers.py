@@ -133,7 +133,7 @@ def telemetry_handler(id: int, lat: float, lon: float, alt: float,
         lon = cast_wrapper(lon, float)
         if lon: lon /= 1e7
         alt = cast_wrapper(alt, float)
-        if alt: alt /= 1e7
+        if alt: alt /= 1e2
         azimuth = cast_wrapper(azimuth, float)
         if azimuth: azimuth /= 1e7
         dop = cast_wrapper(dop, float)
