@@ -135,7 +135,7 @@ void getBarometer() {
         getTemperature(temp);
         getPressure(press);
         float alt = 44330.0 * (1.0 - pow(press / 101325.0, 0.1903));
-        int32_t altitude = 10000000 * alt;
+        int32_t altitude = 100 * alt;
         setAltitude(altitude);
         usleep(500000);
     }
