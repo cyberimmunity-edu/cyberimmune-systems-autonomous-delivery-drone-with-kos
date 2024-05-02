@@ -69,7 +69,7 @@ int initSensors() {
         return 0;
     }
 
-    setGpsInfo(1.2f, 0);
+    setGpsInfo(1.2f, 10);
 
     return 1;
 }
