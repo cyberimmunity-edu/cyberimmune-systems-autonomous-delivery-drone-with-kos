@@ -1,7 +1,6 @@
 #include "../include/mission.h"
 
 #include <stdio.h>
-#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -11,24 +10,56 @@ uint32_t commandNum = 0;
 MissionCommand *commands = NULL;
 int hasMission = false;
 
-int parseValue(uint32_t num, char* string, float* values) {
-    uint32_t ptrG = 0;
-    for (uint32_t i = 0; i < num; i++) {
-        uint32_t ptrL = 0;
-        char value[COMMAND_MAX_STRING_LEN];
-        while (string[ptrG] != '_' && string[ptrG] != '&' && string[ptrG] != '#') {
-            if (ptrL >= COMMAND_MAX_STRING_LEN) {
-                fprintf(stderr, "[%s] Warning: Failed to parse mission command\n", ENTITY_NAME);
-                return 0;
-            }
-            value[ptrL] = string[ptrG];
-            ptrL++;
-            ptrG++;
+int isStopSymbol(char character) {
+    return ((character == '_') || (character == '&') || (character == '#'));
+}
+
+int parseInt(char*& string, int32_t& value, uint32_t numAfterPoint) {
+    char stringValue[COMMAND_MAX_STRING_LEN];
+    uint32_t strPtr = 0, valPtr = 0;
+    while (!isStopSymbol(string[strPtr])) {
+        if (valPtr >= COMMAND_MAX_STRING_LEN) {
+            fprintf(stderr, "[%s] Warning: Failed to parse mission command\n", ENTITY_NAME);
+            return 0;
         }
-        value[ptrL] = '\0';
-        ptrG++;
-        values[i] = atof(value);
+        else if (string[strPtr] == '.') {
+            strPtr++;
+            break;
+        }
+        else {
+            stringValue[valPtr] = string[strPtr];
+            strPtr++;
+            valPtr++;
+        }
     }
+    int i = 0;
+    while (!isStopSymbol(string[strPtr])) {
+        if (valPtr >= COMMAND_MAX_STRING_LEN) {
+            fprintf(stderr, "[%s] Warning: Failed to parse mission command\n", ENTITY_NAME);
+            return 0;
+        }
+        else if (i < numAfterPoint) {
+            stringValue[valPtr] = string[strPtr];
+            strPtr++;
+            valPtr++;
+            i++;
+        }
+        else
+            strPtr++;
+    }
+    string += strPtr + 1;
+    for (int j = i; j < numAfterPoint; j++) {
+        if (valPtr >= COMMAND_MAX_STRING_LEN) {
+            fprintf(stderr, "[%s] Warning: Failed to parse mission command\n", ENTITY_NAME);
+            return 0;
+        }
+        else {
+            stringValue[valPtr] = '0';
+            valPtr++;
+        }
+    }
+    stringValue[valPtr] = '\0';
+    value = atoi(stringValue);
     return 1;
 }
 
@@ -54,69 +85,63 @@ int parseCommands(char* str) {
                 end = j;
                 break;
             }
-        float *values;
+        char* stringPtr = str + ptr + 1;
+        int32_t lat, lng, alt;
         switch (str[ptr]) {
         case 'H':
-            values = (float*)malloc(3 * sizeof(float));
-            if (!parseValue(3, str + ptr + 1, values)) {
+            if (!parseInt(stringPtr, lat, 7) || !parseInt(stringPtr, lng, 7) || !parseInt(stringPtr, alt, 2)) {
                 fprintf(stderr, "[%s] Warning: Failed to parse values for 'home' command\n", ENTITY_NAME);
-                free(values);
                 free(commands);
                 return 0;
             }
             commands[i].type = CommandType::HOME;
-            commands[i].content.home = CommandHome(values);
+            commands[i].content.waypoint = CommandWaypoint(lat, lng, alt);
             break;
         case 'T':
-            values = (float*)malloc(sizeof(float));
-            if (!parseValue(1, str + ptr + 1, values)) {
+            if (!parseInt(stringPtr, alt, 2)) {
                 fprintf(stderr, "[%s] Warning: Failed to parse values for 'takeoff' command\n", ENTITY_NAME);
-                free(values);
                 free(commands);
                 return 0;
             }
             commands[i].type = CommandType::TAKEOFF;
-            commands[i].content.takeoff = CommandTakeoff(values);
+            commands[i].content.takeoff = CommandTakeoff(alt);
             break;
-        case 'W':
-            values = (float*)malloc(4 * sizeof(float));
-            if (!parseValue(4, str + ptr + 1, values)) {
+        case 'W': {
+            int32_t hold;
+            if (!parseInt(stringPtr, hold, 0) || !parseInt(stringPtr, lat, 7) || !parseInt(stringPtr, lng, 7) || !parseInt(stringPtr, alt, 2)) {
                 fprintf(stderr, "[%s] Warning: Failed to parse values for 'waypoint' command\n", ENTITY_NAME);
-                free(values);
                 free(commands);
                 return 0;
             }
             commands[i].type = CommandType::WAYPOINT;
-            commands[i].content.waypoint = CommandWaypoint(values);
+            commands[i].content.waypoint = CommandWaypoint(lat, lng, alt);
             break;
+        }
         case 'L':
-            values = (float*)malloc(3 * sizeof(float));
-            if (!parseValue(3, str + ptr + 1, values)) {
+            if (!parseInt(stringPtr, lat, 7) || !parseInt(stringPtr, lng, 7) || !parseInt(stringPtr, alt, 2)) {
                 fprintf(stderr, "[%s] Warning: Failed to parse values for 'land' command\n", ENTITY_NAME);
-                free(values);
                 free(commands);
                 return 0;
             }
             commands[i].type = CommandType::LAND;
-            commands[i].content.land = CommandLand(values);
+            commands[i].content.waypoint = CommandWaypoint(lat, lng, alt);
             break;
-        case 'S':
-            values = (float*)malloc(2 * sizeof(float));
-            if (!parseValue(2, str + ptr + 1, values)) {
+        case 'S': {
+            int32_t num, pwm;
+            if (!parseInt(stringPtr, num, 0) || !parseInt(stringPtr, pwm, 0)) {
                 fprintf(stderr, "[%s] Warning: Failed to parse values for 'set servo' command\n", ENTITY_NAME);
-                free(values);
                 free(commands);
                 return 0;
             }
             commands[i].type = CommandType::SET_SERVO;
-            commands[i].content.setServo = CommandSetServo(values);
+            commands[i].content.servo = CommandServo(num, pwm);
             break;
+        }
         default:
             fprintf(stderr, "[%s] Warning: Cannot parse an unknown command %c\n", ENTITY_NAME, str[ptr]);
             free(commands);
             return 0;
         }
-        free(values);
         ptr = end + 1;
     }
 
@@ -150,23 +175,23 @@ void printMission() {
     for (int i = 0; i < commandNum; i++) {
         switch (commands[i].type) {
         case CommandType::HOME:
-            fprintf(stderr, "[%s] Info: Home: %f, %f, %f\n", ENTITY_NAME, commands[i].content.home.latitude,
-                commands[i].content.home.longitude, commands[i].content.home.altitude);
+            fprintf(stderr, "[%s] Info: Home: %d, %d, %d\n", ENTITY_NAME, commands[i].content.waypoint.latitude,
+                commands[i].content.waypoint.longitude, commands[i].content.waypoint.altitude);
             break;
         case CommandType::TAKEOFF:
-            fprintf(stderr, "[%s] Info: Takeoff: %f\n", ENTITY_NAME, commands[i].content.takeoff.altitude);
+            fprintf(stderr, "[%s] Info: Takeoff: %d\n", ENTITY_NAME, commands[i].content.takeoff.altitude);
             break;
         case CommandType::WAYPOINT:
-            fprintf(stderr, "[%s] Info: Waypoint: %f, %f, %f, %f\n", ENTITY_NAME, commands[i].content.waypoint.holdTime,
-                commands[i].content.waypoint.latitude, commands[i].content.waypoint.longitude, commands[i].content.waypoint.altitude);
+            fprintf(stderr, "[%s] Info: Waypoint: %d, %d, %d\n", ENTITY_NAME, commands[i].content.waypoint.latitude,
+                commands[i].content.waypoint.longitude, commands[i].content.waypoint.altitude);
             break;
         case CommandType::LAND:
-            fprintf(stderr, "[%s] Info: Land: %f, %f, %f\n", ENTITY_NAME, commands[i].content.land.latitude,
-                commands[i].content.land.longitude, commands[i].content.land.altitude);
+            fprintf(stderr, "[%s] Info: Land: %d, %d, %d\n", ENTITY_NAME, commands[i].content.waypoint.latitude,
+                commands[i].content.waypoint.longitude, commands[i].content.waypoint.altitude);
             break;
         case CommandType::SET_SERVO:
-            fprintf(stderr, "[%s] Info: Set servo: %f, %f\n", ENTITY_NAME, commands[i].content.setServo.number,
-                commands[i].content.setServo.pwm);
+            fprintf(stderr, "[%s] Info: Set servo: %d, %d\n", ENTITY_NAME, commands[i].content.servo.number,
+                commands[i].content.servo.pwm);
             break;
         default:
             fprintf(stderr, "[%s] Warning: An unknown command\n", ENTITY_NAME);
