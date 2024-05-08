@@ -114,6 +114,7 @@ cd ./cyberimmune-systems-autonomous-delivery-drone-with-kos/orvd
 sudo chmod +x install.sh update.sh restart.sh
 sudo ./install.sh
 ```
+
 Теперь сервер доступен по IP виртуальной машины. IP адрес машины можно получить через `ifconfig` (или `ip a`).
 
 Обновить сервер можно выполнив команду `sudo ./update.sh`, перезапустить - командой `sudo ./restart.sh`.
