@@ -87,7 +87,7 @@ request {
         }
         match dst=drone_controller.NavigationSystem interface=drone_controller.NavigationSystemInterface {
             match method=GetCoords { grant () }
-            match method=GetDop { grant () }
+            match method=GetGpsInfo { grant () }
         }
         match dst=drone_controller.PeripheryController interface=drone_controller.PeripheryControllerInterface {
             match method=EnableBuzzer { grant () }
@@ -187,7 +187,7 @@ response {
         }
         match src=drone_controller.NavigationSystem interface=drone_controller.NavigationSystemInterface {
             match method=GetCoords { grant () }
-            match method=GetDop { grant () }
+            match method=GetGpsInfo { grant () }
         }
         match src=drone_controller.PeripheryController interface=drone_controller.PeripheryControllerInterface {
             match method=EnableBuzzer { grant () }

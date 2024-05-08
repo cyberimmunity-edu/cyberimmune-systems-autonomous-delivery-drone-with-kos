@@ -27,7 +27,7 @@ int getCoords(int32_t &latitude, int32_t &longitude, int32_t &altitude) {
     return 1;
 }
 
-int getDop(float& dop) {
+int getGpsInfo(float& dop, int32_t& sats) {
     NkKosTransport transport;
     nk_iid_t riid;
     initSenderInterface("navigation_system_connection", "drone_controller.NavigationSystem.interface", transport, riid);
@@ -35,13 +35,14 @@ int getDop(float& dop) {
     struct NavigationSystemInterface_proxy proxy;
     NavigationSystemInterface_proxy_init(&proxy, &transport.base, riid);
 
-    NavigationSystemInterface_GetDop_req req;
-    NavigationSystemInterface_GetDop_res res;
+    NavigationSystemInterface_GetGpsInfo_req req;
+    NavigationSystemInterface_GetGpsInfo_res res;
 
-    if ((NavigationSystemInterface_GetDop(&proxy.base, &req, NULL, &res, NULL) != rcOk) || !res.success)
+    if ((NavigationSystemInterface_GetGpsInfo(&proxy.base, &req, NULL, &res, NULL) != rcOk) || !res.success)
         return 0;
 
     memcpy(&dop, &(res.dop), sizeof(float));
+    memcpy(&sats, &(res.sats), sizeof(int32_t));
 
     return 1;
 }

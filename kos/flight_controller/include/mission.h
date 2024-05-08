@@ -1,4 +1,5 @@
 #pragma once
+#include <stdint.h>
 
 enum CommandType {
     HOME,
@@ -8,68 +9,40 @@ enum CommandType {
     SET_SERVO
 };
 
-struct CommandHome {
-    float latitude;
-    float longitude;
-    float altitude;
-
-    CommandHome(float* values) {
-        latitude = values[0];
-        longitude = values[1];
-        altitude = values[2];
-    }
-};
-
 struct CommandTakeoff {
-    float altitude;
+    int32_t altitude;
 
-    CommandTakeoff(float* values) {
-        altitude = values[0];
+    CommandTakeoff(int32_t alt) {
+        altitude = alt;
     }
 };
 
 struct CommandWaypoint {
-    float holdTime;
-    float latitude;
-    float longitude;
-    float altitude;
+    int32_t latitude;
+    int32_t longitude;
+    int32_t altitude;
 
-    CommandWaypoint(float* values) {
-        holdTime = values[0];
-        latitude = values[1];
-        longitude = values[2];
-        altitude = values[3];
+    CommandWaypoint(int32_t lat, int32_t lng, int32_t alt) {
+        latitude = lat;
+        longitude = lng;
+        altitude = alt;
     }
 };
 
-struct CommandLand {
-    float latitude;
-    float longitude;
-    float altitude;
+struct CommandServo {
+    int32_t number;
+    int32_t pwm;
 
-    CommandLand(float* values) {
-        latitude = values[0];
-        longitude = values[1];
-        altitude = values[2];
-    }
-};
-
-struct CommandSetServo {
-    float number;
-    float pwm;
-
-    CommandSetServo(float* values) {
-        number = values[0];
-        pwm = values[1];
+    CommandServo(int32_t num, int32_t pwm_) {
+        number = num;
+        pwm = pwm_;
     }
 };
 
 union CommandContent {
-    CommandHome home;
     CommandTakeoff takeoff;
     CommandWaypoint waypoint;
-    CommandLand land;
-    CommandSetServo setServo;
+    CommandServo servo;
 };
 
 struct MissionCommand {

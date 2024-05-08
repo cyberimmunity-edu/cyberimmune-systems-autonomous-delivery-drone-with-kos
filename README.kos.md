@@ -28,8 +28,8 @@ Cyberimmune autonomous delivery drone prototype
     2. int checkSignature(char\* message, uint8_t &authenticity): производит проверку аутентичности сообщения. На выход подается сообщение в формате "сообщение#подпись" (без кавычек), записывает в authenticity 1 в случае подтверждения аутентичности и 0 в ином случае
 
 4. ipc_messages_navigation_system: содержит сообщения для модуля navigation_system, работающего с GPS и баромтером, подключенным к RaspberryPi
-    1. int getCoords(int32_t &latitude, int32_t &longitude, int32_t &altitude): записывает в переданные переменные текущие координаты дрона. Значения долготы и широты - в градусах \* 10^7, высоты - в м \* 10^7
-    2. int getDop(float& dop): записывает в переданную переменную значение DOP (снижение точности), полученное от GPS
+    1. int getCoords(int32_t &latitude, int32_t &longitude, int32_t &altitude): записывает в переданные переменные текущие координаты дрона. Значения долготы и широты - в градусах \* 10^7, высоты - в см
+    2. int getGpsInfo(float& dop, int32_t &sats): записывает в переданные переменные значение DOP (снижение точности) и число наблюдаемых спутников (sats), полученные от GPS
 
 5. ipc_messages_periphery_controller: содержит сообщения для модуля periphery_controller, выполняющего взаимодействие с GPIO
     1. int enableBuzzer(): включает баззер. Звук будет автоматически отключен через 2 секунды

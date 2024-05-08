@@ -14,14 +14,16 @@ nk_err_t GetCoordsImpl(struct NavigationSystemInterface *self,
     return NK_EOK;
 }
 
-nk_err_t GetDopImpl(struct NavigationSystemInterface *self,
-                    const NavigationSystemInterface_GetDop_req *req, const struct nk_arena *reqArena,
-                    NavigationSystemInterface_GetDop_res *res, struct nk_arena *resArena) {
+nk_err_t GetGpsInfoImpl(struct NavigationSystemInterface *self,
+                    const NavigationSystemInterface_GetGpsInfo_req *req, const struct nk_arena *reqArena,
+                    NavigationSystemInterface_GetGpsInfo_res *res, struct nk_arena *resArena) {
     float dop;
+    int32_t sats;
 
-    res->success = getDop(dop);
+    res->success = getGpsInfo(dop, sats);
 
     memcpy(&(res->dop), &dop, sizeof(float));
+    memcpy(&(res->sats), &sats, sizeof(int32_t));
 
     return NK_EOK;
 }

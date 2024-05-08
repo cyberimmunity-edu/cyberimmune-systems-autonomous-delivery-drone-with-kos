@@ -135,20 +135,21 @@ void getBarometer() {
         getTemperature(temp);
         getPressure(press);
         float alt = 44330.0 * (1.0 - pow(press / 101325.0, 0.1903));
-        int32_t altitude = 10000000 * alt;
+        int32_t altitude = 100 * alt;
         setAltitude(altitude);
         usleep(500000);
     }
 }
 
 void getSensors() {
-    bool read;
+    bool read, update;
     uint8_t value;
     int mode, idx, latSign, lngSign;
     int32_t latitude, longitude;
-    char head[6], dopStr[9], latStr[33], lngStr[33];
+    char head[8], satsStr[8], dopStr[8], latStr[16], lngStr[16];
 
     while (true) {
+        update = true;
         read = true;
         mode = 0;
         idx = 0;
@@ -163,7 +164,11 @@ void getSensors() {
                     mode = 1;
                 break;
             case 1: //Header
-                if (value == ',') {
+                if (idx >= 8) {
+                    read = false;
+                    update = false;
+                }
+                else if (value == ',') {
                     head[idx] = '\0';
                     if ((head[2] == 'G') && (head[3] == 'G') && (head[4] == 'A'))
                         mode = 2;
@@ -178,12 +183,15 @@ void getSensors() {
                 break;
             case 2: //UTC time
             case 7: //Quality
-            case 8: //Sats
                 if (value == ',')
                     mode++;
                 break;
             case 3: //Lat
-                if (value == ',') {
+                if (idx >= 16) {
+                    read = false;
+                    update = false;
+                }
+                else if (value == ',') {
                     latStr[idx] = '\0';
                     idx = 0;
                     mode = 4;
@@ -200,9 +208,17 @@ void getSensors() {
                     latSign = -1;
                 else if (value == ',')
                     mode = 5;
+                else {
+                    read = false;
+                    update = false;
+                }
                 break;
             case 5: //Lng
-                if (value == ',') {
+                if (idx >= 16) {
+                    read = false;
+                    update = false;
+                }
+                else if (value == ',') {
                     lngStr[idx] = '\0';
                     idx = 0;
                     mode = 6;
@@ -219,9 +235,32 @@ void getSensors() {
                     lngSign = -1;
                 else if (value == ',')
                     mode = 7;
+                else {
+                    read = false;
+                    update = false;
+                }
+                break;
+            case 8: //Sats
+                if (idx >= 8) {
+                    read = false;
+                    update = false;
+                }
+                else if (value == ',') {
+                    satsStr[idx] = '\0';
+                    idx = 0;
+                    mode = 9;
+                }
+                else {
+                    satsStr[idx] = value;
+                    idx++;
+                }
                 break;
             case 9: //Hdop
-                if (value == ',') {
+                if (idx >= 8) {
+                    read = false;
+                    update = false;
+                }
+                else if (value == ',') {
                     dopStr[idx] = '\0';
                     idx = 0;
                     read = false;
@@ -234,15 +273,22 @@ void getSensors() {
             }
         }
 
-        longitude = round(10000000 * atof(lngStr + 3) / 60.0f);
-        latitude = round(10000000 * atof(latStr + 2) / 60.0f);
-        lngStr[3] = '\0';
-        latStr[2] = '\0';
-        longitude += 10000000 * atoi(lngStr);
-        latitude += 10000000 * atoi(latStr);
+        if (update) {
+            if (lngStr[0] == '\0' || latStr[0] == '\0')
+                fprintf(stderr, "[%s] Warning: No coordinates were received from GPS\n", ENTITY_NAME);
 
-        setCoords(latitude, longitude);
-        setDop(atof(dopStr));
+            longitude = round(10000000 * atof(lngStr + 3) / 60.0f);
+            latitude = round(10000000 * atof(latStr + 2) / 60.0f);
+            lngStr[3] = '\0';
+            latStr[2] = '\0';
+            longitude += 10000000 * atoi(lngStr);
+            latitude += 10000000 * atoi(latStr);
+
+            setCoords(latitude, longitude);
+            setGpsInfo(atof(dopStr), atoi(satsStr));
+        }
+        else
+            fprintf(stderr, "[%s] Warning: Failed to parse NMEA string from GPS\n", ENTITY_NAME);
     }
 }
 
@@ -313,18 +359,6 @@ int initSensors() {
     Retcode rc = UartOpenPort(gpsUart, &gpsUartHandler);
     if (rc != rcOk) {
         fprintf(stderr, "[%s] Warning: Failed to open UART %s ("RETCODE_HR_FMT")\n", ENTITY_NAME, gpsUart, RETCODE_HR_PARAMS(rc));
-        return 0;
-    }
-    UartConfig uartPortConfig;
-    rc = UartGetConfig(gpsUartHandler, &uartPortConfig);
-    if (rc != rcOk) {
-        fprintf(stderr, "[%s] Warning: Failed to get config from UART %s ("RETCODE_HR_FMT")\n", ENTITY_NAME, gpsUart, RETCODE_HR_PARAMS(rc));
-        return 0;
-    }
-    uartPortConfig.baudrate = UartBaudRate::UART_BR_9600;
-    rc = UartSetConfig(gpsUartHandler, &uartPortConfig);
-    if (rc != rcOk) {
-        fprintf(stderr, "[%s] Warning: Failed to set config to UART %s ("RETCODE_HR_FMT")\n", ENTITY_NAME, gpsUart, RETCODE_HR_PARAMS(rc));
         return 0;
     }
 
