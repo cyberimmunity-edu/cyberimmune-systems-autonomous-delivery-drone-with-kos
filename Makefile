@@ -70,3 +70,13 @@ shell-orvd:
 
 shell-orvd-real:
 	docker run --volume="`pwd`:/home/user/" --name orvd -w /home/user/orvd --net simulator -p 8080:8080 --ip 172.28.0.4 -it --rm orvd /bin/bash -i
+
+e2e-offline:
+	docker-compose -f tests/e2e-offline-docker-compose.yml up --abort-on-container-exit --exit-code-from mavproxy
+	docker-compose -f tests/e2e-offline-docker-compose.yml down
+
+e2e-online:
+	docker-compose -f tests/e2e-online-docker-compose.yml up --abort-on-container-exit --exit-code-from mavproxy
+	docker-compose -f tests/e2e-online-docker-compose.yml down
+
+e2e-tests: e2e-offline e2e-online

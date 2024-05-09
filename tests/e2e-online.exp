@@ -1,0 +1,13 @@
+#!/usr/bin/expect
+spawn mavproxy.py --out 172.28.5.254:14550 --out 172.28.5.254:14551 --master tcp:172.28.0.2:5760 --sitl 172.28.0.2:5501 --logfile /home/user/mav.tlog
+set timeout 100
+expect_after eof {exit 0}
+expect "AP: ArduPilot Ready" { send "wp load /home/user/ardupilot/exampleMission.txt\r" }
+expect "AP: Flight plan received" { send "wp loop\r" }
+expect "Got MISSION_ACK: TYPE_MISSION: ACCEPTED" { send "arm throttle\r" }
+exec >@stdout 2>@stderr /home/user/tests/mission-upload-to-orvd.sh 172.28.0.4
+expect "AP: EKF3 IMU0 is using GPS" { send "arm throttle\r" }
+expect "ARMED" { send "mode auto\r" }
+expect "AP: Mission: 1 Takeoff" { send "long MAV_CMD_MISSION_START\r" }
+expect "DISARMED" { exit }
+

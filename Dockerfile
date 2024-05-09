@@ -19,6 +19,7 @@ RUN apt-get update && \
         vim \
         curl \
         tar \
+        expect \
         build-essential \
         device-tree-compiler \
         && adduser --disabled-password --gecos "" user \
@@ -38,6 +39,7 @@ RUN su -c 'pip3 install PyYAML mavproxy pymavlink --user --upgrade' user
 COPY ./ardupilot /home/user/ardupilot
 COPY ./kos /home/user/kos
 COPY ./planner /home/user/planner
+COPY ./tests /home/user/tests
 
 RUN chown -R 1000:1000 /home/user
 

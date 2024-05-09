@@ -49,12 +49,12 @@ services:
       context: .
       dockerfile: ./Dockerfile
     container_name: mavproxy
-    command: mavproxy.py --out 172.28.5.254:14550 --out 172.28.5.254:14551 --master tcp:172.28.0.2:5760 --sitl 172.28.0.2:5501 --logfile /home/user/mav.tlog --daemon
+    command: expect /home/user/tests/e2e-offline.exp
     working_dir: /home/user/mavproxy
     user: user
     depends_on:
       - arducopter
-    restart: always
+    restart: no
     networks:
       cyberimmune:
         ipv4_address: 172.28.0.3
