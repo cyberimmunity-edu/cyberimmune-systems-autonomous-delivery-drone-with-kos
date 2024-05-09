@@ -8,7 +8,7 @@ services:
       context: .
       dockerfile: ./Dockerfile
     container_name: kos
-    command: /home/user/kos/cross-build-sim-offline.sh 172.28.0.2
+    command: /home/user/kos/cross-build-sim-online.sh 172.28.0.2 172.28.0.4
     working_dir: /home/user/kos
     user: user
     depends_on:
@@ -49,15 +49,29 @@ services:
       context: .
       dockerfile: ./Dockerfile
     container_name: mavproxy
-    command: mavproxy.py --out 172.28.5.254:14550 --out 172.28.5.254:14551 --master tcp:172.28.0.2:5760 --sitl 172.28.0.2:5501 --logfile /home/user/mav.tlog --daemon
+    command: expect /home/user/tests/e2e-online.exp
     working_dir: /home/user/mavproxy
     user: user
     depends_on:
       - arducopter
-    restart: always
+    restart: no
     networks:
       cyberimmune:
         ipv4_address: 172.28.0.3
+#################################################
+  orvd:
+    image: orvd
+    build:
+      context: .
+      dockerfile: ./orvd.Dockerfile
+    container_name: orvd
+    working_dir: /home/user/orvd
+    restart: always
+    networks:
+      cyberimmune:
+        ipv4_address: 172.28.0.4
+    ports:
+      - "8080:8080"
 #################################################
 networks:
   cyberimmune:
