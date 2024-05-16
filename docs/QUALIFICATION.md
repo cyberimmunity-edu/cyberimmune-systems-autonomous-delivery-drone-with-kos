@@ -34,7 +34,7 @@
 
 Требуется:
 
-1. ознакомиться с [программным интерфейсом](https://github.com/cyberimmunity-edu/cyberimmune-systems-autonomous-delivery-drone-with-kos/blob/main/README.kos.md) бортового модуля безопасности
+1. ознакомиться с [программным интерфейсом](https://github.com/cyberimmunity-edu/cyberimmune-systems-autonomous-delivery-drone-with-kos/blob/main/docs/API.md) бортового модуля безопасности
 2. используя вызовы программного интерфейса, отобразить в текстовом выводе координаты и высоту местоположения квадрокоптера в каждый момент (не чаще раза в секунду)
     - подсказка: редактировать понадобится только файл `kos/flight_controller/src/main.cpp`
 
