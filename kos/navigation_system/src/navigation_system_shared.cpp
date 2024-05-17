@@ -85,6 +85,5 @@ int getCoords(int32_t &latitude, int32_t &longitude, int32_t &altitude) {
     longitude = sensorLongitude;
     altitude = sensorAltitude;
     sensorMutex.unlock();
-
     return 1;
 }
