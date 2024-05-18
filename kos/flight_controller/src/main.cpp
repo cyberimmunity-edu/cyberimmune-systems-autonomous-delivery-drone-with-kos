@@ -125,13 +125,23 @@ int main(void) {
     //If we get here, the drone is able to arm and start the mission
     //The flight is need to be controlled from now on
     //Also we need to check on ORVD, whether the flight is still allowed or it is need to be paused
-
+    int32_t latitude{}, longitude{}, altitude{}; //Значения долготы и широты - в градусах * 10^7, высоты - в см
     while (true){
         fprintf(stderr, "get coord >>>>\n");
         sleep(10);
-        int32_t latitude, longitude, altitude; //Значения долготы и широты - в градусах * 10^7, высоты - в см
         getCoords(latitude, longitude, altitude) ;
-        fprintf(stderr, "coords: \nlatitude: "<<latitude <<"\nlongitude: " << longitude <<"\naltitude: "<<altitude<<"\n");
+        fprintf(stderr, ">>>>coords: \nlatitude: ");
+        fprintf(stderr, "%d.", latitude/1000000);
+        fprintf(stderr, "%d.", (latitude/1000)%1000);
+        fprintf(stderr, "%d", latitude%1000);
+        fprintf(stderr, "\nlongitude: "); 
+        fprintf(stderr, "%d.",longitude /1000000);
+        fprintf(stderr, "%d.", (longitude/1000)%1000);
+        fprintf(stderr, "%d", longitude%1000);
+        fprintf(stderr, "\naltitude: ");
+        fprintf(stderr, "%d m",altitude/100);
+        
+        fprintf(stderr, "\n");
     }
     return EXIT_SUCCESS;
 }
