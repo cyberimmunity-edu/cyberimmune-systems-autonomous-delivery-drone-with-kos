@@ -13,10 +13,10 @@ entities:
 
 - name: drone_controller.CredentialManager
   env:
-    VFS_FILESYSTEM_BACKEND: client:kl.VfsNet
+    VFS_FILESYSTEM_BACKEND: client:kl.VfsSdCardFs
   connections:
-  - target: kl.VfsNet
-    id: kl.VfsNet
+  - target: kl.VfsSdCardFs
+    id: kl.VfsSdCardFs
   - target: drone_controller.ServerConnector
     id: server_connector_connection
 @INIT_CredentialManager_ENTITY_CONNECTIONS@
