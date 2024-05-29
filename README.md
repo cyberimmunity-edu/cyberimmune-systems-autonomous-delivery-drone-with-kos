@@ -59,5 +59,5 @@ cd planner/
 
 ### Результаты
 Дрон летит по маршруту и координаты выводятся в журнал
-![alt text](https://aivx.github.io/cyberimmune-systems-autonomous-delivery-drone-with-kos/1.jpg)
-![alt text](https://aivx.github.io/cyberimmune-systems-autonomous-delivery-drone-with-kos/2.jpg)
+![alt text](https://github.com/aivx/cyberimmune-systems-autonomous-delivery-drone-with-kos/blob/master/1.jpg?raw=true)
+![alt text](https://github.com/aivx/cyberimmune-systems-autonomous-delivery-drone-with-kos/blob/master/2.jpg?raw=true)
