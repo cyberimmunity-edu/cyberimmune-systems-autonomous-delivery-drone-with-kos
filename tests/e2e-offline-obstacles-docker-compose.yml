@@ -7,7 +7,7 @@ services:
       context: .
       dockerfile: ./Dockerfile
     container_name: kos
-    command: /home/user/kos/cross-build-sim-online.sh 172.28.0.2 172.28.0.4
+    command: /home/user/kos/cross-build-sim-offline.sh 172.28.0.2
     working_dir: /home/user/kos
     user: user
     depends_on:
@@ -22,7 +22,7 @@ services:
       context: .
       dockerfile: ./Dockerfile
     container_name: arducopter
-    command: /home/user/ardupilot/sitl/bin/arducopter -S --model + --speedup 1 --slave 0  --serial5=tcp:5765:wait --serial6=tcp:5766:wait --serial7=tcp:5767:wait --defaults copter.parm --sim-address=172.28.0.2 --home=53.1019446,107.3774394,846.22,0 -I0
+    command: /home/user/ardupilot/sitl_obstacles/bin/arducopter -S --model + --speedup 1 --slave 0  --serial5=tcp:5765:wait --serial6=tcp:5766:wait --serial7=tcp:5767:wait --defaults copter.parm --sim-address=172.28.0.2 --home=53.1019446,107.3774394,846.22,0 -I0
     working_dir: /home/user/ardupilot
     user: user
     restart: always
@@ -48,29 +48,15 @@ services:
       context: .
       dockerfile: ./Dockerfile
     container_name: mavproxy
-    command: mavproxy.py --out 172.28.5.254:14550 --out 172.28.5.254:14551 --master tcp:172.28.0.2:5760 --sitl 172.28.0.2:5501 --logfile /home/user/mav.tlog --daemon
+    command: expect /home/user/tests/e2e-offline.exp
     working_dir: /home/user/mavproxy
     user: user
     depends_on:
       - arducopter
-    restart: always
+    restart: "no"
     networks:
       cyberimmune:
         ipv4_address: 172.28.0.3
-#################################################
-  orvd:
-    image: orvd
-    build:
-      context: .
-      dockerfile: ./orvd.Dockerfile
-    container_name: orvd
-    working_dir: /home/user/orvd
-    restart: always
-    networks:
-      cyberimmune:
-        ipv4_address: 172.28.0.4
-    ports:
-      - "8080:8080"
 #################################################
 networks:
   cyberimmune:

@@ -22,6 +22,10 @@ clean-network:
 	docker network rm -f simulator
 	docker-compose -f docker-compose-online.yml down
 	docker-compose -f docker-compose-offline.yml down
+	docker-compose -f tests/e2e-offline-docker-compose.yml down
+	docker-compose -f tests/e2e-online-docker-compose.yml down
+	docker-compose -f tests/e2e-offline-obstacles-docker-compose.yml down
+	docker-compose -f tests/e2e-online-obstacles-docker-compose.yml down
 
 clean: clean-containers clean-images
 
@@ -78,5 +82,13 @@ e2e-offline: docker-image
 e2e-online: docker-image
 	docker-compose -f tests/e2e-online-docker-compose.yml up --abort-on-container-exit --exit-code-from mavproxy
 	docker-compose -f tests/e2e-online-docker-compose.yml down
+
+e2e-offline-obstacles: docker-image
+	docker-compose -f tests/e2e-offline-obstacles-docker-compose.yml up --abort-on-container-exit --exit-code-from mavproxy
+	docker-compose -f tests/e2e-offline-obstacles-docker-compose.yml down
+
+e2e-online-obstacles: docker-image
+	docker-compose -f tests/e2e-online-obstacles-docker-compose.yml up --abort-on-container-exit --exit-code-from mavproxy
+	docker-compose -f tests/e2e-online-obstacles-docker-compose.yml down
 
 e2e-tests: e2e-offline e2e-online
