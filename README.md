@@ -27,4 +27,22 @@ cd planner/
 ./APM_Planner.AppImage 
 ```
 # Результаты
+#### Для решения поставленной задачи, был модернизирован файл main.cpp.
+#### Согласно документации, добавили в конец файла код вывода долготы, широты и высоты, значения которых были описаны в файле докумменташки API.
+
+```bash
+# Код 
+  while (true) {
+    int32_t lantitude, longitude, altitude;
+    getCoords(lantitude, longitude, altitude);
+    fprintf(stderr, "Info: [%d].[%d] : [%d]\n", lantitude, longitude, altitude);
+    sleep(2);
+  } 
+```
+
+#### Прогнали через тесты, все работает, ОК :)
+
 ![image](https://github.com/St1nk0/cyberimmune-systems-autonomous-delivery-drone-with-kos/assets/130299705/0fb44e9d-d27d-4346-81a8-7518bbd965e0)
+
+#### Так же попробывали вывести различные переменные и сообщения в других циклах\условиях while. 
+#### Потестировали как это работает не только в оффлайн режиме, но и онлайн.
