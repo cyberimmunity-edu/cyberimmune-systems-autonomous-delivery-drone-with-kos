@@ -25,3 +25,6 @@ make online
 ```bash
 cd planner/
 ./APM_Planner.AppImage 
+```
+# Результаты
+![image](https://github.com/St1nk0/cyberimmune-systems-autonomous-delivery-drone-with-kos/assets/130299705/0fb44e9d-d27d-4346-81a8-7518bbd965e0)
