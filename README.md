@@ -45,3 +45,18 @@ cd planner/
 ![image](https://github.com/St1nk0/cyberimmune-systems-autonomous-delivery-drone-with-kos/assets/130299705/0fb44e9d-d27d-4346-81a8-7518bbd965e0)
 
 #### Так же попробывали вывести различные переменные и сообщения в других циклах\условиях while. Потестировали как это работает не только в оффлайн режиме, но и онлайн.
+
+![image](https://github.com/St1nk0/cyberimmune-systems-autonomous-delivery-drone-with-kos/assets/130299705/4010f99a-8e7f-40e7-ae74-66e9e74e74d7)
+
+![image](https://github.com/St1nk0/cyberimmune-systems-autonomous-delivery-drone-with-kos/assets/130299705/5def7ded-5c9e-488c-87b2-dd5e2f3f588b)
+
+![image](https://github.com/St1nk0/cyberimmune-systems-autonomous-delivery-drone-with-kos/assets/130299705/78a2a7a7-a559-4fb9-8829-668e20afa688)
+
+![image](https://github.com/St1nk0/cyberimmune-systems-autonomous-delivery-drone-with-kos/assets/130299705/c18c894d-8eb9-435d-b0e5-c11e96c72bd6)
+
+![image](https://github.com/St1nk0/cyberimmune-systems-autonomous-delivery-drone-with-kos/assets/130299705/fdf94290-bb8b-4415-9879-9d0abfa95fd4)
+
+
+
+
+
