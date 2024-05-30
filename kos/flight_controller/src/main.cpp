@@ -81,13 +81,14 @@ int main(void) {
         char missionResponse[1024] = {0};
         if (sendSignedMessage("/api/fmission_kos", missionResponse, "mission", RETRY_DELAY_SEC) && parseMission(missionResponse)) {
             fprintf(stderr, "[%s] Info: Successfully received mission from the server\n", ENTITY_NAME);
-            printMission();
+            printMission();     
             break;
         }
         sleep(RETRY_REQUEST_DELAY_SEC);
     }
 
     //The drone is ready to arm
+    fprintf(stderr, "Info: test_arm");
     fprintf(stderr, "[%s] Info: Ready to arm\n", ENTITY_NAME);
     while (true) {
         //Wait, until autopilot wants to arm (and fails so, as motors are disabled by default)
@@ -96,14 +97,15 @@ int main(void) {
             sleep(RETRY_DELAY_SEC);
         }
         fprintf(stderr, "[%s] Info: Received arm request. Notifying the server\n", ENTITY_NAME);
-
+        
         //When autopilot asked for arm, we need to receive permission from ORVD
         char armRespone[1024] = {0};
         sendSignedMessage("/api/arm", armRespone, "arm", RETRY_DELAY_SEC);
-
+        fprintf(stderr, "[%s] Info: okhope\n", ENTITY_NAME);
         if (strstr(armRespone, "$Arm: 0#") != NULL) {
             //If arm was permitted, we enable motors
-            fprintf(stderr, "[%s] Info: Arm is permitted\n", ENTITY_NAME);
+            fprintf(stderr, "Info: test_permitted");
+            fprintf(stderr, "[%s] Info: Arm is permitted\n", ENTITY_NAME);   
             while (!setKillSwitch(true)) {
                 fprintf(stderr, "[%s] Warning: Failed to permit motor usage at Periphery Controller. Trying again in %ds\n", ENTITY_NAME, RETRY_DELAY_SEC);
                 sleep(RETRY_DELAY_SEC);
@@ -121,13 +123,17 @@ int main(void) {
             fprintf(stderr, "[%s] Warning: Failed to parse server response\n", ENTITY_NAME);
         fprintf(stderr, "[%s] Warning: Arm was not allowed. Waiting for another arm request from autopilot\n", ENTITY_NAME);
     };
-
+    
     //If we get here, the drone is able to arm and start the mission
     //The flight is need to be controlled from now on
     //Also we need to check on ORVD, whether the flight is still allowed or it is need to be paused
 
-    while (true)
-        sleep(1000);
+    while (true) {
+        int32_t lantitude, longitude, altitude;
+        getCoords(lantitude, longitude, altitude);
+        fprintf(stderr, "Info: [%d].[%d] : [%d]\n", lantitude, longitude, altitude);
+        sleep(2);
+    }  
 
     return EXIT_SUCCESS;
 }
