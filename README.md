@@ -20,14 +20,14 @@ cd cyberimmune-systems-autonomous-delivery-drone-with-kos
 make online
 ```
 
-#### Запуск APM Planner 2
+### Запуск APM Planner 2
 
 ```bash
 cd planner/
 ./APM_Planner.AppImage 
 ```
 # Результаты
-## Для решения поставленной задачи, был модернизирован файл main.cpp.
+### Для решения поставленной задачи, был модернизирован файл main.cpp.
 #### Согласно документации, добавили в конец файла код вывода долготы, широты и высоты, значения которых были описаны в файле докумменташки API.
 
 ```bash
