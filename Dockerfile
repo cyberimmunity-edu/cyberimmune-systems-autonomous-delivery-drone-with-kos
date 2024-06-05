@@ -22,6 +22,9 @@ RUN apt-get update && \
         expect \
         build-essential \
         device-tree-compiler \
+        parted \
+        fdisk \
+        dosfstools \
         && adduser --disabled-password --gecos "" user \
         && echo 'user ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers
 

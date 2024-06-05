@@ -44,3 +44,16 @@ build
 
 # Ignore IDE files.
 .vscode/
+
+# No need image to be commited
+*.img
+
+# mavproxy cache
+mav.parm
+mav.tlog
+mav.tlog.raw
+
+# ardupilot cache
+eeprom.bin
+logs
+terrain
