@@ -44,10 +44,13 @@ request {
 
     match dst=kl.VfsNet {
         match src=drone_controller.AutopilotConnector { grant () }
-        match src=drone_controller.CredentialManager { grant () }
         match src=drone_controller.NavigationSystem { grant () }
         match src=drone_controller.PeripheryController { grant () }
         match src=drone_controller.ServerConnector { grant () }
+    }
+
+    match dst=kl.VfsSdCardFs {
+        match src=drone_controller.CredentialManager { grant () }
     }
 
     match src=drone_controller.FlightController {
@@ -126,10 +129,13 @@ response {
 
     match src=kl.VfsNet {
         match dst=drone_controller.AutopilotConnector { grant () }
-        match dst=drone_controller.CredentialManager { grant () }
         match dst=drone_controller.NavigationSystem { grant () }
         match dst=drone_controller.PeripheryController { grant () }
         match dst=drone_controller.ServerConnector { grant () }
+    }
+
+    match src=kl.VfsSdCardFs {
+        match dst=drone_controller.CredentialManager { grant () }
     }
 
     match dst=drone_controller.FlightController {

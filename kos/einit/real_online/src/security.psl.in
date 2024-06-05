@@ -50,8 +50,11 @@ request {
     }
 
     match dst=kl.VfsNet {
-        match src=drone_controller.CredentialManager { grant () }
         match src=drone_controller.ServerConnector { grant () }
+    }
+
+    match dst=kl.VfsSdCardFs {
+        match src=drone_controller.CredentialManager { grant () }
     }
 
     match dst=wpa.WpaSupplicant src=drone_controller.ServerConnector { grant () }
@@ -157,8 +160,11 @@ response {
     }
 
     match src=kl.VfsNet {
-        match dst=drone_controller.CredentialManager { grant () }
         match dst=drone_controller.ServerConnector { grant () }
+    }
+
+    match src=kl.VfsSdCardFs {
+        match dst=drone_controller.CredentialManager { grant () }
     }
 
     match src=wpa.WpaSupplicant dst=drone_controller.ServerConnector { grant () }
