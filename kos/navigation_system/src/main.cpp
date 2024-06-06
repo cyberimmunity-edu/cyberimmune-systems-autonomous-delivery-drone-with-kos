@@ -25,6 +25,9 @@ int main(void) {
     sensorThread = std::thread(getSensors);
     senderThread = std::thread(sendCoords);
 
+    while (!hasPosition())
+        sleep(1);
+
     fprintf(stderr, "[%s] Info: Initialization is finished\n", ENTITY_NAME);
 
     NkKosTransport transport;
