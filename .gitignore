@@ -45,6 +45,9 @@ build
 # Ignore IDE files.
 .vscode/
 
+# Ignore other docs files.
+forked-docs/
+
 # No need image to be commited
 *.img
 
