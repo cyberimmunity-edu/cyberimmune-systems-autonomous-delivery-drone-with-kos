@@ -9,11 +9,18 @@
 
 std::mutex sensorMutex;
 
+bool hasAlt = false;
+bool hasCoords = false;
+
 float sensorDop;
 int32_t sensorSats;
 int32_t sensorLatitude;
 int32_t sensorLongitude;
 int32_t sensorAltitude;
+
+bool hasPosition() {
+    return (hasAlt && hasCoords);
+}
 
 void sendCoords() {
     char signature[257] = {0};
@@ -70,6 +77,8 @@ void setAltitude(int32_t altitude) {
     sensorMutex.lock();
     sensorAltitude = altitude;
     sensorMutex.unlock();
+    if (!hasAlt && (altitude != 0))
+        hasAlt = true;
 }
 
 void setCoords(int32_t latitude, int32_t longitude) {
@@ -77,6 +86,8 @@ void setCoords(int32_t latitude, int32_t longitude) {
     sensorLatitude = latitude;
     sensorLongitude = longitude;
     sensorMutex.unlock();
+    if (!hasCoords && (latitude != 0) && (longitude != 0))
+        hasCoords = true;
 }
 
 int getCoords(int32_t &latitude, int32_t &longitude, int32_t &altitude) {
@@ -85,6 +96,5 @@ int getCoords(int32_t &latitude, int32_t &longitude, int32_t &altitude) {
     longitude = sensorLongitude;
     altitude = sensorAltitude;
     sensorMutex.unlock();
-
     return 1;
 }

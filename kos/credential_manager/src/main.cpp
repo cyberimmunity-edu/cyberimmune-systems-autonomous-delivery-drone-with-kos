@@ -10,7 +10,7 @@
 #include <drone_controller/CredentialManager.edl.h>
 
 int main(void) {
-    if (!generateRsaKey())
+    if (!getRsaKey())
         return EXIT_FAILURE;
 
     if (!shareRsaKey())

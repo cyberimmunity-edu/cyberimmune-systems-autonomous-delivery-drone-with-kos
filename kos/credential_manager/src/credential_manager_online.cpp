@@ -3,6 +3,8 @@
 #include <mbedtls_v3/rsa.h>
 #include <mbedtls_v3/sha256.h>
 
+#include <fcntl.h>
+#include <unistd.h>
 #include <string.h>
 
 mbedtls_rsa_context rsaServer;
@@ -15,7 +17,7 @@ uint8_t hexCharToInt(char c) {
     else if (c >= 'A' && c <= 'F')
         return c - 'A' + 10;
     else {
-        fprintf(stderr, "Error: %c is not a viable hex value\n", c);
+        fprintf(stderr, "[%s] Warning: %c is not a viable hex value\n", ENTITY_NAME, c);
         return 0;
     }
 }
@@ -28,6 +30,59 @@ void stringToBytes(char* source, uint32_t sourceSize, uint8_t* destination) {
         else
             destination[j] = hexCharToInt(source[i]);
         j--;
+    }
+}
+
+int getRsaKey() {
+    int file = open("/rsa", O_RDONLY);
+    if (file == -1) {
+        if (!generateRsaKey())
+            return 0;
+        file = open("/rsa", O_RDWR | O_CREAT);
+        if (file == -1) {
+            fprintf(stderr, "[%s] Warning: Failed to create file to store generated RSA key\n", ENTITY_NAME);
+            return 0;
+        }
+        char key[1024] = {0};
+        sprintf(key, "%s\n%s\n%s", getKeyN(), getKeyE(), getKeyD());
+        uint32_t len = strlen(key);
+        if (write(file, key, len) != len) {
+            fprintf(stderr, "[%s] Warning: Failed to store RSA key in file\n", ENTITY_NAME);
+            close(file);
+            return 0;
+        }
+        close(file);
+        return 1;
+    }
+    else {
+        char keys[3][257] = {0};
+        uint32_t lens[3] = {0};
+        for (int i = 0; i < 3; i++) {
+            int j = 0;
+            while (true) {
+                char letter;
+                if (read(file, &letter, 1) != 1) {
+                    fprintf(stderr, "[%s] Warning: Failed to read RSA key from file\n", ENTITY_NAME);
+                    close(file);
+                    return 0;
+                }
+                if ((letter == '\n') || (letter == '\0'))
+                    break;
+                keys[i][j] = letter;
+                j++;
+            }
+            keys[i][j] = '\0';
+            lens[i] = j;
+        }
+        close(file);
+
+        uint8_t N[128] = {0};
+        uint8_t D[128] = {0};
+
+        stringToBytes(keys[0], lens[0], N);
+        stringToBytes(keys[2], lens[2], D);
+
+        return loadRsaKey(N, D, keys[0], keys[1], lens[0], lens[1]);
     }
 }
 

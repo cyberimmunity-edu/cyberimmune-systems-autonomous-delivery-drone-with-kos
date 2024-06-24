@@ -10,26 +10,38 @@ docker-image-simulator:
 docker-image-orvd:
 	docker build -f orvd.Dockerfile -t orvd ./
 
-clean-containers:
-	docker-compose -f docker-compose-online.yml down
+clean-docker-compose:
 	docker-compose -f docker-compose-offline.yml down
+	docker-compose -f docker-compose-online.yml down
+	docker-compose -f docker-compose-offline-obstacles.yml down
+	docker-compose -f docker-compose-online-obstacles.yml down
+	docker-compose -f tests/e2e-offline-docker-compose.yml down
+	docker-compose -f tests/e2e-online-docker-compose.yml down
+	docker-compose -f tests/e2e-offline-obstacles-docker-compose.yml down
+	docker-compose -f tests/e2e-online-obstacles-docker-compose.yml down
+
+clean-containers: clean-docker-compose
 	docker ps -a -q |xargs docker rm
 
 clean-images:
 	docker images --format json |jq -r ".ID" |xargs docker rmi
 
-clean-network:
+clean-network: clean-docker-compose
 	docker network rm -f simulator
-	docker-compose -f docker-compose-online.yml down
-	docker-compose -f docker-compose-offline.yml down
 
-clean: clean-containers clean-images
+clean: clean-containers clean-images clean-network
 
 offline: docker
 	docker-compose -f docker-compose-offline.yml up
 
 online: docker
 	docker-compose -f docker-compose-online.yml up
+
+offline-obstacles: docker
+	docker-compose -f docker-compose-offline-obstacles.yml up
+
+online-obstacles: docker
+	docker-compose -f docker-compose-online-obstacles.yml up
 
 offline-multi: docker
 	docker-compose -f docker-compose-offline-multi.yml up
@@ -78,5 +90,13 @@ e2e-offline: docker-image
 e2e-online: docker-image
 	docker-compose -f tests/e2e-online-docker-compose.yml up --abort-on-container-exit --exit-code-from mavproxy
 	docker-compose -f tests/e2e-online-docker-compose.yml down
+
+e2e-offline-obstacles: docker-image
+	docker-compose -f tests/e2e-offline-obstacles-docker-compose.yml up --abort-on-container-exit --exit-code-from mavproxy
+	docker-compose -f tests/e2e-offline-obstacles-docker-compose.yml down
+
+e2e-online-obstacles: docker-image
+	docker-compose -f tests/e2e-online-obstacles-docker-compose.yml up --abort-on-container-exit --exit-code-from mavproxy
+	docker-compose -f tests/e2e-online-obstacles-docker-compose.yml down
 
 e2e-tests: e2e-offline e2e-online

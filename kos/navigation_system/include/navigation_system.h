@@ -5,6 +5,8 @@
 int initNavigationSystem();
 int initSensors();
 
+bool hasPosition();
+
 void getSensors();
 void sendCoords();
 

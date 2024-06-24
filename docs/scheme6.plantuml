@@ -1,0 +1,34 @@
+@startuml
+
+nwdiag {
+
+  group {
+    color = "#77FF77"
+    kos;
+    arducopter;
+    mavproxy;
+    orvd;
+  }
+
+  network Host {
+    address = 192.168.1.0/24
+
+    APM_Planner2 [address = "192.168.1.1"]
+  }
+
+  network Docker {
+    address = 172.28.5.0/24
+
+    kos [address = "172.28.0.1"]
+    arducopter [address = "172.28.0.2"]
+    mavproxy [address = "172.28.0.3"]
+    orvd [address = "172.28.0.4"]
+    APM_Planner2 [address = "172.28.5.254"]
+  }
+ 
+  network QEMU {
+    address = "10.0.2.0/24"
+
+    kos [address = "10.0.2.15"]
+  }
+@enduml

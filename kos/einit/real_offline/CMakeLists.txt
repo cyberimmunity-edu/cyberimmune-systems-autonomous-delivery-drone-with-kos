@@ -11,14 +11,7 @@ set_target_properties (${precompiled_vfsVfsRamFs} PROPERTIES
     - devfs /dev devfs 0")
 
 set (FS_IMAGE ramdisk0.img)
-set (FS_IMG_SIZE 2)
-set (FS_IMG_FORMAT ext4)
-add_custom_target (${FS_IMAGE}
-    COMMAND ${KL_SDK_ROOT_PATH}/common/prepare_hdd_img.sh
-    -d ${CMAKE_SOURCE_DIR}/resources/hdd
-    -s ${FS_IMG_SIZE}
-    -f ${FS_IMG_FORMAT}
-    -img ${FS_IMAGE})
+add_custom_target (${FS_IMAGE} COMMAND ${KL_SDK_ROOT_PATH}/common/prepare_hdd_img.sh -s 2 -f ext4 -img ${FS_IMAGE})
 
 set (ENTITIES AutopilotConnector CredentialManager FlightController NavigationSystem PeripheryController ServerConnector
     ${precompiled_vfsVfsRamFs} ${FS_IMAGE})

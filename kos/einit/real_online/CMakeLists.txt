@@ -37,9 +37,16 @@ set_target_properties (${wpa_SUPPLICANT_ENTITY} PROPERTIES
     - '-dddddd'
     - '-ien1'
     - '-c/etc/wpa_supplicant.conf'")
+set_target_properties (${precompiled_vfsVfsSdCardFs} PROPERTIES
+    EXTRA_ARGS "\
+    - -l
+    - devfs /dev devfs 0")
+
+set (FS_IMAGE mmc0.img)
+add_custom_target (${FS_IMAGE} COMMAND ${KL_SDK_ROOT_PATH}/common/prepare_hdd_img.sh -s 128 -f fat32 -img ${FS_IMAGE})
 
 set (ENTITIES AutopilotConnector CredentialManager FlightController NavigationSystem PeripheryController ServerConnector
-    ${precompiled_vfsVfsNet} ${rump_DHCPCD_ENTITY} ${wpa_SUPPLICANT_ENTITY})
+    ${precompiled_vfsVfsNet} ${rump_DHCPCD_ENTITY} ${wpa_SUPPLICANT_ENTITY} ${precompiled_vfsVfsSdCardFs} ${FS_IMAGE})
 
 set (FILES ${CMAKE_SOURCE_DIR}/resources/hdd/etc/wpa_supplicant.conf ${CMAKE_SOURCE_DIR}/resources/hdd/etc/dhcpcd.conf)
 

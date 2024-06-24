@@ -12,6 +12,7 @@
 mbedtls_rsa_context rsaSelf;
 char keyE[257] = {0};
 char keyN[257] = {0};
+char keyD[257] = {0};
 
 void hashToKey(uint8_t* source, uint32_t sourceSize, uint8_t* destination) {
     int j = 127;
@@ -70,6 +71,7 @@ int generateRsaKey() {
     size_t resSize;
     mbedtls_mpi_write_string(&E, 16, keyE, 1024, &resSize);
     mbedtls_mpi_write_string(&N, 16, keyN, 1024, &resSize);
+    mbedtls_mpi_write_string(&D, 16, keyD, 1024, &resSize);
 
     mbedtls_rsa_import(&rsaSelf, NULL, NULL, NULL, NULL, &D);
 
@@ -78,6 +80,18 @@ int generateRsaKey() {
     mbedtls_mpi_free(&N);
     mbedtls_mpi_free(&E);
     mbedtls_mpi_free(&D);
+
+    return 1;
+}
+
+int loadRsaKey(uint8_t* N, uint8_t* D, char* n, char* e, uint32_t nLen, uint32_t eLen) {
+    mbedtls_rsa_init(&rsaSelf);
+    mbedtls_rsa_import_raw(&rsaSelf, N, 128, NULL, 0, NULL, 0, NULL, 0, D, 128);
+
+    for (int i = 0; i < nLen; i++)
+        keyN[i] = n[i];
+    for (int i = 0; i < eLen; i++)
+        keyE[i] = e[i];
 
     return 1;
 }
@@ -126,4 +140,16 @@ int signMessage(char* message, char* sign) {
     bytesToString(result, sign);
 
     return 1;
+}
+
+char* getKeyN() {
+    return keyN;
+}
+
+char* getKeyE() {
+    return keyE;
+}
+
+char* getKeyD() {
+    return keyD;
 }

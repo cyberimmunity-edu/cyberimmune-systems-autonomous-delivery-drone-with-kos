@@ -1,4 +1,4 @@
-FROM ubuntu:22.04
+FROM cr.yandex/mirror/ubuntu:22.04
 
 ENV DEBIAN_FRONTEND noninteractive
 ENV PATH="${PATH}:/opt/KasperskyOS-Community-Edition-1.2.0.45/toolchain/bin:/home/user/.local/bin"
@@ -22,6 +22,9 @@ RUN apt-get update && \
         expect \
         build-essential \
         device-tree-compiler \
+        parted \
+        fdisk \
+        dosfstools \
         && adduser --disabled-password --gecos "" user \
         && echo 'user ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers
 

@@ -1,5 +1,9 @@
 #include "../include/credential_manager.h"
 
+int getRsaKey() {
+    return generateRsaKey();
+}
+
 int setRsaKey(char* key) {
     return 1;
 }

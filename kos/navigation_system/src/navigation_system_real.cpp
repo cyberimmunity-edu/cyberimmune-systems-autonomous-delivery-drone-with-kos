@@ -274,9 +274,6 @@ void getSensors() {
         }
 
         if (update) {
-            if (lngStr[0] == '\0' || latStr[0] == '\0')
-                fprintf(stderr, "[%s] Warning: No coordinates were received from GPS\n", ENTITY_NAME);
-
             longitude = round(10000000 * atof(lngStr + 3) / 60.0f);
             latitude = round(10000000 * atof(latStr + 2) / 60.0f);
             lngStr[3] = '\0';
@@ -359,6 +356,24 @@ int initSensors() {
     Retcode rc = UartOpenPort(gpsUart, &gpsUartHandler);
     if (rc != rcOk) {
         fprintf(stderr, "[%s] Warning: Failed to open UART %s ("RETCODE_HR_FMT")\n", ENTITY_NAME, gpsUart, RETCODE_HR_PARAMS(rc));
+        return 0;
+    }
+
+    rtl_size_t writtenBytes;
+    uint8_t gnssConfig[] =  { 0xb5, 0x62,
+        0x06, 0x8a, 0x4a, 0x00, 0x00, 0x07, 0x00, 0x00, 0x1f, 0x00, 0x31, 0x10, 0x01, 0x01, 0x00, 0x31,
+        0x10, 0x01, 0x20, 0x00, 0x31, 0x10, 0x00, 0x05, 0x00, 0x31, 0x10, 0x00, 0x21, 0x00, 0x31, 0x10,
+        0x01, 0x07, 0x00, 0x31, 0x10, 0x01, 0x22, 0x00, 0x31, 0x10, 0x00, 0x0d, 0x00, 0x31, 0x10, 0x00,
+        0x0f, 0x00, 0x31, 0x10, 0x00, 0x24, 0x00, 0x31, 0x10, 0x00, 0x12, 0x00, 0x31, 0x10, 0x00, 0x14,
+        0x00, 0x31, 0x10, 0x00, 0x25, 0x00, 0x31, 0x10, 0x01, 0x18, 0x00, 0x31, 0x10, 0x01, 0xa7, 0x51 };
+    ssize_t expectedSize = sizeof(gnssConfig);
+    rc = UartWrite(gpsUartHandler, gnssConfig, expectedSize, NULL, &writtenBytes);
+    if (rc != rcOk) {
+        fprintf(stderr, "[%s] Warning: Failed to write configuration message to GPS ("RETCODE_HR_FMT")\n", ENTITY_NAME, RETCODE_HR_PARAMS(rc));
+        return 0;
+    }
+    else if (writtenBytes != expectedSize) {
+        fprintf(stderr, "[%s] Warning: Failed to write configuration message to GPS: %ld bytes were expected, %ld bytes were sent\n", ENTITY_NAME, expectedSize, writtenBytes);
         return 0;
     }
 

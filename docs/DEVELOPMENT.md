@@ -67,7 +67,7 @@ cd planner/
 git clone https://github.com/cyberimmunity-edu/cyberimmune-systems-autonomous-delivery-drone-with-kos.git
 ```
 
-1. Перейти в скачанную папку и изменить ветку на 'simulation'
+1. Перейти в скачанную папку
 
 ```bash
 cd cyberimmune-systems-autonomous-delivery-drone-with-kos
@@ -79,7 +79,7 @@ cd cyberimmune-systems-autonomous-delivery-drone-with-kos
 ./install_dependencies.sh
 ```
 
-1. Скачать и установить KasperskyOS-Community-Edition-1.2.0.45.zip (расположив содержимое в /opt)
+1. Скачать и установить KasperskyOS-Community-Edition-1.2.0.45.zip (расположив содержимое в /opt) и добавить символьную ссылку `sudo ln -s /opt/KasperskyOS-Community-Edition-1.2.0.45 /opt/KasperskyOS-Local-Edition`.
 
 1. Сборка и запуск осуществляется при помощи скрипта `run.sh`
     1. Если в доступной сети развернут и запущен сервер ОРВД, то дополнительных аргументов при запуске скрипта не требуется

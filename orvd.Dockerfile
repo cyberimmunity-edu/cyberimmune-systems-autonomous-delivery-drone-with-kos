@@ -1,4 +1,4 @@
-FROM ubuntu:22.04
+FROM cr.yandex/mirror/ubuntu:22.04
 
 ENV DEBIAN_FRONTEND noninteractive
 ENV FLASK_APP orvd_server.py
