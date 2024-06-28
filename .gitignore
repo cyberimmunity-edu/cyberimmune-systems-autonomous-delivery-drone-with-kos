@@ -42,6 +42,7 @@ build
 
 *.zip
 
+*.deb
 # Ignore IDE files.
 .vscode/
 
