@@ -35,13 +35,13 @@ double degToRad(double deg);
 
 
 struct Coridor{
-    CommandWaypoint point1;
-    CommandWaypoint point2;
+    CommandWaypoint point1 = CommandWaypoint(0,0,0);
+    CommandWaypoint point2 = CommandWaypoint(0,0,0);
 
-    // Coridor(CommandWaypoint point1,CommandWaypoint point2){
-    //     this->point1=point1;
-    //     this->point2=point2;
-    // }
+    Coridor(CommandWaypoint _point1,CommandWaypoint _point2){
+         point1 = _point1;
+         point2 = _point2;
+    }
 
     double length(){
         return distance2Point(point1,point2);
@@ -145,7 +145,7 @@ int main(void) {
                 }
             }
             for (int i = 1; i < waypoints.size(); i++){
-                Coridor coridor;
+                Coridor coridor(waypoints[i-1], waypoints[i]);
                 coridor.point1 = waypoints[i-1];
                 coridor.point2 = waypoints[i];
                 coridors.push_back(coridor);
