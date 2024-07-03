@@ -17,6 +17,20 @@
 #define RETRY_REQUEST_DELAY_SEC 5
 #define FLY_ACCEPT_PERIOD_US 500000
 
+#define EARTH_RADIUS 6371000
+
+
+double distance2Point(CommandWaypoint point1, CommandWaypoint point2);
+double degToRad(double deg);
+
+void printCoords();
+void corridorCheck();
+void speedCheck();
+void cargoLock();
+void heightCheck();
+
+
+
 int sendSignedMessage(char* method, char* response, char* errorMessage, uint8_t delay) {
     char message[512] = {0};
     char signature[257] = {0};
@@ -127,14 +141,78 @@ int main(void) {
     //Also we need to check on ORVD, whether the flight is still allowed or it is need to be paused
 
     while (true){
-        int32_t lat,lon,alt;
+        
+        printCoords();
+
+        corridorCheck();
+
+        cargoLock();
+
+        speedCheck();
+
+        heightCheck();
+        sleep(3);
+    }
+
+    return EXIT_SUCCESS;
+}
+
+double degToRad(double deg){
+        return deg * M_PI / 180;
+}
+
+double distance2Point(CommandWaypoint point1, CommandWaypoint point2){
+    double phi1 = degToRad(point1.latitude);
+    double phi2 = degToRad(point2.latitude);
+
+    double deltaPhi = degToRad(point2.latitude - point1.latitude);
+    double deltaLambda = degToRad(point2.longtitude - point1.longitude);
+
+    double a = sin(deltaPhi/2)*sin(deltaPhi/2) + cos(phi1)*cos(phi2)*sin(deltaLambda/2)*sin(deltaLambda/2);
+    double c = 2* atan2(sqrt(a), sqrt(1-a));
+
+    return EARTH_RADIUS * c;
+}
+
+
+
+void printCoords(){
+    int32_t lat,lon,alt;
         if(getCoords(lat,lon,alt)){
             fprintf(stderr, "latitude: [%d]\n",lat);
             fprintf(stderr, "longitude: [%d]\n",lon);
             fprintf(stderr, "altitude: [%d]\n", alt);
         }
-        sleep(3);
+}
+
+struct coridor{
+    CommandWaypoint point1;
+    CommandWaypoint point2;
+
+    
+
+    double length(){
+        return distance2Point(point1,point2);
     }
 
-    return EXIT_SUCCESS;
+    double distanceToCoridor(double lat, double lon){
+
+    }
+}
+
+void corridorCheck(){
+
+    return;
+}
+
+void cargoLock(){
+    return;
+}
+
+void speedCheck(){
+    return;
+}
+
+void heightCheck(){
+    return;
 }
