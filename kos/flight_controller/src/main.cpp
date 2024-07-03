@@ -24,7 +24,7 @@ double distance2Point(CommandWaypoint point1, CommandWaypoint point2);
 double degToRad(double deg);
 
 void printCoords();
-void corridorCheck();
+bool corridorCheck();
 void speedCheck();
 void cargoLock();
 void heightCheck();
@@ -189,19 +189,36 @@ struct coridor{
     CommandWaypoint point1;
     CommandWaypoint point2;
 
-    
+    coridor(CommandWaypoint point1,CommandWaypoint point2){
+        this->point1=point1;
+        this->point2=point2;
+    }
 
     double length(){
         return distance2Point(point1,point2);
     }
 
-    double distanceToCoridor(double lat, double lon){
-
+    double distanceToCoridor(CommandWaypoint point){
+        double a = distance2Point (point, point1);
+        double b = distance2Point (point, point2);
+        double c = length();
+        if(c*c>=(a*a+b*b)){
+            double p = (a+b+c)/2;
+            double h = 2*sqrt(p*(p-a)*(p-b)*(p-c))/c;
+            return h;
+        }else{
+            if(a < b) return a;
+            else return b;
+        }
     }
 }
 
-void corridorCheck(){
-
+bool corridorCheck(){
+    int32_t lat,lon,alt;
+    getCoords(lat,lon,alt);
+    CommandWaypoint drone = new CommandWaypoint(lat,lon,alt);
+    coridor curCoridor = coridor();
+    MissionCommand
     return;
 }
 
