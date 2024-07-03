@@ -12,6 +12,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <vector>
 
 #define RETRY_DELAY_SEC 1
 #define RETRY_REQUEST_DELAY_SEC 5
@@ -20,15 +21,52 @@
 #define EARTH_RADIUS 6371000
 
 
+#define ALLOWED_DISTANCE 10
+#define MAX_H_SPEED 200
+#define MAX_ALT 100
+#define MIN_ALT 5
+
+
+using namespace std;
+
 double distance2Point(CommandWaypoint point1, CommandWaypoint point2);
 double degToRad(double deg);
 
+
+
+struct Coridor{
+    CommandWaypoint point1;
+    CommandWaypoint point2;
+
+    // Coridor(CommandWaypoint point1,CommandWaypoint point2){
+    //     this->point1=point1;
+    //     this->point2=point2;
+    // }
+
+    double length(){
+        return distance2Point(point1,point2);
+    }
+
+    double distanceToCoridor(CommandWaypoint point){
+        double a = distance2Point (point, point1);
+        double b = distance2Point (point, point2);
+        double c = length();
+        if(c*c>=(a*a+b*b)){
+            double p = (a+b+c)/2;
+            double h = 2*sqrt(p*(p-a)*(p-b)*(p-c))/c;
+            return h;
+        }else{
+            if(a < b) return a;
+            else return b;
+        }
+    }
+};
+
 void printCoords();
-bool corridorCheck();
+void coridorCheck(vector<Coridor> coridors);
 void speedCheck();
 void cargoLock();
 void heightCheck();
-
 
 
 int sendSignedMessage(char* method, char* response, char* errorMessage, uint8_t delay) {
@@ -90,12 +128,29 @@ int main(void) {
     sendSignedMessage("/api/auth", authResponse, "authentication", RETRY_DELAY_SEC);
     fprintf(stderr, "[%s] Info: Successfully authenticated on the server\n", ENTITY_NAME);
 
+    vector<Coridor> coridors;
     //Constantly ask server, if mission for the drone is available. Parse it and ensure, that mission is correct
     while (true) {
         char missionResponse[1024] = {0};
         if (sendSignedMessage("/api/fmission_kos", missionResponse, "mission", RETRY_DELAY_SEC) && parseMission(missionResponse)) {
             fprintf(stderr, "[%s] Info: Successfully received mission from the server\n", ENTITY_NAME);
             printMission();
+
+            vector<CommandWaypoint> waypoints;
+            MissionCommand* commands = getCommands();
+            uint32_t numCommands = getNumCommands();
+            for (uint32_t i=0; i < numCommands; i++){
+                if(commands[i].type == WAYPOINT or commands[i].type == HOME){
+                    waypoints.push_back(commands[i].content.waypoint);
+                }
+            }
+            for (int i = 1; i < waypoints.size(); i++){
+                Coridor coridor;
+                coridor.point1 = waypoints[i-1];
+                coridor.point2 = waypoints[i];
+                coridors.push_back(coridor);
+            }
+
             break;
         }
         sleep(RETRY_REQUEST_DELAY_SEC);
@@ -144,7 +199,7 @@ int main(void) {
         
         printCoords();
 
-        corridorCheck();
+        coridorCheck(coridors);
 
         cargoLock();
 
@@ -166,7 +221,7 @@ double distance2Point(CommandWaypoint point1, CommandWaypoint point2){
     double phi2 = degToRad(point2.latitude);
 
     double deltaPhi = degToRad(point2.latitude - point1.latitude);
-    double deltaLambda = degToRad(point2.longtitude - point1.longitude);
+    double deltaLambda = degToRad(point2.longitude - point1.longitude);
 
     double a = sin(deltaPhi/2)*sin(deltaPhi/2) + cos(phi1)*cos(phi2)*sin(deltaLambda/2)*sin(deltaLambda/2);
     double c = 2* atan2(sqrt(a), sqrt(1-a));
@@ -185,51 +240,49 @@ void printCoords(){
         }
 }
 
-struct coridor{
-    CommandWaypoint point1;
-    CommandWaypoint point2;
 
-    coridor(CommandWaypoint point1,CommandWaypoint point2){
-        this->point1=point1;
-        this->point2=point2;
-    }
-
-    double length(){
-        return distance2Point(point1,point2);
-    }
-
-    double distanceToCoridor(CommandWaypoint point){
-        double a = distance2Point (point, point1);
-        double b = distance2Point (point, point2);
-        double c = length();
-        if(c*c>=(a*a+b*b)){
-            double p = (a+b+c)/2;
-            double h = 2*sqrt(p*(p-a)*(p-b)*(p-c))/c;
-            return h;
-        }else{
-            if(a < b) return a;
-            else return b;
-        }
-    }
-}
-
-bool corridorCheck(){
+void coridorCheck(vector<Coridor> coridors){
     int32_t lat,lon,alt;
     getCoords(lat,lon,alt);
-    CommandWaypoint drone = new CommandWaypoint(lat,lon,alt);
-    coridor curCoridor = coridor();
-    MissionCommand
-    return;
+    CommandWaypoint drone = CommandWaypoint(lat,lon,alt);
+    double minDistance = coridors[0].distanceToCoridor(drone);
+    for(uint32_t i =1; i < coridors.size(); i++){
+        double d = coridors[i].distanceToCoridor(drone);
+        if (d < minDistance) minDistance = d;
+    }
+    if (minDistance > ALLOWED_DISTANCE) pauseFlight();
+
 }
 
 void cargoLock(){
-    return;
+    setCargoLock(0);
 }
 
 void speedCheck(){
+    int32_t lat1, lat2, lon1, lon2 , alt1, alt2;
+    getCoords(lat1, lon1, alt1);
+    CommandWaypoint point1 = CommandWaypoint(lat1, lon1, alt1);
+    sleep(1);
+    getCoords(lat2, lon2, alt2);
+    CommandWaypoint point2 = CommandWaypoint(lat2, lon2, alt2);
+
+    double speed = distance2Point(point1, point2);
+
+    if (speed > MAX_H_SPEED) {
+        changeSpeed(5);
+    }
+
     return;
 }
 
 void heightCheck(){
+    int32_t lat, lon, alt;
+    getCoords(lat, lon, alt);
+    if (alt > MAX_ALT) {
+        changeAltitude(50);
+    }
+    if (alt < MIN_ALT) {
+        changeAltitude(50);
+    }
     return;
 }
