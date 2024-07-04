@@ -12,11 +12,11 @@ std::mutex sensorMutex;
 bool hasAlt = false;
 bool hasCoords = false;
 
-float sensorDop;
-int32_t sensorSats;
-int32_t sensorLatitude;
-int32_t sensorLongitude;
-int32_t sensorAltitude;
+float sensorDop = 0.0f;
+int32_t sensorSats = 0;
+int32_t sensorLatitude = 0;
+int32_t sensorLongitude = 0;
+int32_t sensorAltitude = 0;
 
 bool hasPosition() {
     return (hasAlt && hasCoords);
@@ -36,7 +36,7 @@ void sendCoords() {
 
     while (true) {
         if (!getCoords(lat, lng, alt))
-            fprintf(stderr, "[%s] Warning: Failed to get GPS coords Trying again in 500ms\n", ENTITY_NAME);
+            fprintf(stderr, "[%s] Warning: Failed to get GPS coords. Trying again in 500ms\n", ENTITY_NAME);
         else {
             if (!getGpsInfo(dop, sats))
                 fprintf(stderr, "[%s] Warning: Failed to get GPS's sats and dop. Trying again in 500ms\n", ENTITY_NAME);
@@ -66,19 +66,29 @@ void setGpsInfo(float dop, int32_t sats) {
 }
 
 int getGpsInfo(float& dop, int32_t& sats) {
-    sensorMutex.lock();
-    dop = sensorDop;
-    sats = sensorSats;
-    sensorMutex.unlock();
-    return 1;
+    if (hasPosition()) {
+        sensorMutex.lock();
+        dop = sensorDop;
+        sats = sensorSats;
+        sensorMutex.unlock();
+        return 1;
+    }
+    else {
+        dop = 0.0f;
+        sats = 0;
+        return 0;
+    }
 }
 
 void setAltitude(int32_t altitude) {
     sensorMutex.lock();
     sensorAltitude = altitude;
     sensorMutex.unlock();
-    if (!hasAlt && (altitude != 0))
+    if (!hasAlt && (altitude != 0)) {
         hasAlt = true;
+        if (hasPosition())
+            fprintf(stderr, "[%s] Info: Consistent coordinates are received\n", ENTITY_NAME);
+    }
 }
 
 void setCoords(int32_t latitude, int32_t longitude) {
@@ -86,15 +96,26 @@ void setCoords(int32_t latitude, int32_t longitude) {
     sensorLatitude = latitude;
     sensorLongitude = longitude;
     sensorMutex.unlock();
-    if (!hasCoords && (latitude != 0) && (longitude != 0))
+    if (!hasCoords && (latitude != 0) && (longitude != 0)) {
         hasCoords = true;
+        if (hasPosition())
+            fprintf(stderr, "[%s] Info: Consistent coordinates are received\n", ENTITY_NAME);
+    }
 }
 
 int getCoords(int32_t &latitude, int32_t &longitude, int32_t &altitude) {
-    sensorMutex.lock();
-    latitude = sensorLatitude;
-    longitude = sensorLongitude;
-    altitude = sensorAltitude;
-    sensorMutex.unlock();
-    return 1;
+    if (hasPosition()) {
+        sensorMutex.lock();
+        latitude = sensorLatitude;
+        longitude = sensorLongitude;
+        altitude = sensorAltitude;
+        sensorMutex.unlock();
+        return 1;
+    }
+    else {
+        latitude = 0;
+        longitude = 0;
+        altitude = 0;
+        return 0;
+    }
 }
