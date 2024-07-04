@@ -241,3 +241,216 @@ rm -Rf build*
 
 Для эксперементальных целей или отладки вы можете менять любую часть проекта, но для соревнований реализация учитывается только внутри `kos/flight_controller`.
 Весь недостающий требуемый функционал вызывается через специально подготовленное [API](/docs/API.md).
+
+## Вопрос 17: А как убедиться в симуляторе, что киберпрепятствия я преодолеваю?
+
+Использовать симулятор sitl_obstacles вместо обычного sitl.
+Можно запустить:
+
+- docker версия (способ 1)
+  - online `make online-obstacles` и сквозной тест `make e2e-online-bstacles`
+  - offline `make offline-obstacles` и сквозной тест `make e2e-offline-obstacles`
+- хост версия (способ 2)
+  - online `./run.sh --with-obstacles`
+  - offline `./run.sh --with-obstacles --no-server`
+
+## Вопрос 18: А как настроить кэш для APM Planner 2 ?
+
+В интерфейсе APM Planner 2 выделить область на карте используя ALT или SHIFT и внизу нажать Cache
+
+## Вопрос 19: Как убрать лишние папки в .gitignore, чтобы они не попадали в коммиты и код?
+
+В репозитории хранить желательно только само решение и вспомогательные файлы. При запуске цифрового двойнике создаётся множество файлов сторонних программ не имеющих отношения к решению. Эти файлы нужно исключать из репозитория и не отслеживать изменения связанные с ними. В корне репозитория есть файл [.gitignore](/.gitignore) который позволяет исключать ненужные папки и файлы. [Подробная документация по ссылке](https://git-scm.com/docs/gitignore).
+
+## Вопрос 20: Как пользоваться docker решением без интернета?
+
+Предлагается разделить Dockerfile на два файла: обычный и базовый. В базовый включающий всё необходимое, но без файлов проекта. В обычном унаследоваться от базового.
+
+Например:
+
+- Файл simulator-base.Dockerfile
+
+```Dockerfile
+FROM cr.yandex/mirror/ubuntu:22.04
+
+ENV DEBIAN_FRONTEND noninteractive
+ENV PATH="${PATH}:/opt/KasperskyOS-Community-Edition-1.2.0.45/toolchain/bin:/home/user/.local/bin"
+RUN apt-get update && \
+    apt install -y \
+        net-tools \
+        python3 \
+        python3-dev \
+        python3-pip \
+        python3-serial \
+        python3-opencv \
+        python3-wxgtk4.0 \
+        python3-matplotlib \
+        python3-lxml \
+        python3-pygame \
+        sudo \
+        mc \
+        vim \
+        curl \
+        tar \
+        expect \
+        build-essential \
+        device-tree-compiler \
+        parted \
+        fdisk \
+        dosfstools \
+        && adduser --disabled-password --gecos "" user \
+        && echo 'user ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers
+
+COPY ./KasperskyOS-Community-Edition-1.2.0.45.zip /tmp
+
+RUN unzip /tmp/KasperskyOS-Community-Edition-1.2.0.45 -d /opt \
+    && rm /tmp/*.zip \
+    && ln -s /opt/KasperskyOS-Community-Edition-1.2.0.45 /opt/KasperskyOS-Local-Edition \
+    && echo '/opt/KasperskyOS-Community-Edition-1.2.0.45/toolchain/lib' >> /etc/ld.so.conf.d/KasperskyOS.conf \
+    && echo '/opt/KasperskyOS-Community-Edition-1.2.0.45/toolchain/x86_64-pc-linux-gnu/aarch64-kos/lib/' >> /etc/ld.so.conf.d/KasperskyOS.conf \
+    && ldconfig
+
+RUN su -c 'pip3 install PyYAML mavproxy pymavlink --user --upgrade' user
+
+CMD ["bash"]
+```
+
+и файл Dockerfile:
+
+```Dockerfile
+FROM simulator-base
+
+COPY ./ardupilot /home/user/ardupilot
+COPY ./kos /home/user/kos
+COPY ./planner /home/user/planner
+COPY ./tests /home/user/tests
+
+RUN chown -R 1000:1000 /home/user
+
+CMD ["bash"]
+```
+
+Изменения в Makefile (добавляется правило):
+
+```Makefile
+docker-image-simulator-base:
+    docker build -f simulator-base.Dockerfile -t simulator-base ./
+```
+
+Таким образом мы добавляем зависимость, но не указываем её в зависимостях Makefile.
+Чтобы это работало, нам нужно собрать базовый образ при помощи `make docker-image-simulator-base` и пользоваться всем остальным как обычно.
+
+Подобное можно сделать и для ОРВД.
+
+## Вопрос 21: Как сделать экспорт и импорт docker образа?
+
+На примере базового образа из прошлого вопроса сохранить образ в файл можно:
+
+```bash
+docker save simulator-base -o simulator-base.tar
+```
+
+Загрузить из файла:
+
+```bash
+docker load -i simulator-base.tar
+```
+
+## Вопрос 22: Как обходить выданные киберпрепятствия используя sitl_obstacles ?
+
+1. При помощи docker
+   1. Запуск без ОРВД `make offline-obstacles` (задание вручную задаётся)
+   1. Запуск с ОРВД `make online-obstacles` (задание задаётся вручную и в ОРВД)
+   1. Запуск автоматического сквозного теста без ОРВД `make e2e-offline-obstacles`
+   1. Запуск автоматического сквозного теста с ОРВД `make e2e-online-obstacles`
+1. Без docker используя `./run.sh`
+   1. Запуск без ОРВД `./run.sh --with-obstacles --no-server` (задание вручную задаётся)
+   1. Запуск с ОРВД `./run.sh --with-obstacles` (задание задаётся врунчюу и в ОРВД)
+
+## Вопрос 23: Как останавливать apache2 (ОРВД) на хост системе?
+
+Apache2 на хост системе запускается при помощи systemd и управление сервисами происходит при помощи systemctl. 
+Таким образом можно:
+
+- остановить apache2 (ОРВД) `systemctl stop apache2`
+- запустить apache2 (ОРВД) `systemctl start apache2`
+- посмотреть статус apache2 (ОРВД) `systemctl status apache2`
+
+## Вопрос 24: Ошибки QEMU (qemu-system-aarch64: Slirp: Failed to send packet, ret: -1)
+
+Не мешают работе эмуляции и не стоит обращать внимание.
+
+## Вопрос 25: Последовательность действий для запуска без ОРВД (offline):
+
+  1. Запустили `make offline` (аналогично и для `./run.sh --no-server`)
+  2. Запустили APM Planner 2
+  3. Дождались когда всё загрузилось и подключилось
+  4. Загрузили полётное задание в APM Planner 2 (Flight plan -> Edit waypoints -> Load WP -> Write)
+  5. Ткнули ARM (получили разрешение)
+  6. Ткнули ARM (запустили двигатели)
+  7. Включили режим Auto
+  8. Запустили Mission start
+
+## Вопрос 26: Последовательность действий для запуска с ОРВД (online):
+
+  1. Запустили `make online` (аналогично и для `./run.sh`)
+  2. Запустили APM Planner 2
+  3. Дождались когда всё загрузилось и подключилось
+  4. Загрузили полётное задание в APM Planner 2 (Flight plan -> Edit waypoints -> Load WP -> Write)
+  5. Зашли в ОРВД и посмотрели подключился ли квадрокоптер и какой у него ID
+  6. Загрузили полётное задание в ОРВД используя Mission Sender
+  7. В ОРВД подтвердили миссию и разрешили взлёт
+  8. В APM Planner 2 ткнули ARM (запросили разрешение)
+  9. В ОРВД разрешили запуск двигателей
+  10. В APM Planner 2 ткнули ARM (запустили двигатели)
+  11. Включили режим Auto
+  12. Запустили Mission start
+
+## Вопрос 27: А какой формат файла exampleMission.txt ?
+
+Формат файла можно посмотреть в документации [Mavlink: File Formats](https://mavlink.io/en/file_formats/).
+Однако, намного удобнее загрузить полётное задание из файла в APM Planner 2 и все поля получат текстовую расшифровку.
+
+## Вопрос 28: Что возвращает метод API метод getCoords() ?
+
+API метод [getCoords()](./API.md#int-getcoordsint32_t-latitude-int32_t-longitude-int32_t-altitude) возвращает то, что ему приходит от GPS прёмника подключенного к модулю безопасности.
+
+## Вопрос 29: В какой именно системе координат мы получаем данные от функции getCoords?
+
+Подразумевается использование WGS 84.
+
+## Вопрос 30: Мы ведь можем использовать какие-то стандартные библиотеки по типу vector?
+
+Да. Что касается библиотек, можно посмотреть [документацию к SDK](https://support.kaspersky.ru/help/KCE/1.2/ru-RU/included_third_party_libs.htm) и найти версию поставляемого компилятора в документации которого указаны поддерживаемые стандартные библиотеки (стандарт и т.п.).
+
+## Вопрос 31: Какова требуемая точность позиционирования (насколько большое отклонение от полетного задания еще считается допустимым) ?
+
+Не более 5 метров. Коридор 10 метров.
+
+## Вопрос 32: Может ли квадрокоптер в течение полетного задания совершить посадку и повторный взлет?
+
+Только если это указано в полётном задании.
+
+## Вопрос 33: Гарантируется ли, что точка приземления дрона (команда Land) находится под последней контрольной точкой (команда Waypoint) ?
+
+Да.
+
+## Вопрос 34: Гарантируется ли, что дрон перевозит лишь один груз?
+
+Планируется перевозка только одного груза, однако не обязательно он будет загружен на первой точке.
+
+## Вопрос 35: Что у меня не так установлено, что я никак не могу запустить по 2 способу?
+
+Проверьте, что установленны пакеты: device-tree-compiler, parted, fdisk, dosfstools (пакеты для Ubuntu 22.04, другие дистрибутивы по аналогии).
+
+## Вопросы 36: В ходе соревнований все 7 дней будут участвовать сразу все команды или каждой команде будет выделено по 1-2 дня?
+
+У команд разный прогресс. Если участники не прошли киберпрепятствия в ЦД, то будут заниматься обходом киберпрепятствий в ЦД. Рекомендуется внимательно изучить [критерии оценки команд](./ASSESSMENT.md).
+
+## Вопрос 37: Надо ли брать инструменты для сборки/разборки дрона?
+
+Нет. Если дрон будет неисправен, то предполагается замена. (может, за исключением винтов, если винты сломаются, то выдадут новые).
+
+## Вопрос 38: Разбор для транспортировки домой. Для этого потребуются инструменты?
+
+Предполагаю, что нет. У ребят, собирающих квадрокоптеры должно быть всё необходимое.
