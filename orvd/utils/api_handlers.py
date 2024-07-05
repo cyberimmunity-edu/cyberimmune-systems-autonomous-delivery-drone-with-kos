@@ -61,6 +61,10 @@ def key_ms_exchange_handler(id: int):
     key_entity = get_entity_by_key(MissionSenderPublicKeys, id)
     if key_entity == None:
         save_public_key(n, e, f'ms{id}')
+    else:
+        key_entity.n = n
+        key_entity.e = e
+        commit_changes()
     orvd_key_pk = get_key('orvd', private=True).publickey()
     orvd_n, orvd_e = orvd_key_pk.n, orvd_key_pk.e
     str_to_send = f'$Key: {hex(orvd_n)[2:]} {hex(orvd_e)[2:]}'

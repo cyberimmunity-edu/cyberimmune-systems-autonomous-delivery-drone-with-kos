@@ -1,5 +1,5 @@
 import os
-from flask import Flask, request, render_template, redirect
+from flask import Flask, request, render_template, redirect, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 
@@ -22,6 +22,19 @@ with app.app_context():
 @app.route('/')
 def index():
     return render_template('index.html')
+
+@app.route('/tiles/index')
+def tiles_index():
+    tiles_dir = './static/resources/tiles'
+    tiles_index = []
+    for root, dirs, files in os.walk(tiles_dir):
+        for file in files:
+            if file.endswith('.png'):
+                rel_dir = os.path.relpath(root, tiles_dir)
+                z, x = rel_dir.split(os.sep)
+                y = file.replace('.png', '')
+                tiles_index.append(f"{z}/{x}/{y}")
+    return jsonify(tiles_index)
 
 
 @app.route('/admin')
