@@ -44,7 +44,7 @@ int getRsaKey() {
             return 0;
         }
         char key[1024] = {0};
-        sprintf(key, "%s\n%s\n%s", getKeyN(), getKeyE(), getKeyD());
+        sprintf(key, "%s\n%s\n%s\n", getKeyN(), getKeyE(), getKeyD());
         uint32_t len = strlen(key);
         if (write(file, key, len) != len) {
             fprintf(stderr, "[%s] Warning: Failed to store RSA key in file\n", ENTITY_NAME);
