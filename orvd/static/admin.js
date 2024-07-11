@@ -91,7 +91,7 @@ function customTileLoadFunction(imageTile, src) {
   if (availableTiles.includes(tilePath)) {
       imageTile.getImage().src = localUrl;
   } else {
-      //imageTile.getImage().src = src;
+      imageTile.getImage().src = src;
   }
 }
 
