@@ -1,3 +1,6 @@
+const TILES_URL = "https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}";
+const TILES_LOCAL_PATH = "static/resources/tiles";
+
 function getSearchParameters() {
   var prmstr = window.location.search.substr(1);
   return prmstr != null && prmstr != "" ? transformToAssocArray(prmstr) : {};
@@ -23,7 +26,7 @@ document.getElementById('kill_switch').onclick = kill_switch;
 document.getElementById('fly_accept_checkbox').onclick = fly_accept;
 
 ol.proj.useGeographic()
-const place = [142.733472, 46.986186];
+const place = [142.812588, 46.617637];
 
 let ids = [];
 let active_id = null;
@@ -65,18 +68,51 @@ let polyline_style = new ol.style.Style({
     color: [0, 0, 0, 255],
     width: 2
   })
-})
-
-const source = new ol.source.OSM({
-  attributions: ['',],
 });
-source.setUrl("https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}");
+
+let availableTiles = [];
+
+await fetch('/tiles/index')
+    .then(response => response.json())
+    .then(data => {
+        availableTiles = data;
+    });
+
+function customTileLoadFunction(imageTile, src) {
+  const urlPattern = /x=([0-9]+)&y=([0-9]+)&z=([0-9]+)/;
+  const matches = src.match(urlPattern);
+  const x = matches[1];
+  const y = matches[2];
+  const z = matches[3];
+  
+  const tilePath = `${z}/${x}/${y}`;
+  const localUrl = `${TILES_LOCAL_PATH}/${tilePath}.png`;
+
+  if (availableTiles.includes(tilePath)) {
+      imageTile.getImage().src = localUrl;
+  } else {
+      imageTile.getImage().src = src;
+  }
+}
+
+const tileLayer = new ol.layer.Tile({
+  source: new ol.source.XYZ({
+      url: TILES_URL,
+      tileLoadFunction: customTileLoadFunction
+  })
+});
+
+const vectorLayer = new ol.layer.Vector({
+  source: new ol.source.Vector({
+    url: '/static/resources/area.kml',
+    format: new ol.format.KML()
+  })
+});
+
 const map = new ol.Map({
 target: 'map',
 layers: [
-  new ol.layer.Tile({
-    source: source,
-  }),
+  tileLayer, vectorLayer
 ],
 view: new ol.View({
   center: place,

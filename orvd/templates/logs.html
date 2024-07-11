@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Logs</title>
+      <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+      </head>
+<body>
+<script type="module" src="{{ url_for('static',filename='logs.js') }}"> </script>
+
+<h1>Logs</h1>
+
+<label for="id">ID:</label>
+<input id="id" type="text" name="id" /><br><br>
+<input id="submit" type="submit" value="Получить">
+<div id="logs-container"></div>
+</body>
+</html>
