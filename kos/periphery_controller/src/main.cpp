@@ -1,6 +1,7 @@
 #include "../include/periphery_controller.h"
 #include "../include/periphery_controller_interface.h"
 #include "../../shared/include/initialization_interface.h"
+#include "../../shared/include/ipc_messages_initialization.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -13,32 +14,37 @@
 std::thread killSwitchCheckThread;
 
 int main(void) {
+    while (!waitForInit("logger_connection", "Logger")) {
+        logEntry("Failed to receive initialization notification from Logger. Trying again in 1s", ENTITY_NAME, LogLevel::LOG_WARNING);
+        sleep(1);
+    }
+
     if (!initPeripheryController())
         return EXIT_FAILURE;
 
     while (!initGpioPins()) {
-        fprintf(stderr, "[%s] Info: Trying again to initialize GPIO pins in 1s\n", ENTITY_NAME);
+        logEntry("Trying again to initialize GPIO pins in 1s", ENTITY_NAME, LogLevel::LOG_WARNING);
         sleep(1);
     }
 
     while (!setKillSwitch(false)) {
-        fprintf(stderr, "[%s] Info: Trying again to turn off kill-switch in 1s\n", ENTITY_NAME);
+        logEntry("Trying again to turn off kill-switch in 1s", ENTITY_NAME, LogLevel::LOG_WARNING);
         sleep(1);
     }
 
     while (!setBuzzer(false)) {
-        fprintf(stderr, "[%s] Info: Trying again to turn off buzzer in 1s\n", ENTITY_NAME);
+        logEntry("Trying again to turn off buzzer in 1s", ENTITY_NAME, LogLevel::LOG_WARNING);
         sleep(1);
     }
 
     while (!setCargoLock(true)) {
-        fprintf(stderr, "[%s] Info: Trying again to lock cargo in 1s\n", ENTITY_NAME);
+        logEntry("Trying again to lock cargo in 1s", ENTITY_NAME, LogLevel::LOG_WARNING);
         sleep(1);
     }
 
     killSwitchCheckThread = std::thread(checkKillSwitchPermission);
 
-    fprintf(stderr, "[%s] Info: Initialization is finished\n", ENTITY_NAME);
+    logEntry("Initialization is finished", ENTITY_NAME, LogLevel::LOG_INFO);
 
     NkKosTransport transport;
     initReceiverInterface("periphery_controller_connection", transport);
@@ -60,10 +66,10 @@ int main(void) {
         if (nk_transport_recv(&transport.base, &req.base_, &reqArena) == NK_EOK) {
             PeripheryController_entity_dispatch(&entity, &req.base_, &reqArena, &res.base_, &resArena);
             if (nk_transport_reply(&transport.base, &res.base_, &resArena) != NK_EOK)
-                fprintf(stderr, "[%s] Warning: Failed to send a reply to IPC-message\n", ENTITY_NAME);
+                logEntry("Failed to send a reply to IPC-message", ENTITY_NAME, LogLevel::LOG_WARNING);
         }
         else
-            fprintf(stderr, "[%s] Warning: Failed to receive IPC-message\n", ENTITY_NAME);
+            logEntry("Failed to receive IPC-message", ENTITY_NAME, LogLevel::LOG_WARNING);
     };
 
     return EXIT_SUCCESS;

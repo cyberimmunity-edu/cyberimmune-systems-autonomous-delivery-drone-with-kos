@@ -20,11 +20,15 @@ int writeIntValue(int32_t value) {
     ssize_t expectedSize = sizeof(int32_t);
     Retcode rc = UartWrite(autopilotUartHandler, (uint8_t*)(&value), expectedSize, NULL, &writtenBytes);
     if (rc != rcOk) {
-        fprintf(stderr, "[%s] Warning: Failed to write to UART %s ("RETCODE_HR_FMT")\n", ENTITY_NAME, autopilotUart, RETCODE_HR_PARAMS(rc));
+        char logBuffer[256];
+        snprintf(logBuffer, 256, "Failed to write to UART %s ("RETCODE_HR_FMT")", autopilotUart, RETCODE_HR_PARAMS(rc));
+        logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
         return 0;
     }
     else if (writtenBytes != expectedSize) {
-        fprintf(stderr, "[%s] Warning: Failed to write message to autopilot: %ld bytes were expected, %ld bytes were sent\n", ENTITY_NAME, expectedSize, writtenBytes);
+        char logBuffer[256];
+        snprintf(logBuffer, 256, "Failed to write message to autopilot: %ld bytes were expected, %ld bytes were sent", expectedSize, writtenBytes);
+        logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
         return 0;
     }
 
@@ -33,40 +37,48 @@ int writeIntValue(int32_t value) {
 
 int initAutopilotConnector() {
     while (!waitForInit("periphery_controller_connection", "PeripheryController")) {
-        fprintf(stderr, "[%s] Warning: Failed to receive initialization notification from Periphery Controller. Trying again in %ds\n", ENTITY_NAME, 1);
+        logEntry("Failed to receive initialization notification from Periphery Controller. Trying again in 1s", ENTITY_NAME, LogLevel::LOG_WARNING);
         sleep(1);
     }
 
     char boardName[NAME_MAX_LENGTH] = {0};
     if (KnHalGetEnv("board", boardName, sizeof(boardName)) != rcOk) {
-        fprintf(stderr, "[%s] Error: Failed to get board name\n", ENTITY_NAME);
+        logEntry("Failed to get board name", ENTITY_NAME, LogLevel::LOG_ERROR);
         return 0;
     }
 
     char autopilotConfig[NAME_MAX_LENGTH];
     if (snprintf(autopilotConfig, NAME_MAX_LENGTH, "%s.%s", boardName, autopilotConfigSuffix) < 0) {
-        fprintf(stderr, "[%s] Error: Failed to generate UART config name\n", ENTITY_NAME);
+        logEntry("Failed to generate UART config name", ENTITY_NAME, LogLevel::LOG_ERROR);
         return 0;
     }
 
     Retcode rc = BspInit(NULL);
     if (rc != rcOk) {
-        fprintf(stderr, "[%s] Error: Failed to initialize BSP ("RETCODE_HR_FMT")\n", ENTITY_NAME, RETCODE_HR_PARAMS(rc));
+        char logBuffer[256];
+        snprintf(logBuffer, 256, "Failed to initialize BSP ("RETCODE_HR_FMT")", RETCODE_HR_PARAMS(rc));
+        logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_ERROR);
         return 0;
     }
     rc = BspEnableModule(autopilotUart);
     if (rc != rcOk) {
-        fprintf(stderr, "[%s] Error: Failed to enable UART %s ("RETCODE_HR_FMT")\n", ENTITY_NAME, autopilotUart, RETCODE_HR_PARAMS(rc));
+        char logBuffer[256];
+        snprintf(logBuffer, 256, "Failed to enable UART %s ("RETCODE_HR_FMT")", autopilotUart, RETCODE_HR_PARAMS(rc));
+        logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_ERROR);
         return 0;
     }
     rc = BspSetConfig(autopilotUart, autopilotConfig);
     if (rc != rcOk) {
-        fprintf(stderr, "[%s] Error: Failed to set BSP config for UART %s ("RETCODE_HR_FMT")\n", ENTITY_NAME, autopilotUart, RETCODE_HR_PARAMS(rc));
+        char logBuffer[256];
+        snprintf(logBuffer, 256, "Failed to set BSP config for UART %s ("RETCODE_HR_FMT")", autopilotUart, RETCODE_HR_PARAMS(rc));
+        logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_ERROR);
         return 0;
     }
     rc = UartInit();
     if (rc != rcOk) {
-        fprintf(stderr, "[%s] Error: Failed to initialize UART ("RETCODE_HR_FMT")\n", ENTITY_NAME, RETCODE_HR_PARAMS(rc));
+        char logBuffer[256];
+        snprintf(logBuffer, 256, "Failed to initialize UART ("RETCODE_HR_FMT")", RETCODE_HR_PARAMS(rc));
+        logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_ERROR);
         return 0;
     }
 
@@ -76,7 +88,9 @@ int initAutopilotConnector() {
 int initConnection() {
     Retcode rc = UartOpenPort(autopilotUart, &autopilotUartHandler);
     if (rc != rcOk) {
-        fprintf(stderr, "[%s] Warning: Failed to open UART %s ("RETCODE_HR_FMT")\n", ENTITY_NAME, autopilotUart, RETCODE_HR_PARAMS(rc));
+        char logBuffer[256];
+        snprintf(logBuffer, 256, "Failed to open UART %s ("RETCODE_HR_FMT")", autopilotUart, RETCODE_HR_PARAMS(rc));
+        logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
         return 0;
     }
 
@@ -88,12 +102,14 @@ int getAutopilotCommand(uint8_t& command) {
     for (int i = 0; i < AUTOPILOT_COMMAND_MESSAGE_HEAD_SIZE; i++) {
         Retcode rc = UartReadByte(autopilotUartHandler, message + i);
         if (rc != rcOk) {
-            fprintf(stderr, "[%s] Warning: Failed to read from UART %s ("RETCODE_HR_FMT")\n", ENTITY_NAME, autopilotUart, RETCODE_HR_PARAMS(rc));
+            char logBuffer[256];
+            snprintf(logBuffer, 256, "Failed to read from UART %s ("RETCODE_HR_FMT")", autopilotUart, RETCODE_HR_PARAMS(rc));
+            logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
             return 0;
         }
 
         if (message[i] != AutopilotCommandMessageHead[i]) {
-            fprintf(stderr, "[%s] Warning: Received message has an unknown header\n", ENTITY_NAME);
+            logEntry("Received message has an unknown header", ENTITY_NAME, LogLevel::LOG_WARNING);
             return 0;
         }
     }
@@ -103,11 +119,15 @@ int getAutopilotCommand(uint8_t& command) {
     Retcode rc = UartRead(autopilotUartHandler, (rtl_uint8_t*)(message + AUTOPILOT_COMMAND_MESSAGE_HEAD_SIZE),
         expectedSize, NULL, &readBytes);
     if (rc != rcOk) {
-        fprintf(stderr, "[%s] Warning: Failed to read from UART %s ("RETCODE_HR_FMT")\n", ENTITY_NAME, autopilotUart, RETCODE_HR_PARAMS(rc));
+        char logBuffer[256];
+        snprintf(logBuffer, 256, "Failed to read from UART %s ("RETCODE_HR_FMT")", autopilotUart, RETCODE_HR_PARAMS(rc));
+        logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
         return 0;
     }
     else if (readBytes != expectedSize) {
-        fprintf(stderr, "[%s] Warning: Failed to read message from autopilot: %ld bytes were expected, %ld bytes were received\n", ENTITY_NAME, expectedSize, readBytes);
+        char logBuffer[256];
+        snprintf(logBuffer, 256, "Failed to read message from autopilot: %ld bytes were expected, %ld bytes were received", expectedSize, readBytes);
+        logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
         return 0;
     }
 
@@ -122,11 +142,15 @@ int sendAutopilotCommand(AutopilotCommand command) {
     ssize_t expectedSize = sizeof(AutopilotCommandMessage);
     Retcode rc = UartWrite(autopilotUartHandler, (uint8_t*)(&message), expectedSize, NULL, &writtenBytes);
     if (rc != rcOk) {
-        fprintf(stderr, "[%s] Warning: Failed to write to UART %s ("RETCODE_HR_FMT")\n", ENTITY_NAME, autopilotUart, RETCODE_HR_PARAMS(rc));
+        char logBuffer[256];
+        snprintf(logBuffer, 256, "Failed to write to UART %s ("RETCODE_HR_FMT")", autopilotUart, RETCODE_HR_PARAMS(rc));
+        logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
         return 0;
     }
     else if (writtenBytes != expectedSize) {
-        fprintf(stderr, "[%s] Warning: Failed to write message to autopilot: %ld bytes were expected, %ld bytes were sent\n", ENTITY_NAME, expectedSize, writtenBytes);
+        char logBuffer[256];
+        snprintf(logBuffer, 256, "Failed to write message to autopilot: %ld bytes were expected, %ld bytes were sent", expectedSize, writtenBytes);
+        logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
         return 0;
     }
 

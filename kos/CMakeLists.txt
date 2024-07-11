@@ -40,14 +40,23 @@ endif ()
 find_package (MbedTLS REQUIRED COMPONENTS)
 include_directories (${MbedTLS_INCLUDE})
 
+set (fmt_USE_STATIC ON)
+set (spdlog_USE_STATIC ON)
+find_package (spdlog REQUIRED)
+include_directories (${koslogger_INCLUDE})
+find_package (logger REQUIRED)
+
 nk_build_idl_files (initialization_idl_files NK_MODULE "drone_controller" IDL "resources/Initialization.idl")
 
-nk_build_idl_files (autopilot_connector_idl_files DEPENDS initialization_idl_files NK_MODULE "drone_controller" IDL "resources/AutopilotConnectorInterface.idl")
-nk_build_idl_files (credential_manager_idl_files DEPENDS initialization_idl_files NK_MODULE "drone_controller" IDL "resources/CredentialManagerInterface.idl")
-nk_build_idl_files (navigation_system_idl_files DEPENDS initialization_idl_files NK_MODULE "drone_controller" IDL "resources/NavigationSystemInterface.idl")
-nk_build_idl_files (periphery_controller_idl_files DEPENDS initialization_idl_files NK_MODULE "drone_controller" IDL "resources/PeripheryControllerInterface.idl")
-nk_build_idl_files (server_connector_idl_files DEPENDS initialization_idl_files NK_MODULE "drone_controller" IDL "resources/ServerConnectorInterface.idl")
+nk_build_idl_files (logger_idl_files DEPENDS initialization_idl_files NK_MODULE "drone_controller" IDL "resources/LoggerInterface.idl")
 
+nk_build_idl_files (autopilot_connector_idl_files DEPENDS logger_idl_files NK_MODULE "drone_controller" IDL "resources/AutopilotConnectorInterface.idl")
+nk_build_idl_files (credential_manager_idl_files DEPENDS logger_idl_files NK_MODULE "drone_controller" IDL "resources/CredentialManagerInterface.idl")
+nk_build_idl_files (navigation_system_idl_files DEPENDS logger_idl_files NK_MODULE "drone_controller" IDL "resources/NavigationSystemInterface.idl")
+nk_build_idl_files (periphery_controller_idl_files DEPENDS logger_idl_files NK_MODULE "drone_controller" IDL "resources/PeripheryControllerInterface.idl")
+nk_build_idl_files (server_connector_idl_files DEPENDS logger_idl_files NK_MODULE "drone_controller" IDL "resources/ServerConnectorInterface.idl")
+
+nk_build_edl_files (logger_edl_files IDL_TARGET logger_idl_files NK_MODULE "drone_controller" EDL "resources/Logger.edl")
 nk_build_edl_files (autopilot_connector_edl_files IDL_TARGET autopilot_connector_idl_files NK_MODULE "drone_controller" EDL "resources/AutopilotConnector.edl")
 nk_build_edl_files (credential_manager_edl_files IDL_TARGET credential_manager_idl_files NK_MODULE "drone_controller" EDL "resources/CredentialManager.edl")
 nk_build_edl_files (navigation_system_edl_files IDL_TARGET navigation_system_idl_files NK_MODULE "drone_controller" EDL "resources/NavigationSystem.edl")
@@ -67,12 +76,13 @@ add_link_options (LINKER:-z,noexecstack
                   LINKER:-z,separate-code
                   LINKER:-z,now)
 
+add_subdirectory (logger)
 add_subdirectory (autopilot_connector)
 add_subdirectory (credential_manager)
-add_subdirectory (flight_controller)
 add_subdirectory (navigation_system)
 add_subdirectory (periphery_controller)
 add_subdirectory (server_connector)
+add_subdirectory (flight_controller)
 
 if (SIMULATION)
     if (SERVER)

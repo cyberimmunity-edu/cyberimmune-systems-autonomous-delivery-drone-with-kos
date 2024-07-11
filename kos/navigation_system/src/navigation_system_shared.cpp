@@ -30,27 +30,27 @@ void sendCoords() {
     float dop;
     int32_t prevLat, prevLng, lat, lng, alt, azimuth, sats;
     while (!getCoords(prevLat, prevLng, alt)) {
-        fprintf(stderr, "[%s] Warning: Failed to get coords from Navigation System. Trying again in 1s\n", ENTITY_NAME);
+        logEntry("Failed to get coords from Navigation System. Trying again in 1s", ENTITY_NAME, LogLevel::LOG_WARNING);
         sleep(1);
     }
 
     while (true) {
         if (!getCoords(lat, lng, alt))
-            fprintf(stderr, "[%s] Warning: Failed to get GPS coords. Trying again in 500ms\n", ENTITY_NAME);
+            logEntry("Failed to get GPS coords. Trying again in 500ms", ENTITY_NAME, LogLevel::LOG_WARNING);
         else {
             if (!getGpsInfo(dop, sats))
-                fprintf(stderr, "[%s] Warning: Failed to get GPS's sats and dop. Trying again in 500ms\n", ENTITY_NAME);
+                logEntry("Failed to get GPS's sats and dop. Trying again in 500ms", ENTITY_NAME, LogLevel::LOG_WARNING);
             else {
                 azimuth = round(atan2(lng - prevLng, lat - prevLat) * 1800000000 / M_PI);
                 prevLat = lat;
                 prevLng = lng;
                 snprintf(request, 1024, "/api/telemetry?%s&lat=%d&lon=%d&alt=%d&azimuth=%d&dop=%f&sats=%d", BOARD_ID, lat, lng, alt, azimuth, dop, sats);
                 if (!signMessage(request, signature))
-                    fprintf(stderr, "[%s] Warning: Failed to sign 'coordinate' message at Credential Manager. Trying again in 500ms\n", ENTITY_NAME);
+                    logEntry("Failed to sign 'coordinate' message at Credential Manager. Trying again in 500ms", ENTITY_NAME, LogLevel::LOG_WARNING);
                 else {
                     snprintf(request, 1024, "%s&sig=0x%s", request, signature);
                     if (!sendRequest(request, response))
-                        fprintf(stderr, "[%s] Warning: Failed to send 'coordinate' request through Server Connector. Trying again in 500ms\n", ENTITY_NAME);
+                        logEntry("Failed to send 'coordinate' request through Server Connector. Trying again in 500ms", ENTITY_NAME, LogLevel::LOG_WARNING);
                 }
             }
         }
@@ -87,7 +87,7 @@ void setAltitude(int32_t altitude) {
     if (!hasAlt && (altitude != 0)) {
         hasAlt = true;
         if (hasPosition())
-            fprintf(stderr, "[%s] Info: Consistent coordinates are received\n", ENTITY_NAME);
+            logEntry("Consistent coordinates are received", ENTITY_NAME, LogLevel::LOG_INFO);
     }
 }
 
@@ -99,7 +99,7 @@ void setCoords(int32_t latitude, int32_t longitude) {
     if (!hasCoords && (latitude != 0) && (longitude != 0)) {
         hasCoords = true;
         if (hasPosition())
-            fprintf(stderr, "[%s] Info: Consistent coordinates are received\n", ENTITY_NAME);
+            logEntry("Consistent coordinates are received", ENTITY_NAME, LogLevel::LOG_INFO);
     }
 }
 
