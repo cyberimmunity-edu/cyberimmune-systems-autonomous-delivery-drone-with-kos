@@ -71,9 +71,15 @@ def key_ms_exchange_handler(id: int):
     return str_to_send
 
 def auth_handler(id: int):
-    if not get_entity_by_key(Uav, id):
+    uav_entity = get_entity_by_key(Uav, id)
+    if not uav_entity:
         uav_entity = Uav(id=id, is_armed=False, state='В сети', kill_switch_state=False)
         add_and_commit(uav_entity)
+    else:
+        uav_entity.is_armed = False
+        uav_entity.state = 'В сети'
+        uav_entity.kill_switch_state = False
+        commit_changes()
     
     return f'$Auth id={id}'
 
@@ -191,6 +197,27 @@ def fmission_ms_handler(id: int, mission_str: str):
     return OK
 
 
+def get_logs_handler(id: int):
+    uav_log = None
+    try:
+        with open(f'{LOGS_PATH}/{id}.txt') as f:
+            uav_log = f.read()
+        if uav_log:
+            return uav_log
+        else:
+            return NOT_FOUND
+    except:
+        return NOT_FOUND
+
+def save_logs_handler(id: int, log: str):
+    try:
+        with open(f'{LOGS_PATH}/{id}.txt', 'a') as f:
+            f.write(f'\n{log}')
+    except Exception as e:
+        print(e)
+    return OK
+
+
 def admin_auth_handler(login: str, password: str):
     user_entity = get_entity_by_key(User, login)
     if not user_entity:
@@ -286,6 +313,7 @@ def admin_kill_switch_handler(id: int):
         uav_entity.kill_switch_state = True
         uav_entity.state = "Kill switch ON"
         commit_changes()
+        return OK
 
 def get_id_list_handler():
     uav_entities = Uav.query.order_by(Uav.created_date).all()

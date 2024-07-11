@@ -91,7 +91,7 @@ function customTileLoadFunction(imageTile, src) {
   if (availableTiles.includes(tilePath)) {
       imageTile.getImage().src = localUrl;
   } else {
-      imageTile.getImage().src = src;
+      //imageTile.getImage().src = src;
   }
 }
 
@@ -102,11 +102,17 @@ const tileLayer = new ol.layer.Tile({
   })
 });
 
+const vectorLayer = new ol.layer.Vector({
+  source: new ol.source.Vector({
+    url: '/static/resources/area.kml',
+    format: new ol.format.KML()
+  })
+});
 
 const map = new ol.Map({
 target: 'map',
 layers: [
-  tileLayer
+  tileLayer, vectorLayer
 ],
 view: new ol.View({
   center: place,

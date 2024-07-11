@@ -22,6 +22,8 @@ MISSION_NOT_ACCEPTED = 1
 NOT_FOUND = '$-1'
 OK = '$OK'
 
+LOGS_PATH = './logs'
+
 loaded_keys = {}
 
 
@@ -74,9 +76,10 @@ def read_mission(file_str: str) -> list:
                     drone_home = None
                 cmd = land_handler(lat=ln_param5, lon=ln_param6, alt=ln_param7, home=drone_home)
             else:
-                print('Ошибка: использована неизвестная команда. Список разрешенных команд: 16, 21, 22, 183.')
-                missionlist = []
-                break
+                # print(f'Error: unknown command {ln_command}. Allowed commands: 16, 21, 22, 183.')
+                # missionlist = []
+                # break
+                continue
             
             missionlist.append(cmd)
     return missionlist
@@ -125,11 +128,18 @@ def sign(message: str, key_group: str) -> int:
 
 
 def verify(message: str, signature: int, key_group: str) -> bool:
-    n, e = get_key(key_group, private=False)
-    msg_bytes = message.encode()
-    hash = int.from_bytes(sha256(msg_bytes).digest(), byteorder='big', signed=False)
-    hashFromSignature = pow(signature, e, n)
-    return hash == hashFromSignature
+    try:
+        key_set = get_key(key_group, private=False)
+        if len(key_set) == 2:
+            n, e = key_set
+        else:
+            return False
+        msg_bytes = message.encode()
+        hash = int.from_bytes(sha256(msg_bytes).digest(), byteorder='big', signed=False)
+        hashFromSignature = pow(signature, e, n)
+        return hash == hashFromSignature
+    except:
+        return False
 
 # для теста
 def mock_verifier(*args, **kwargs):

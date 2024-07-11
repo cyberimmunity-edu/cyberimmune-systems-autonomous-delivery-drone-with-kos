@@ -158,6 +158,28 @@ def change_fly_accept():
         return bad_request('Wrong id/decision')
 
 
+@app.route('/logs')
+def logs_page():
+    return render_template('logs.html')
+
+@app.route('/logs/get_logs')
+def get_logs():
+    id = cast_wrapper(request.args.get('id'), int)
+    if id:
+        return regular_request(handler_func=get_logs_handler, id=id)
+    else:
+        return bad_request('Wrong id')
+    
+@app.route('/api/logs')
+def save_logs():
+    id = cast_wrapper(request.args.get('id'), int)
+    log = cast_wrapper(request.args.get('log'), str)
+    if id:
+        return regular_request(handler_func=save_logs_handler, id=id, log=log)
+    else:
+        return bad_request('Wrong id')
+
+
 @app.route('/mission_sender')
 def mission_sender():
     return render_template('mission_sender.html')
