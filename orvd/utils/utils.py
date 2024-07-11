@@ -85,12 +85,19 @@ def read_mission(file_str: str) -> list:
     return missionlist
 
 def home_handler(lat: float, lon: float, alt: float) -> list:
+    lat = round(lat, 7)
+    lon = round(lon, 7)
+    alt = round(alt, 2)
     return ['H', str(lat), str(lon), str(alt)]
 
 def takeoff_handler(alt: float) -> list:
+    alt = round(alt, 2)
     return ['T', str(alt)]
 
 def waypoint_handler(hold: float, lat: float, lon: float, alt: float) -> list:
+    lat = round(lat, 7)
+    lon = round(lon, 7)
+    alt = round(alt, 2)
     return ['W', str(hold), str(lat), str(lon), str(alt)]
 
 def servo_handler(number: float, pwm: float) -> list:
@@ -105,6 +112,10 @@ def land_handler(lat: float, lon: float, alt: float, home: list = None) -> list:
         ret_lat = home[1] if lat == 0. else str(lat)
         ret_lon = home[2] if lon == 0. else str(lon)
         ret_alt = home[3] if alt == 0. else str(alt)
+    
+    ret_lat = round(ret_lat, 7)
+    ret_lon = round(ret_lon, 7)
+    ret_alt = round(ret_alt, 2)
     
     return ['L', ret_lat, ret_lon, ret_alt]
 
