@@ -6,6 +6,7 @@
 #include "../../shared/include/ipc_messages_navigation_system.h"
 #include "../../shared/include/ipc_messages_periphery_controller.h"
 #include "../../shared/include/ipc_messages_server_connector.h"
+#include "../../shared/include/ipc_messages_logger.h"
 
 #include <math.h>
 #include <stdio.h>
@@ -24,19 +25,25 @@ int sendSignedMessage(char* method, char* response, char* errorMessage, uint8_t 
     snprintf(message, 512, "%s?%s", method, BOARD_ID);
 
     while (!signMessage(message, signature)) {
-        fprintf(stderr, "[%s] Warning: Failed to sign %s message at Credential Manager. Trying again in %ds\n", ENTITY_NAME, errorMessage, delay);
+        char logBuffer[256];
+        snprintf(logBuffer, 256, "Failed to sign %s message at Credential Manager. Trying again in %ds", errorMessage, delay);
+        logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
         sleep(delay);
     }
     snprintf(request, 1024, "%s&sig=0x%s", message, signature);
 
     while (!sendRequest(request, response)) {
-        fprintf(stderr, "[%s] Warning: Failed to send %s request through Server Connector. Trying again in %ds\n", ENTITY_NAME, errorMessage, delay);
+        char logBuffer[256];
+        snprintf(logBuffer, 256, "Failed to send %s request through Server Connector. Trying again in %ds", errorMessage, delay);
+        logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
         sleep(delay);
     }
 
     uint8_t authenticity = 0;
     while (!checkSignature(response, authenticity) || !authenticity) {
-        fprintf(stderr, "[%s] Warning: Failed to check signature of %s response received through Server Connector. Trying again in %ds\n", ENTITY_NAME, errorMessage, delay);
+        char logBuffer[256];
+        snprintf(logBuffer, 256, "Failed to check signature of %s response received through Server Connector. Trying again in %ds", errorMessage, delay);
+        logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
         sleep(delay);
     }
 
@@ -45,42 +52,58 @@ int sendSignedMessage(char* method, char* response, char* errorMessage, uint8_t 
 
 int main(void) {
     //Before do anything, we need to ensure, that other modules are ready to work
+    while (!waitForInit("logger_connection", "Logger")) {
+        char logBuffer[256];
+        snprintf(logBuffer, 256, "Failed to receive initialization notification from Logger. Trying again in %ds", RETRY_DELAY_SEC);
+        logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
+        sleep(RETRY_DELAY_SEC);
+    }
     while (!waitForInit("periphery_controller_connection", "PeripheryController")) {
-        fprintf(stderr, "[%s] Warning: Failed to receive initialization notification from Periphery Controller. Trying again in %ds\n", ENTITY_NAME, RETRY_DELAY_SEC);
+        char logBuffer[256];
+        snprintf(logBuffer, 256, "Failed to receive initialization notification from Periphery Controller. Trying again in %ds", RETRY_DELAY_SEC);
+        logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
         sleep(RETRY_DELAY_SEC);
     }
     while (!waitForInit("autopilot_connector_connection", "AutopilotConnector")) {
-        fprintf(stderr, "[%s] Warning: Failed to receive initialization notification from Autopilot Connector. Trying again in %ds\n", ENTITY_NAME, RETRY_DELAY_SEC);
+        char logBuffer[256];
+        snprintf(logBuffer, 256, "Failed to receive initialization notification from Autopilot Connector. Trying again in %ds", RETRY_DELAY_SEC);
+        logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
         sleep(RETRY_DELAY_SEC);
     }
     while (!waitForInit("navigation_system_connection", "NavigationSystem")) {
-        fprintf(stderr, "[%s] Warning: Failed to receive initialization notification from Navigation System. Trying again in %ds\n", ENTITY_NAME, RETRY_DELAY_SEC);
+        char logBuffer[256];
+        snprintf(logBuffer, 256, "Failed to receive initialization notification from Navigation System. Trying again in %ds", RETRY_DELAY_SEC);
+        logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
         sleep(RETRY_DELAY_SEC);
     }
     while (!waitForInit("server_connector_connection", "ServerConnector")) {
-        fprintf(stderr, "[%s] Warning: Failed to receive initialization notification from Server Connector. Trying again in %ds\n", ENTITY_NAME, RETRY_DELAY_SEC);
+        char logBuffer[256];
+        snprintf(logBuffer, 256, "Failed to receive initialization notification from Server Connector. Trying again in %ds", RETRY_DELAY_SEC);
+        logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
         sleep(RETRY_DELAY_SEC);
     }
     while (!waitForInit("credential_manager_connection", "CredentialManager")) {
-        fprintf(stderr, "[%s] Warning: Failed to receive initialization notification from Credential Manager. Trying again in %ds\n", ENTITY_NAME, RETRY_DELAY_SEC);
+        char logBuffer[256];
+        snprintf(logBuffer, 256, "Failed to receive initialization notification from Credential Manager. Trying again in %ds", RETRY_DELAY_SEC);
+        logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
         sleep(RETRY_DELAY_SEC);
     }
-    fprintf(stderr, "[%s] Info: Initialization is finished\n", ENTITY_NAME);
+    logEntry("Initialization is finished", ENTITY_NAME, LogLevel::LOG_INFO);
 
     //Enable buzzer to indicate, that all modules has been initialized
     if (!enableBuzzer())
-        fprintf(stderr, "[%s] Warning: Failed to enable buzzer at Periphery Controller\n", ENTITY_NAME);
+        logEntry("Failed to enable buzzer at Periphery Controller", ENTITY_NAME, LogLevel::LOG_WARNING);
 
     //Copter need to be registered at ORVD
     char authResponse[1024] = {0};
     sendSignedMessage("/api/auth", authResponse, "authentication", RETRY_DELAY_SEC);
-    fprintf(stderr, "[%s] Info: Successfully authenticated on the server\n", ENTITY_NAME);
+    logEntry("Successfully authenticated on the server", ENTITY_NAME, LogLevel::LOG_INFO);
 
     //Constantly ask server, if mission for the drone is available. Parse it and ensure, that mission is correct
     while (true) {
         char missionResponse[1024] = {0};
         if (sendSignedMessage("/api/fmission_kos", missionResponse, "mission", RETRY_DELAY_SEC) && parseMission(missionResponse)) {
-            fprintf(stderr, "[%s] Info: Successfully received mission from the server\n", ENTITY_NAME);
+            logEntry("Successfully received mission from the server", ENTITY_NAME, LogLevel::LOG_INFO);
             printMission();
             break;
         }
@@ -88,14 +111,16 @@ int main(void) {
     }
 
     //The drone is ready to arm
-    fprintf(stderr, "[%s] Info: Ready to arm\n", ENTITY_NAME);
+    logEntry("Ready to arm", ENTITY_NAME, LogLevel::LOG_INFO);
     while (true) {
         //Wait, until autopilot wants to arm (and fails so, as motors are disabled by default)
         while (!waitForArmRequest()) {
-            fprintf(stderr, "[%s] Warning: Failed to receive an arm request from Autopilot Connector. Trying again in %ds\n", ENTITY_NAME, RETRY_DELAY_SEC);
+            char logBuffer[256];
+            snprintf(logBuffer, 256, "Failed to receive an arm request from Autopilot Connector. Trying again in %ds", RETRY_DELAY_SEC);
+            logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
             sleep(RETRY_DELAY_SEC);
         }
-        fprintf(stderr, "[%s] Info: Received arm request. Notifying the server\n", ENTITY_NAME);
+        logEntry("Received arm request. Notifying the server", ENTITY_NAME, LogLevel::LOG_INFO);
 
         //When autopilot asked for arm, we need to receive permission from ORVD
         char armRespone[1024] = {0};
@@ -103,23 +128,25 @@ int main(void) {
 
         if (strstr(armRespone, "$Arm: 0#") != NULL) {
             //If arm was permitted, we enable motors
-            fprintf(stderr, "[%s] Info: Arm is permitted\n", ENTITY_NAME);
+            logEntry("Arm is permitted", ENTITY_NAME, LogLevel::LOG_INFO);
             while (!setKillSwitch(true)) {
-                fprintf(stderr, "[%s] Warning: Failed to permit motor usage at Periphery Controller. Trying again in %ds\n", ENTITY_NAME, RETRY_DELAY_SEC);
+                char logBuffer[256];
+                snprintf(logBuffer, 256, "Failed to permit motor usage at Periphery Controller. Trying again in %ds", RETRY_DELAY_SEC);
+                logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
                 sleep(RETRY_DELAY_SEC);
             }
             if (!permitArm())
-                fprintf(stderr, "[%s] Warning: Failed to permit arm through Autopilot Connector\n", ENTITY_NAME);
+                logEntry("Failed to permit arm through Autopilot Connector", ENTITY_NAME, LogLevel::LOG_WARNING);
             break;
         }
         else if (strstr(armRespone, "$Arm: 1#") != NULL) {
-            fprintf(stderr, "[%s] Info: Arm is forbidden\n", ENTITY_NAME);
+            logEntry("Arm is forbidden", ENTITY_NAME, LogLevel::LOG_INFO);
             if (!forbidArm())
-                fprintf(stderr, "[%s] Warning: Failed to forbid arm through Autopilot Connector\n", ENTITY_NAME);
+                logEntry("Failed to forbid arm through Autopilot Connector", ENTITY_NAME, LogLevel::LOG_WARNING);
         }
         else
-            fprintf(stderr, "[%s] Warning: Failed to parse server response\n", ENTITY_NAME);
-        fprintf(stderr, "[%s] Warning: Arm was not allowed. Waiting for another arm request from autopilot\n", ENTITY_NAME);
+            logEntry("Failed to parse server response", ENTITY_NAME, LogLevel::LOG_WARNING);
+        logEntry("Arm was not allowed. Waiting for another arm request from autopilot", ENTITY_NAME, LogLevel::LOG_WARNING);
     };
 
     //If we get here, the drone is able to arm and start the mission

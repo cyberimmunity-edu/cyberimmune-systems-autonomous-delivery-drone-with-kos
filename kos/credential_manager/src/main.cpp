@@ -1,6 +1,7 @@
 #include "../include/credential_manager.h"
 #include "../include/credential_manager_interface.h"
 #include "../../shared/include/initialization_interface.h"
+#include "../../shared/include/ipc_messages_initialization.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -10,13 +11,18 @@
 #include <drone_controller/CredentialManager.edl.h>
 
 int main(void) {
+    while (!waitForInit("logger_connection", "Logger")) {
+        logEntry("Failed to receive initialization notification from Logger. Trying again in 1s", ENTITY_NAME, LogLevel::LOG_WARNING);
+        sleep(1);
+    }
+
     if (!getRsaKey())
         return EXIT_FAILURE;
 
     if (!shareRsaKey())
         return EXIT_FAILURE;
 
-    fprintf(stderr, "[%s] Info: Initialization is finished\n", ENTITY_NAME);
+    logEntry("Initialization is finished", ENTITY_NAME, LogLevel::LOG_INFO);
 
     NkKosTransport transport;
     initReceiverInterface("credential_manager_connection", transport);
@@ -38,10 +44,10 @@ int main(void) {
         if (nk_transport_recv(&transport.base, &req.base_, &reqArena) == NK_EOK) {
             CredentialManager_entity_dispatch(&entity, &req.base_, &reqArena, &res.base_, &resArena);
             if (nk_transport_reply(&transport.base, &res.base_, &resArena) != NK_EOK)
-                fprintf(stderr, "[%s] Warning: Failed to send a reply to IPC-message\n", ENTITY_NAME);
+                logEntry("Failed to send a reply to IPC-message", ENTITY_NAME, LogLevel::LOG_WARNING);
         }
         else
-            fprintf(stderr, "[%s] Warning: Failed to receive IPC-message\n", ENTITY_NAME);
+            logEntry("Failed to receive IPC-message", ENTITY_NAME, LogLevel::LOG_WARNING);
     };
 
     return EXIT_SUCCESS;

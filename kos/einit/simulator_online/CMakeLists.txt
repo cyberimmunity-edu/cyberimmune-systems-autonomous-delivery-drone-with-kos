@@ -50,7 +50,7 @@ else()
 endif()
 
 set (ENTITIES AutopilotConnector CredentialManager FlightController NavigationSystem PeripheryController ServerConnector
-    ${precompiled_vfsVfsNet} ${rump_DHCPCD_ENTITY} ${wpa_SUPPLICANT_ENTITY} ${precompiled_vfsVfsSdCardFs} ${FS_IMAGE})
+    Logger ${precompiled_vfsVfsNet} ${rump_DHCPCD_ENTITY} ${wpa_SUPPLICANT_ENTITY} ${precompiled_vfsVfsSdCardFs} ${FS_IMAGE})
 
 set (FILES ${CMAKE_SOURCE_DIR}/resources/hdd/etc/wpa_supplicant.conf ${CMAKE_SOURCE_DIR}/resources/hdd/etc/dhcpcd.conf)
 

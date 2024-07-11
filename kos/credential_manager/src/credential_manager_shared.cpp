@@ -48,7 +48,7 @@ int generateRsaKey() {
     mbedtls_mpi_init(&D);
 
     if (mbedtls_ctr_drbg_seed(&drbg, mbedtls_entropy_func, &entropy, (unsigned char*)BOARD_ID, strlen(BOARD_ID)) != 0) {
-        fprintf(stderr, "[%s] Error: Failed to get drbg seed\n", ENTITY_NAME);
+        logEntry("Failed to get drbg seed", ENTITY_NAME, LogLevel::LOG_ERROR);
         mbedtls_entropy_free(&entropy);
         mbedtls_ctr_drbg_free(&drbg);
         mbedtls_mpi_free(&N);
@@ -57,7 +57,7 @@ int generateRsaKey() {
         return 0;
     }
     if(mbedtls_rsa_gen_key(&rsaSelf, mbedtls_ctr_drbg_random, &drbg, 1024, 65537) != 0) {
-        fprintf(stderr, "[%s] Error: Failed to generate RSA key\n", ENTITY_NAME);
+        logEntry("Failed to generate RSA key", ENTITY_NAME, LogLevel::LOG_ERROR);
         mbedtls_entropy_free(&entropy);
         mbedtls_ctr_drbg_free(&drbg);
         mbedtls_mpi_free(&N);
@@ -101,7 +101,7 @@ int shareRsaKey() {
     char rsaServerResponse[1024] = {0};
     snprintf(rsaServerRequest, 1024, "/api/key?%s&e=0x%s&n=0x%s", BOARD_ID, keyE, keyN);
     while (!sendRequest(rsaServerRequest, rsaServerResponse)) {
-        fprintf(stderr, "[%s] Warning: Failed to share RSA key. Trying again in 1s\n", ENTITY_NAME);
+        logEntry("Failed to share RSA key. Trying again in 1s", ENTITY_NAME, LogLevel::LOG_WARNING);
         sleep(1);
     }
     return setRsaKey(rsaServerResponse);
@@ -112,17 +112,17 @@ int signMessage(char* message, char* sign) {
     mbedtls_sha256_context sha256;
     mbedtls_sha256_init(&sha256);
     if (mbedtls_sha256_starts(&sha256, 0) != 0) {
-        fprintf(stderr, "[%s] Warning: Failed to calculate message hash\n", ENTITY_NAME);
+        logEntry("Failed to calculate message hash", ENTITY_NAME, LogLevel::LOG_WARNING);
         mbedtls_sha256_free(&sha256);
         return 0;
     }
     if (mbedtls_sha256_update(&sha256, (unsigned char*)message, strlen(message)) != 0) {
-        fprintf(stderr, "[%s] Warning: Failed to calculate message hash\n", ENTITY_NAME);
+        logEntry("Failed to calculate message hash", ENTITY_NAME, LogLevel::LOG_WARNING);
         mbedtls_sha256_free(&sha256);
         return 0;
     }
     if (mbedtls_sha256_finish(&sha256, hash) != 0) {
-        fprintf(stderr, "[%s] Warning: Failed to calculate message hash\n", ENTITY_NAME);
+        logEntry("Failed to calculate message hash", ENTITY_NAME, LogLevel::LOG_WARNING);
         mbedtls_sha256_free(&sha256);
         return 0;
     }
@@ -133,7 +133,7 @@ int signMessage(char* message, char* sign) {
 
     uint8_t result[128] = {0};
     if (mbedtls_rsa_public(&rsaSelf, key, result) != 0) {
-        fprintf(stderr, "[%s] Warning: Failed to sign message\n", ENTITY_NAME);
+        logEntry("Failed to sign message", ENTITY_NAME, LogLevel::LOG_WARNING);
         return 0;
     }
 

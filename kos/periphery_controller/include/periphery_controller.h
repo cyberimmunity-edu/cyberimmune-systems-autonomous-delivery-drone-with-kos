@@ -1,5 +1,7 @@
 #pragma once
 
+#include "../../shared/include/ipc_messages_logger.h"
+
 int initPeripheryController();
 int initGpioPins();
 

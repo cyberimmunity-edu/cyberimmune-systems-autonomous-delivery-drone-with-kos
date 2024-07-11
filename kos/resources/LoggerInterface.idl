@@ -1,0 +1,7 @@
+package drone_controller.LoggerInterface
+
+const UInt16 MaxLogEntry = 1024;
+
+interface {
+    Log(in string<MaxLogEntry> logEntry, in UInt8 logLevel, out UInt8 success);
+}

@@ -8,7 +8,7 @@ uint16_t serverPort = 8080;
 
 int initServerConnector() {
     if (!wait_for_network()) {
-        fprintf(stderr, "[%s] Error: Connection to network has failed\n", ENTITY_NAME);
+        logEntry("Connection to network has failed", ENTITY_NAME, LogLevel::LOG_ERROR);
         return 0;
     }
 
@@ -21,7 +21,7 @@ int sendRequest(char* query, char* response) {
 
     int socketDesc = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (socketDesc < 0) {
-        fprintf(stderr, "[%s] Warning: Failed to create a socket\n", ENTITY_NAME);
+        logEntry("Failed to create a socket", ENTITY_NAME, LogLevel::LOG_WARNING);
         return 0;
     }
 
@@ -30,16 +30,18 @@ int sendRequest(char* query, char* response) {
     serverAddress.sin_port = htons(serverPort);
     serverAddress.sin_addr.s_addr = inet_addr(SERVER_IP);
     if (connect(socketDesc, (struct sockaddr *)&serverAddress, sizeof(serverAddress)) < 0) {
-	    fprintf(stderr, "[%s] Warning: Connection to %s:%d has failed\n", ENTITY_NAME, SERVER_IP, serverPort);
-		close(socketDesc);
+        char logBuffer[256];
+        snprintf(logBuffer, 256, "Connection to %s:%d has failed", SERVER_IP, serverPort);
+        logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
+        close(socketDesc);
         return 0;
-	}
+    }
 
     if (send(socketDesc, request, sizeof(request), 0) < 0) {
-		fprintf(stderr, "[%s] Warning: Failed to send a request\n", ENTITY_NAME);
-	    close(socketDesc);
-		return 0;
-	}
+        logEntry("Failed to send a request", ENTITY_NAME, LogLevel::LOG_WARNING);
+        close(socketDesc);
+        return 0;
+    }
 
     ssize_t contentLength;
     char buffer[BUFFER_SIZE] = {0};
@@ -50,8 +52,8 @@ int sendRequest(char* query, char* response) {
 
     char* msg = strstr(content, "$");
     if (msg == NULL) {
-        fprintf(stderr, "[%s] Warning: Failed to parse response content\n", ENTITY_NAME);
-		return 0;
+        logEntry("Failed to parse response content", ENTITY_NAME, LogLevel::LOG_WARNING);
+        return 0;
     }
 
     strcpy(response, msg);

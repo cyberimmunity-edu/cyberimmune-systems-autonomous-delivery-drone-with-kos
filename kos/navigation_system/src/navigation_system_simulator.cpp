@@ -16,13 +16,13 @@ void getSensors() {
         restart = false;
         for (int i = 0; i < SIM_SENSOR_DATA_MESSAGE_HEAD_SIZE; i++) {
             if (read(simSensorSocket, message + i, 1) != 1) {
-                fprintf(stderr, "[%s] Warning: Failed to read from socket\n", ENTITY_NAME);
+                logEntry("Failed to read from socket", ENTITY_NAME, LogLevel::LOG_WARNING);
                 restart = true;
                 break;
             }
 
             if (message[i] != SimSensorDataMessageHead[i]) {
-                fprintf(stderr, "[%s] Warning: Received message has an unknown header\n", ENTITY_NAME);
+                logEntry("Received message has an unknown header", ENTITY_NAME, LogLevel::LOG_WARNING);
                 restart = true;
                 break;
             }
@@ -36,15 +36,18 @@ void getSensors() {
                 setCoords(data->latitude, data->longitude);
                 setAltitude(data->altitude);
             }
-            else
-                fprintf(stderr, "[%s] Warning: Failed to read message from autopilot: %ld bytes were expected, %ld bytes were received\n", ENTITY_NAME, expectedSize, readBytes);
+            else {
+                char logBuffer[256];
+                snprintf(logBuffer, 256, "Failed to read message from autopilot: %ld bytes were expected, %ld bytes were received", expectedSize, readBytes);
+                logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
+            }
         }
     }
 }
 
 int initNavigationSystem() {
     if (!wait_for_network()) {
-        fprintf(stderr, "[%s] Error: Connection to network has failed\n", ENTITY_NAME);
+        logEntry("Connection to network has failed", ENTITY_NAME, LogLevel::LOG_ERROR);
         return 0;
     }
 
@@ -55,7 +58,7 @@ int initSensors() {
     simSensorSocket = NULL;
 
     if ((simSensorSocket = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
-        fprintf(stderr, "[%s] Warning: Failed to create socket\n", ENTITY_NAME);
+        logEntry("Failed to create socket", ENTITY_NAME, LogLevel::LOG_WARNING);
         return 0;
     }
 
@@ -65,7 +68,9 @@ int initSensors() {
     address.sin_port = htons(simSensorPort);
 
     if (connect(simSensorSocket, (struct sockaddr*)&address, sizeof(address)) != 0) {
-        fprintf(stderr, "[%s] Warning: Connection to %s:%d has failed\n", ENTITY_NAME, SIMULATOR_IP, simSensorPort);
+        char logBuffer[256];
+        snprintf(logBuffer, 256, "Connection to %s:%d has failed", SIMULATOR_IP, simSensorPort);
+        logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
         return 0;
     }
 
