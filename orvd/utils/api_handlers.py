@@ -211,6 +211,8 @@ def get_logs_handler(id: int):
 
 def save_logs_handler(id: int, log: str):
     try:
+        if not os.path.exists(LOGS_PATH):
+            os.makedirs(LOGS_PATH)
         with open(f'{LOGS_PATH}/{id}.txt', 'a') as f:
             f.write(f'\n{log}')
     except Exception as e:
