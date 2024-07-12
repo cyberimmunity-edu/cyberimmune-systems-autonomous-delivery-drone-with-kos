@@ -109,9 +109,9 @@ def land_handler(lat: float, lon: float, alt: float, home: list = None) -> list:
         ret_lon = lon
         ret_alt = alt
     else:
-        ret_lat = home[1] if lat == 0. else lat
-        ret_lon = home[2] if lon == 0. else lon
-        ret_alt = home[3] if alt == 0. else alt
+        ret_lat = float(home[1]) if lat == 0. else lat
+        ret_lon = float(home[2]) if lon == 0. else lon
+        ret_alt = float(home[3]) if alt == 0. else alt
     
     ret_lat = round(ret_lat, 7)
     ret_lon = round(ret_lon, 7)
