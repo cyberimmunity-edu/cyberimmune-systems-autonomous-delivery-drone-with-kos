@@ -105,19 +105,19 @@ def servo_handler(number: float, pwm: float) -> list:
 
 def land_handler(lat: float, lon: float, alt: float, home: list = None) -> list:
     if home == None:
-        ret_lat = str(lat)
-        ret_lon = str(lon)
-        ret_alt = str(alt)
+        ret_lat = lat
+        ret_lon = lon
+        ret_alt = alt
     else:
-        ret_lat = home[1] if lat == 0. else str(lat)
-        ret_lon = home[2] if lon == 0. else str(lon)
-        ret_alt = home[3] if alt == 0. else str(alt)
+        ret_lat = home[1] if lat == 0. else lat
+        ret_lon = home[2] if lon == 0. else lon
+        ret_alt = home[3] if alt == 0. else alt
     
     ret_lat = round(ret_lat, 7)
     ret_lon = round(ret_lon, 7)
     ret_alt = round(ret_alt, 2)
     
-    return ['L', ret_lat, ret_lon, ret_alt]
+    return ['L', str(ret_lat), str(ret_lon), str(ret_alt)]
 
 
 def encode_mission(mission_list: list) -> list:
