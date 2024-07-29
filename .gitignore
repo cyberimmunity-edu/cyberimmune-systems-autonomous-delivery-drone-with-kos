@@ -1,0 +1,59 @@
+# Prerequisites
+*.d
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Fortran module files
+*.mod
+*.smod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+
+# Build cache
+build
+
+# clang-check
+*.plist
+
+# manual backups
+*.bkp
+
+*.zip
+
+# Ignore IDE files.
+.vscode/
+
+# No need image to be commited
+*.img
+
+# mavproxy cache
+mav.parm
+mav.tlog
+mav.tlog.raw
+
+# ardupilot cache
+eeprom.bin
+logs
+terrain

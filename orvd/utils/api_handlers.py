@@ -2,7 +2,10 @@ from utils.db_utils import *
 from utils.utils import *
 
 arm_queue = set()
-    
+
+def bad_request(message: str):
+    return message, 400
+        
 def signed_request(handler_func, verifier_func, signer_func, query_str, key_group, sig, **kwargs):
     if sig != None and verifier_func(query_str, int(sig, 16), key_group):
         answer = handler_func(**kwargs)
@@ -31,14 +34,20 @@ def check_user_token(token):
         return False
     
 def regular_request(handler_func, **kwargs):
-    answer = handler_func(**kwargs)
-    ret_code = 200
+    try:
+        answer = handler_func(**kwargs)
+        ret_code = 200
+    except:
+        answer = 'Conflict.'
+        ret_code = 409
     return answer, ret_code
 
-
+    
 def key_kos_exchange_handler(id: int, n: str, e: str):
     n, e = str(int(n, 16)), str(int(e, 16))
-    save_public_key(n, e, f'kos{id}')
+    key_entity = get_entity_by_key(UavPublicKeys, id)
+    if key_entity == None:
+        save_public_key(n, e, f'kos{id}')
     orvd_n, orvd_e = get_key('orvd', private=False)
     str_to_send = f'$Key: {hex(orvd_n)[2:]} {hex(orvd_e)[2:]}'
     return str_to_send
@@ -49,7 +58,9 @@ def key_ms_exchange_handler(id: int):
         generate_keys(ORVD_KEY_SIZE, key_group)
     key = loaded_keys[key_group].publickey()
     n, e = str(key.n), str(key.e)
-    save_public_key(n, e, f'ms{id}')
+    key_entity = get_entity_by_key(MissionSenderPublicKeys, id)
+    if key_entity == None:
+        save_public_key(n, e, f'ms{id}')
     orvd_key_pk = get_key('orvd', private=True).publickey()
     orvd_n, orvd_e = orvd_key_pk.n, orvd_key_pk.e
     str_to_send = f'$Key: {hex(orvd_n)[2:]} {hex(orvd_e)[2:]}'
@@ -111,24 +122,34 @@ def kill_switch_handler(id: int):
     else:
         return f'$KillSwitch: {KILL_SWITCH_OFF}'
     
-def telemetry_handler(id: int, lat: float, lon: float, alt: float, azimuth: float):
+def telemetry_handler(id: int, lat: float, lon: float, alt: float,
+                      azimuth: float, dop: float, sats: float):
     uav_entity = get_entity_by_key(Uav, id)
     if not uav_entity:
         return NOT_FOUND
     else:
-        lat = float(lat) / 1e7
-        lon = float(lon) / 1e7
-        alt = float(alt) / 1e2
-        azimuth = float(azimuth) / 1e7
+        lat = cast_wrapper(lat, float)
+        if lat: lat /= 1e7
+        lon = cast_wrapper(lon, float)
+        if lon: lon /= 1e7
+        alt = cast_wrapper(alt, float)
+        if alt: alt /= 1e2
+        azimuth = cast_wrapper(azimuth, float)
+        if azimuth: azimuth /= 1e7
+        dop = cast_wrapper(dop, float)
+        sats = cast_wrapper(sats, int)
         uav_telemetry_entity = get_entity_by_key(UavTelemetry, uav_entity.id)
         if not uav_telemetry_entity:
-            uav_telemetry_entity = UavTelemetry(uav_id=uav_entity.id, lat=lat, lon=lon, alt=alt, azimuth=azimuth)
+            uav_telemetry_entity = UavTelemetry(uav_id=uav_entity.id, lat=lat, lon=lon, alt=alt,
+                                                azimuth=azimuth, dop=dop, sats=sats)
             add_and_commit(uav_telemetry_entity)
         else:
             uav_telemetry_entity.lat = lat
             uav_telemetry_entity.lon = lon
             uav_telemetry_entity.alt = alt
             uav_telemetry_entity.azimuth = azimuth
+            uav_telemetry_entity.dop = dop
+            uav_telemetry_entity.sats = sats
             commit_changes()
         if not uav_entity.is_armed:
             return f'$Arm: {DISARMED}'
@@ -232,7 +253,8 @@ def get_telemetry_handler(id: int):
         return NOT_FOUND
     else:
         telemetry = (str(uav_telemetry_entity.lat), str(uav_telemetry_entity.lon),
-                     str(uav_telemetry_entity.alt), str(uav_telemetry_entity.azimuth))
+                     str(uav_telemetry_entity.alt), str(uav_telemetry_entity.azimuth),
+                     str(uav_telemetry_entity.dop), str(uav_telemetry_entity.sats))
         return "&".join(telemetry)
         
 
@@ -249,7 +271,7 @@ def mission_decision_handler(id: int, decision: int):
         else:
             mission_entity.is_accepted = False
         commit_changes()
-        return '$Ok'
+        return OK
 
 def admin_kill_switch_handler(id: int):
     uav_entity = get_entity_by_key(Uav, id)
@@ -257,7 +279,7 @@ def admin_kill_switch_handler(id: int):
         return NOT_FOUND
     else:
         uav_entity.is_armed = False
-        uav_entity.kill_switch = True
+        uav_entity.kill_switch_state = True
         uav_entity.state = "Kill switch ON"
         commit_changes()
 
@@ -265,3 +287,27 @@ def get_id_list_handler():
     uav_entities = Uav.query.order_by(Uav.created_date).all()
     uav_ids = list(map(lambda e: e.id, uav_entities))
     return str(uav_ids)
+
+def get_mission_state_handler(id: int):
+    uav_entity = get_entity_by_key(Uav, id)
+    if uav_entity:
+        mission = get_entity_by_key(Mission, id)
+        if mission:
+            if mission.is_accepted:
+                return str(MISSION_ACCEPTED)
+            else:
+                return str(MISSION_NOT_ACCEPTED)
+    return NOT_FOUND
+
+def change_fly_accept_handler(id: int, decision: int):
+    uav_entity = get_entity_by_key(Uav, id)
+    if uav_entity:
+        if decision == 0:
+            uav_entity.is_armed = True
+            uav_entity.state = 'В полете'
+        else:
+            uav_entity.is_armed = False
+            uav_entity.state = 'В сети'
+        commit_changes()
+        return OK
+    return NOT_FOUND

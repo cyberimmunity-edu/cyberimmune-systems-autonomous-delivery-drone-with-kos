@@ -1,0 +1,55 @@
+@startuml scheme5
+
+package "ОРВД" {
+    HTTP - [Apache2]
+    [Apache2] - [Flask app]
+    [Flask app] - [SQLite]
+}
+
+package "Arducopter" {
+    [SITL]
+}
+
+package "Planner" {
+    [MAVProxy]
+}
+
+package "Monitor" {
+    [KOS]
+}
+
+package "External Planner" {
+    [APM Planner 2]
+}
+
+[KOS] <--> HTTP : TCP 8080
+[SITL] <--> [KOS] : TCP 5765
+[MAVProxy] <--> [SITL] : Serial1 TCP 5760
+[MAVProxy] --> [SITL] : UDP 5501
+[APM Planner 2] <-- [MAVProxy] : UDP 14550
+
+note right of [KOS]
+    Модуль безопасности.
+    Контролирует выполнение полётного задания
+    в рамках целей и политик безопасности (ЦПБ).
+end note
+
+note right of [SITL]
+    Симулятор квадрокоптера.
+end note
+
+note right of ОРВД
+    Система организации воздушного движения.
+end note
+
+note right of [MAVProxy]
+    Управляющая наземная станция 
+    для автономных систем с текстовым интерфейсом.
+end note
+
+note right of [APM Planner 2]
+    Управляющая наземная станция 
+    для автономных систем с графическим интерфейсом.
+end note
+
+@enduml

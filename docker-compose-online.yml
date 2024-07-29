@@ -1,4 +1,3 @@
-version: '3.4'
 
 services:
 #################################################
@@ -8,7 +7,7 @@ services:
       context: .
       dockerfile: ./Dockerfile
     container_name: kos
-    command: /home/user/kos/cross-build-sim-online.sh
+    command: /home/user/kos/cross-build-sim-online.sh 172.28.0.2 172.28.0.4
     working_dir: /home/user/kos
     user: user
     depends_on:
@@ -23,7 +22,7 @@ services:
       context: .
       dockerfile: ./Dockerfile
     container_name: arducopter
-    command: /home/user/ardupilot/sitl/bin/arducopter -S --model + --speedup 1 --slave 0  --serial5=tcp:5765:wait --serial6=tcp:5766:wait --serial7=tcp:5767:wait --defaults copter.parm --sim-address=172.28.0.2 --home=-35.3633463,149.1652273,587.05,0 -I0
+    command: /home/user/ardupilot/sitl/bin/arducopter -S --model + --speedup 1 --slave 0  --serial5=tcp:5765:wait --serial6=tcp:5766:wait --serial7=tcp:5767:wait --defaults copter.parm --sim-address=172.28.0.2 --home=53.1019446,107.3774394,846.22,0 -I0
     working_dir: /home/user/ardupilot
     user: user
     restart: always

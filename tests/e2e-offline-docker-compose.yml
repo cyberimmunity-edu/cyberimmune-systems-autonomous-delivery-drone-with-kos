@@ -1,0 +1,68 @@
+
+services:
+#################################################
+  kos:
+    image: simulator
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    container_name: kos
+    command: /home/user/kos/cross-build-sim-offline.sh 172.28.0.2
+    working_dir: /home/user/kos
+    user: user
+    depends_on:
+      - arducopter
+    networks:
+      cyberimmune:
+        ipv4_address: 172.28.0.1
+#################################################
+  arducopter:
+    image: simulator
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    container_name: arducopter
+    command: /home/user/ardupilot/sitl/bin/arducopter -S --model + --speedup 1 --slave 0  --serial5=tcp:5765:wait --serial6=tcp:5766:wait --serial7=tcp:5767:wait --defaults copter.parm --sim-address=172.28.0.2 --home=53.1019446,107.3774394,846.22,0 -I0
+    working_dir: /home/user/ardupilot
+    user: user
+    restart: always
+    ports:
+      - "5501:5501"
+      - "5502:5502"
+      - "5760:5760"
+      - "5761:5661"
+      - "5762:5762"
+      - "5763:5763"
+      - "5764:5764"
+      - "5765:5765"
+      - "5766:5766"
+      - "5767:5767"
+      - "9005:9005"
+    networks:
+      cyberimmune:
+        ipv4_address: 172.28.0.2
+#################################################
+  mavproxy:
+    image: simulator
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    container_name: mavproxy
+    command: expect /home/user/tests/e2e-offline.exp
+    working_dir: /home/user/mavproxy
+    user: user
+    depends_on:
+      - arducopter
+    restart: "no"
+    networks:
+      cyberimmune:
+        ipv4_address: 172.28.0.3
+#################################################
+networks:
+  cyberimmune:
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.28.0.0/16
+          ip_range: 172.28.5.0/24
+          gateway: 172.28.5.254

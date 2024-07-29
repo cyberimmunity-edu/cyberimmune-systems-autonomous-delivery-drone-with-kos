@@ -1,4 +1,4 @@
-FROM ubuntu:22.04
+FROM cr.yandex/mirror/ubuntu:22.04
 
 ENV DEBIAN_FRONTEND noninteractive
 ENV PATH="${PATH}:/opt/KasperskyOS-Community-Edition-1.2.0.45/toolchain/bin:/home/user/.local/bin"
@@ -19,8 +19,12 @@ RUN apt-get update && \
         vim \
         curl \
         tar \
+        expect \
         build-essential \
         device-tree-compiler \
+        parted \
+        fdisk \
+        dosfstools \
         && adduser --disabled-password --gecos "" user \
         && echo 'user ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers
 
@@ -38,13 +42,8 @@ RUN su -c 'pip3 install PyYAML mavproxy pymavlink --user --upgrade' user
 COPY ./ardupilot /home/user/ardupilot
 COPY ./kos /home/user/kos
 COPY ./planner /home/user/planner
+COPY ./tests /home/user/tests
 
-# arducopter container IP is 172.28.0.2 (from docker-compose.yml)
-# orvd container IP is 172.28.0.4 (from docker-compose.yml)
-RUN sed -i -e 's/SIMULATOR_IP=.*$/SIMULATOR_IP="172.28.0.2" \\/g' /home/user/kos/cross-build-sim-offline.sh \
-    && sed -i -e 's/SIMULATOR_IP=.*$/SIMULATOR_IP="172.28.0.2" \\/g' /home/user/kos/cross-build-sim-online.sh \
-    && sed -i -e 's/SERVER_IP=.*$/SERVER_IP="172.28.0.4" \\/g' /home/user/kos/cross-build-sim-offline.sh \
-    && sed -i -e 's/SERVER_IP=.*$/SERVER_IP="172.28.0.4" \\/g' /home/user/kos/cross-build-sim-online.sh \
-    && chown -R 1000:1000 /home/user
+RUN chown -R 1000:1000 /home/user
 
 CMD ["bash"]

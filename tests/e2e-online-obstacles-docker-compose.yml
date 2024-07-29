@@ -1,0 +1,82 @@
+
+services:
+#################################################
+  kos:
+    image: simulator
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    container_name: kos
+    command: /home/user/kos/cross-build-sim-online.sh 172.28.0.2 172.28.0.4
+    working_dir: /home/user/kos
+    user: user
+    depends_on:
+      - arducopter
+    networks:
+      cyberimmune:
+        ipv4_address: 172.28.0.1
+#################################################
+  arducopter:
+    image: simulator
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    container_name: arducopter
+    command: /home/user/ardupilot/sitl_obstacles/bin/arducopter -S --model + --speedup 1 --slave 0  --serial5=tcp:5765:wait --serial6=tcp:5766:wait --serial7=tcp:5767:wait --defaults copter.parm --sim-address=172.28.0.2 --home=53.1019446,107.3774394,846.22,0 -I0
+    working_dir: /home/user/ardupilot
+    user: user
+    restart: always
+    ports:
+      - "5501:5501"
+      - "5502:5502"
+      - "5760:5760"
+      - "5761:5661"
+      - "5762:5762"
+      - "5763:5763"
+      - "5764:5764"
+      - "5765:5765"
+      - "5766:5766"
+      - "5767:5767"
+      - "9005:9005"
+    networks:
+      cyberimmune:
+        ipv4_address: 172.28.0.2
+#################################################
+  mavproxy:
+    image: simulator
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    container_name: mavproxy
+    command: expect /home/user/tests/e2e-online.exp
+    working_dir: /home/user/mavproxy
+    user: user
+    depends_on:
+      - arducopter
+    restart: "no"
+    networks:
+      cyberimmune:
+        ipv4_address: 172.28.0.3
+#################################################
+  orvd:
+    image: orvd
+    build:
+      context: .
+      dockerfile: ./orvd.Dockerfile
+    container_name: orvd
+    working_dir: /home/user/orvd
+    restart: always
+    networks:
+      cyberimmune:
+        ipv4_address: 172.28.0.4
+    ports:
+      - "8080:8080"
+#################################################
+networks:
+  cyberimmune:
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.28.0.0/16
+          ip_range: 172.28.5.0/24
+          gateway: 172.28.5.254

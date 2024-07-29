@@ -17,11 +17,10 @@ var params = getSearchParameters();
 
 document.getElementById('arm').onclick = arm;
 document.getElementById('disarm').onclick = disarm;
-document.getElementById('f_disarm').onclick = f_disarm;
-document.getElementById('fa_disarm').onclick = fa_disarm;
 document.getElementById("id_select").addEventListener("change", onChangeSelector, false);
 document.getElementById('mission_checkbox').onclick = mission_decision;
 document.getElementById('kill_switch').onclick = kill_switch;
+document.getElementById('fly_accept_checkbox').onclick = fly_accept;
 
 ol.proj.useGeographic()
 const place = [142.733472, 46.986186];
@@ -31,6 +30,7 @@ let active_id = null;
 let current_mission = null;
 let uav = null;
 let access_token = params.token;
+var current_state = null;
 
 let uav_style = new ol.style.Style({
   image: new ol.style.Icon({
@@ -180,65 +180,117 @@ function onChangeSelector() {
 }
 
 async function arm() {
-  let resp = await fetch("admin/arm_decision?id=" + active_id + "&decision=0" + "&token=" + access_token);
-  console.log(await resp.text());
-  status_change();
+  console.log('arm')
+  if (active_id != null) {
+    let resp = await fetch("admin/arm_decision?id=" + active_id + "&decision=0" + "&token=" + access_token);
+    console.log(await resp.text());
+    status_change();
+  }
 }
 
 async function disarm() {
-  let resp = await fetch("admin/arm_decision?id=" + active_id + "&decision=1" + "&token=" + access_token);
-  console.log(await resp.text());
-  status_change();
+  if (active_id != null) {
+    let resp = await fetch("admin/arm_decision?id=" + active_id + "&decision=1" + "&token=" + access_token);
+    console.log(await resp.text());
+    status_change();
+  }
 }
 
 async function f_disarm() {
-  let resp = await fetch("admin/force_disarm?id=" + active_id + "&token=" + access_token);
-  console.log(await resp.text());
-  status_change();
+  if (active_id != null) {
+    let resp = await fetch("admin/force_disarm?id=" + active_id + "&token=" + access_token);
+    console.log(await resp.text());
+    status_change();
+  }
 }
 
 async function fa_disarm() {
-  let resp = await fetch("admin/force_disarm_all" + "?token=" + access_token);
-  console.log(await resp.text());
-  status_change();
+  if (active_id != null) {
+    let resp = await fetch("admin/force_disarm_all" + "?token=" + access_token);
+    console.log(await resp.text());
+    status_change();
+  }
 }
 
 async function kill_switch() {
-  let resp = await fetch("admin/kill_switch?id=" + active_id + "&token=" + access_token);
-  console.log(await resp.text());
-  status_change();
+  if (active_id != null) {
+    let resp = await fetch("admin/kill_switch?id=" + active_id + "&token=" + access_token);
+    console.log(await resp.text());
+    status_change();
+  }
 }
 
 async function mission_decision() {
   let mission_checkbox = document.getElementById('mission_checkbox');
-  let query_str = "admin/mission_decision?id=" + active_id + "&decision=";
-  if (mission_checkbox.checked) {
-    query_str += 0;
+  if (current_mission == null || current_mission == '$-1') {
+    mission_checkbox.checked = false;
   }
   else {
-    query_str += 1;
+    let query_str = "admin/mission_decision?id=" + active_id + "&decision=";
+    if (mission_checkbox.checked) {
+      query_str += 0;
+    }
+    else {
+      query_str += 1;
+    }
+    query_str += "&token=" + access_token
+    let mission_resp = await fetch(query_str);
+    let mission_text = await mission_resp.text();
+    console.log(mission_text);
   }
-  query_str += "&token=" + access_token
-  let mission_resp = await fetch(query_str);
-  let mission_text = await mission_resp.text();
-  console.log(mission_text);
+}
+
+async function fly_accept() {
+  let fly_accept_checkbox = document.getElementById('fly_accept_checkbox');
+  if (active_id == null || current_state == "Kill switch ON") {
+    fly_accept_checkbox.checked = false;
+  } else {
+    let query_str = "admin/change_fly_accept?id=" + active_id + "&decision=";
+    if (fly_accept_checkbox.checked) {
+      query_str += 0;
+    }
+    else {
+      query_str += 1;
+    }
+    query_str += "&token=" + access_token
+    let fly_accept_resp = await fetch(query_str);
+    let fly_accept_text = await fly_accept_resp.text();
+    console.log(fly_accept_text);
+  }
 }
 
 async function status_change() {
   let state_resp = await fetch("admin/get_state?id=" + active_id + "&token=" + access_token);
   let state_text = await state_resp.text();
   document.getElementById("status").innerHTML="Статус: " + state_text;
+  current_state = state_text;
+  if (state_text == 'В полете') {
+    document.getElementById('fly_accept_checkbox').checked = true;
+  } else {
+    document.getElementById('fly_accept_checkbox').checked = false;
+  }
 }
 
 async function waiters_change() {
   let waiter_resp = await fetch("admin/get_waiter_number" + "?token=" + access_token);
   let waiter_text = await waiter_resp.text();
   document.getElementById("waiters").innerHTML="Ожидают: " + waiter_text;
+  let waiters_num = parseInt(waiter_text);
+  if (waiters_num > 0) {
+    document.getElementById('arm').disabled = false;
+    document.getElementById('disarm').disabled = false;
+  } else {
+    document.getElementById('arm').disabled = true;
+    document.getElementById('disarm').disabled = true;
+  }
 }
 
 async function get_mission() {
   let mission_resp = await fetch("admin/get_mission?id=" + active_id + "&token=" + access_token);
   let mission_text = await mission_resp.text();
+  if (mission_text == '$-1') {
+    current_mission = mission_text;
+  }
   if (mission_text != '$-1' && current_mission != mission_text) {
     clear_markers()
     console.log(mission_text)
@@ -289,6 +341,10 @@ async function get_telemetry() {
     let lon = parseFloat(telemetry_list[1]);
     let alt = parseFloat(telemetry_list[2]);
     let azimuth = parseFloat(telemetry_list[3]);
+    let dop = parseFloat(telemetry_list[4]);
+    let sats = parseInt(telemetry_list[5]);
+    document.getElementById("dop").innerHTML="DOP: " + dop;
+    document.getElementById("sats").innerHTML="SATS: " + sats;
     if (uav == null) {
       add_marker(lat, lon, alt, 'uav');
     } else {
@@ -299,11 +355,24 @@ async function get_telemetry() {
   }
 }
 
+async function get_mission_state() {
+  let mission_state_resp = await fetch("admin/get_mission_state?id=" + active_id + "&token=" + access_token);
+  let mission_state_text = await mission_state_resp.text();
+  if (mission_state_text == '0') {
+    document.getElementById('mission_checkbox').checked = true;
+  } else {
+    document.getElementById('mission_checkbox').checked = false;
+  }
+}
+
 async function change_active_id(new_id) {
   active_id = new_id;
+  current_mission = null;
+  clear_markers()
   status_change();
   get_mission();
   get_telemetry();
+  get_mission_state();
 }
 
 
@@ -336,5 +405,6 @@ setInterval(async function(){
     waiters_change();
     get_mission();
     get_telemetry();
+    get_mission_state();
   }
  }, 1000);

@@ -1,0 +1,147 @@
+
+services:
+#################################################
+# cross-build-sim-offline.sh SIMULATOR_IP SERVER_IP
+  kos:
+    image: simulator
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    container_name: kos
+    command: /home/user/kos/cross-build-sim-offline.sh 172.28.0.2
+    working_dir: /home/user/kos
+    user: user
+    depends_on:
+      - arducopter
+    networks:
+      cyberimmune:
+        ipv4_address: 172.28.0.1
+#################################################
+  arducopter:
+    image: simulator
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    container_name: arducopter
+    command: /home/user/ardupilot/sitl/bin/arducopter -S --model + --speedup 1 --slave 0  --serial5=tcp:5765:wait --serial6=tcp:5766:wait --serial7=tcp:5767:wait --defaults copter.parm --sim-address=172.28.0.2 --home=53.1019446,107.3774394,846.22,0 -I0 --sysid 1
+    working_dir: /home/user/ardupilot
+    user: user
+    restart: always
+    networks:
+      cyberimmune:
+        ipv4_address: 172.28.0.2
+#################################################
+  mavproxy:
+    image: simulator
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    container_name: mavproxy
+    command: mavproxy.py --out 172.28.5.254:14550 --master tcp:172.28.0.2:5760 --sitl 172.28.0.2:5501 --logfile /home/user/mav.tlog --daemon
+    working_dir: /home/user/mavproxy
+    user: user
+    depends_on:
+      - arducopter
+    restart: always
+    networks:
+      cyberimmune:
+        ipv4_address: 172.28.0.3
+#################################################
+  kos1:
+    image: simulator
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    container_name: kos1
+    command: /home/user/kos/cross-build-sim-offline.sh 172.28.0.12
+    working_dir: /home/user/kos
+    user: user
+    depends_on:
+      - arducopter1
+    networks:
+      cyberimmune:
+        ipv4_address: 172.28.0.11
+#################################################
+  arducopter1:
+    image: simulator
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    container_name: arducopter1
+    command: /home/user/ardupilot/sitl/bin/arducopter -S --model + --speedup 1 --slave 0  --serial5=tcp:5765:wait --serial6=tcp:5766:wait --serial7=tcp:5767:wait --defaults copter.parm --sim-address=172.28.0.12 --home=-35.3633463,149.1652273,587.05,0 -I0 --sysid 2
+    working_dir: /home/user/ardupilot
+    user: user
+    restart: always
+    networks:
+      cyberimmune:
+        ipv4_address: 172.28.0.12
+#################################################
+  mavproxy1:
+    image: simulator
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    container_name: mavproxy1
+    command: mavproxy.py --out 172.28.5.254:14550 --master tcp:172.28.0.12:5760 --sitl 172.28.0.12:5501 --logfile /home/user/mav.tlog --daemon
+    working_dir: /home/user/mavproxy
+    user: user
+    depends_on:
+      - arducopter1
+    restart: always
+    networks:
+      cyberimmune:
+        ipv4_address: 172.28.0.13
+#################################################
+  kos2:
+    image: simulator
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    container_name: kos2
+    command: /home/user/kos/cross-build-sim-offline.sh 172.28.0.22
+    working_dir: /home/user/kos
+    user: user
+    depends_on:
+      - arducopter2
+    networks:
+      cyberimmune:
+        ipv4_address: 172.28.0.21
+#################################################
+  arducopter2:
+    image: simulator
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    container_name: arducopter2
+    command: /home/user/ardupilot/sitl/bin/arducopter -S --model + --speedup 1 --slave 0  --serial5=tcp:5765:wait --serial6=tcp:5766:wait --serial7=tcp:5767:wait --defaults copter.parm --sim-address=172.28.0.22 --home=-35.3633463,149.1652273,587.05,0 -I0 --sysid 3
+    working_dir: /home/user/ardupilot
+    user: user
+    restart: always
+    networks:
+      cyberimmune:
+        ipv4_address: 172.28.0.22
+#################################################
+  mavproxy2:
+    image: simulator
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    container_name: mavproxy2
+    command: mavproxy.py --out 172.28.5.254:14550 --master tcp:172.28.0.22:5760 --sitl 172.28.0.22:5501 --logfile /home/user/mav.tlog --daemon
+    working_dir: /home/user/mavproxy
+    user: user
+    depends_on:
+      - arducopter2
+    restart: always
+    networks:
+      cyberimmune:
+        ipv4_address: 172.28.0.23
+#################################################
+networks:
+  cyberimmune:
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.28.0.0/16
+          ip_range: 172.28.5.0/24
+          gateway: 172.28.5.254

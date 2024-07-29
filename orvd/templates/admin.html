@@ -4,13 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>ОРВД</title>
-	<script
-		src="https://cdn.jsdelivr.net/npm/ol@v9.0.0/dist/ol.js"
-		crossorigin=""
-		></script>
-	<link 
-		rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@v9.0.0/ol.css"
-		crossorigin="">
+  <script src="{{ url_for('static',filename='ol/dist/ol.js') }}"></script>
+  <link rel= "stylesheet" type= "text/css" href= "{{ url_for('static',filename='ol/ol.css') }}">
   <link rel= "stylesheet" type= "text/css" href= "{{ url_for('static',filename='styles/style.css') }}">
   <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
   </head>
@@ -26,6 +21,8 @@
         </select>
         <p id="status" class="status note">Статус: - </p>
         <p id="waiters" class="wait note">Ожидают: - </p>
+        <p id="dop" class="dop note">DOP: - </p>
+        <p id="sats" class="sats note">SATS: - </p>
         <div class="marginb"></div>
 
         <button id="arm" class="arm button" type="button">Arm</button>
@@ -37,11 +34,14 @@
             <input id="mission_checkbox" type="checkbox" name="languages" value="mission">
             Подтверждение миссии
           </label>
+          <br><br>
+          <label>
+            <input id="fly_accept_checkbox" type="checkbox" name="languages" value="fly_accept">
+            Разрешение на полет
+          </label>
         </form>
         <div class="marginb"></div>
 
-        <button id="f_disarm" class="fdisarm button" type="button">Force disarm</button>
-        <button id="fa_disarm" class="fadisarm button" type="button">Force disarm all</button>
         <button id="kill_switch" class="kill_switch button" type="button">Kill switch</button>
       </div>
     </div>
