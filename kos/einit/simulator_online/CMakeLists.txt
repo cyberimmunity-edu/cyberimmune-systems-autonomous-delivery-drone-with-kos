@@ -49,20 +49,19 @@ else()
   add_custom_target (${FS_IMAGE} COMMAND ${KL_SDK_ROOT_PATH}/common/prepare_hdd_img.sh -s 128 -f fat32 -img ${FS_IMAGE})
 endif()
 
-set (ENTITIES AutopilotConnector CredentialManager FlightController NavigationSystem PeripheryController ServerConnector
-    Logger ${precompiled_vfsVfsNet} ${rump_DHCPCD_ENTITY} ${wpa_SUPPLICANT_ENTITY} ${precompiled_vfsVfsSdCardFs} ${FS_IMAGE})
+if (UNIT_TESTS)
+    set (ENTITIES UnitTests ${precompiled_vfsVfsNet} ${rump_DHCPCD_ENTITY} ${wpa_SUPPLICANT_ENTITY}
+      ${precompiled_vfsVfsSdCardFs} ${FS_IMAGE})
+    set (CONNECTIONS_CFG_FILE "../unit_tests/init.yaml.in")
+    set (SECURITY_PSL_FILE "../unit_tests/security.psl.in")
+else ()
+    set (ENTITIES AutopilotConnector CredentialManager FlightController NavigationSystem PeripheryController ServerConnector
+      Logger ${precompiled_vfsVfsNet} ${rump_DHCPCD_ENTITY} ${wpa_SUPPLICANT_ENTITY} ${precompiled_vfsVfsSdCardFs} ${FS_IMAGE})
+    set (CONNECTIONS_CFG_FILE "src/init.yaml.in")
+    set (SECURITY_PSL_FILE "src/security.psl.in")
+endif ()
 
 set (FILES ${CMAKE_SOURCE_DIR}/resources/hdd/etc/wpa_supplicant.conf ${CMAKE_SOURCE_DIR}/resources/hdd/etc/dhcpcd.conf)
-
-build_kos_hw_image (kos-image
-                    EINIT_ENTITY EinitHw
-                    CONNECTIONS_CFG "src/init.yaml.in"
-                    SECURITY_PSL "src/security.psl.in"
-                    IMAGE_FILES ${ENTITIES} ${FILES})
-
-#build_sd_image (sd-image
-#                KOS_IMAGE_TARGET kos-image
-#                IMAGE_FS ${IMAGE_FS})
 
 set (QEMU_FLAGS "--nographic -monitor none -netdev user,id=net0,dhcpstart=10.0.2.15 -drive file=${FS_IMAGE},if=sd,format=raw")
 set (QEMU_ENV "QEMU_AUDIO_DRV=none")
@@ -72,6 +71,6 @@ build_kos_qemu_image (kos-qemu-image
                     QEMU_FLAGS ${QEMU_FLAGS}
                     QEMU_ENV ${QEMU_ENV}
                     QEMU_DEPENDENCIES ${FS_IMAGE}
-                    CONNECTIONS_CFG "src/init.yaml.in"
-                    SECURITY_PSL "src/security.psl.in"
+                    CONNECTIONS_CFG ${CONNECTIONS_CFG_FILE}
+                    SECURITY_PSL ${SECURITY_PSL_FILE}
                     IMAGE_FILES ${ENTITIES} ${FILES})

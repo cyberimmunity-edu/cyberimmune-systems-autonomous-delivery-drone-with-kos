@@ -13,7 +13,9 @@ export PATH="$SDK_PREFIX/toolchain/bin:$PATH"
 export BUILD_WITH_CLANG=
 export BUILD_WITH_GCC=
 
-SIMULATOR_IP="${1:-"10.0.2.2"}"
+BOARD_ID="3"
+SIMULATOR_IP="10.0.2.2"
+UNIT_TESTS="FALSE"
 
 set -eu
 
@@ -29,6 +31,8 @@ function help
     -s, --sdk-path,
              Path to KasperskyOS Community Edition SDK
              Default: ${SDK_PREFIX}
+    --unit-tests,
+             Run unit tests
 
   Examples:
       bash cross-build.sh -s /opt/KasperskyOS-Community-Edition-1.2.0.89
@@ -47,6 +51,15 @@ do
             ;;
         --sdk-path|-s)
             SDK_PREFIX=$2
+            ;;
+        --unit-tests)
+            UNIT_TESTS="TRUE"
+            ;;
+        --simulator_ip)
+            SIMULATOR_IP=$2
+            ;;
+        --board_id)
+            BOARD_ID=$2
             ;;
         -*)
             echo "Invalid option: $key"
@@ -69,7 +82,8 @@ fi
 "$SDK_PREFIX/toolchain/bin/cmake" -G "Unix Makefiles" -B "$BUILD" \
       -D SIMULATION="TRUE" \
       -D SERVER="FALSE" \
-      -D BOARD_ID="3" \
+      -D UNIT_TESTS=$UNIT_TESTS \
+      -D BOARD_ID=$BOARD_ID \
       -D SIMULATOR_IP=$SIMULATOR_IP \
       -D CMAKE_BUILD_TYPE:STRING=Debug \
       -D CMAKE_INSTALL_PREFIX:STRING="$INSTALL_PREFIX" \
