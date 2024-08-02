@@ -1,6 +1,11 @@
 #include "gtest/gtest.h"
+
+#include <fcntl.h>
+
 #include "../include/mock_declaration.h"
 #include "../../shared/include/ipc_messages_logger.h"
+#include "../../flight_controller/include/mission.h"
+#include "../../logger/include/logger.h"
 
 //Credential Manager
 TEST(CredentialManager, HexCharToInt) {
@@ -156,12 +161,193 @@ TEST(CredentialManager, BytesToString) {
 }
 
 //Flight Controller
-    //isStopSymbol
-    //parseInt
-    //parseCommands
-    //parseMission
+TEST(FlighController, IsStopSymbol) {
+    EXPECT_TRUE(isStopSymbol('_'));
+    EXPECT_TRUE(isStopSymbol('&'));
+    EXPECT_TRUE(isStopSymbol('#'));
+    EXPECT_FALSE(isStopSymbol(' '));
+    EXPECT_FALSE(isStopSymbol('!'));
+    EXPECT_FALSE(isStopSymbol('"'));
+    EXPECT_FALSE(isStopSymbol('$'));
+    EXPECT_FALSE(isStopSymbol('%'));
+    for (char s = '\''; s <= '^'; s++) //' ( ) * + , - . / 0-9 : ; < = > ? @ A-Z [ \ ] ^
+        EXPECT_FALSE(isStopSymbol(s));
+    for (char s = '`'; s <= '~'; s++) //` a-z { | } ~
+        EXPECT_FALSE(isStopSymbol(s));
+    EXPECT_FALSE(isStopSymbol('\n'));
+}
+
+TEST(FlighController, ParseInt) {
+    int32_t value;
+    char strGood[] = "123.456_.0546_12.32109123414_9.45_228_9__";
+    char* str = strGood;
+
+    logEntry("Empty log", "", LOG_INFO);
+    EXPECT_TRUE(parseInt(str, value, 3));
+    EXPECT_EQ(value, 123456);
+    EXPECT_STREQ(str, ".0546_12.32109123414_9.45_228_9__");
+    EXPECT_STREQ(getMockLog(), "Empty log");
+
+    logEntry("Empty log", "", LOG_INFO);
+    EXPECT_TRUE(parseInt(str, value, 4));
+    EXPECT_EQ(value, 546);
+    EXPECT_STREQ(str, "12.32109123414_9.45_228_9__");
+    EXPECT_STREQ(getMockLog(), "Empty log");
+
+    logEntry("Empty log", "", LOG_INFO);
+    EXPECT_TRUE(parseInt(str, value, 2));
+    EXPECT_EQ(value, 1232);
+    EXPECT_STREQ(str, "9.45_228_9__");
+    EXPECT_STREQ(getMockLog(), "Empty log");
+
+    logEntry("Empty log", "", LOG_INFO);
+    EXPECT_TRUE(parseInt(str, value, 4));
+    EXPECT_EQ(value, 94500);
+    EXPECT_STREQ(str, "228_9__");
+    EXPECT_STREQ(getMockLog(), "Empty log");
+
+    logEntry("Empty log", "", LOG_INFO);
+    EXPECT_TRUE(parseInt(str, value, 0));
+    EXPECT_EQ(value, 228);
+    EXPECT_STREQ(str, "9__");
+    EXPECT_STREQ(getMockLog(), "Empty log");
+
+    logEntry("Empty log", "", LOG_INFO);
+    EXPECT_TRUE(parseInt(str, value, 3));
+    EXPECT_EQ(value, 9000);
+    EXPECT_STREQ(str, "_");
+    EXPECT_STREQ(getMockLog(), "Empty log");
+
+    logEntry("Empty log", "", LOG_INFO);
+    EXPECT_TRUE(parseInt(str, value, 2));
+    EXPECT_EQ(value, 0);
+    EXPECT_STREQ(str, "");
+    EXPECT_STREQ(getMockLog(), "Empty log");
+
+    char strLong[] = "0123.456789012345678901234567890123456789";
+    str = strLong;
+    logEntry("Empty log", "", LOG_INFO);
+    EXPECT_FALSE(parseInt(str, value, 32));
+    EXPECT_STRNE(getMockLog(), "Empty log");
+
+    char strLetter1[] = "12a34.56";
+    str = strLetter1;
+    logEntry("Empty log", "", LOG_INFO);
+    EXPECT_FALSE(parseInt(str, value, 2));
+    EXPECT_STRNE(getMockLog(), "Empty log");
+
+    char strLetter2[] = "1234.5b6";
+    str = strLetter2;
+    logEntry("Empty log", "", LOG_INFO);
+    EXPECT_FALSE(parseInt(str, value, 2));
+    EXPECT_STRNE(getMockLog(), "Empty log");
+
+    char strNoStop[] = "221.456";
+    str = strNoStop;
+    logEntry("Empty log", "", LOG_INFO);
+    EXPECT_FALSE(parseInt(str, value, 3));
+    EXPECT_STRNE(getMockLog(), "Empty log");
+}
+
+TEST(FlighController, ParseCommands) {
+    char commandsGood[] = "H53.1019446_107.3774394_846.22&T5.0&W0.0_53.1020863_107.3774180_5.0&S5.0_1200.0&L53.1019446_107.3774394_846.22#";
+    logEntry("Empty log", "", LOG_INFO);
+    EXPECT_TRUE(parseCommands(commandsGood));
+    EXPECT_STREQ(getMockLog(), "Empty log");
+
+    char commandsWrongCommand[] = "H53.1019446_107.3774394_846.22&X5.0&W0.0_53.1020863_107.3774180_5.0&S5.0_1200.0&L53.1019446_107.3774394_846.22#";
+    logEntry("Empty log", "", LOG_INFO);
+    EXPECT_FALSE(parseCommands(commandsWrongCommand));
+    EXPECT_STRNE(getMockLog(), "Empty log");
+
+    char commandsNoCommands[] = "53.1019446_107.3774394_846.22&5.0&0.0_53.1020863_107.3774180_5.0&5.0_1200.0&53.1019446_107.3774394_846.22#";
+    logEntry("Empty log", "", LOG_INFO);
+    EXPECT_FALSE(parseCommands(commandsNoCommands));
+    EXPECT_STRNE(getMockLog(), "Empty log");
+
+    char commandsWrongArguments1[] = "H53.1019446_846.22&T5.0&W0.0_53.1020863_107.3774180_5.0&S5.0_1200.0&L53.1019446_107.3774394_846.22#";
+    logEntry("Empty log", "", LOG_INFO);
+    EXPECT_FALSE(parseCommands(commandsWrongArguments1));
+    EXPECT_STRNE(getMockLog(), "Empty log");
+
+    char commandsWrongArguments2[] = "H53.1019446_107.3774394_846.22&T5.0&W0.0_53.1020863_107.3774180&S5.0_1200.0&L53.1019446_107.3774394_846.22#";
+    logEntry("Empty log", "", LOG_INFO);
+    EXPECT_FALSE(parseCommands(commandsWrongArguments2));
+    EXPECT_STRNE(getMockLog(), "Empty log");
+
+    char commandsWrongArguments3[] = "H53.1019446_107.3774394_846.22&T5.0&W0.0_53.1020863_107.3774180_5.0&S1200.0&L53.1019446_107.3774394_846.22#";
+    logEntry("Empty log", "", LOG_INFO);
+    EXPECT_FALSE(parseCommands(commandsWrongArguments3));
+    EXPECT_STRNE(getMockLog(), "Empty log");
+
+    char commandsWrongArguments4[] = "H53.1019446_107.3774394_846.22&T5.0&W0.0_53.1020863_107.3774180_5.0&S5.0_1200.0&L107.3774394_846.22#";
+    logEntry("Empty log", "", LOG_INFO);
+    EXPECT_FALSE(parseCommands(commandsWrongArguments4));
+    EXPECT_STRNE(getMockLog(), "Empty log");
+}
+
+TEST(FlighController, ParseMission) {
+    char missionGood[] = "$FlightMission H53.1019446_107.3774394_846.22&T5.0&W0.0_53.1020863_107.3774180_5.0&S5.0_1200.0&L53.1019446_107.3774394_846.22#";
+    logEntry("Empty log", "", LOG_INFO);
+    EXPECT_TRUE(parseMission(missionGood));
+    EXPECT_STREQ(getMockLog(), "Empty log");
+
+    char missionEmpty[] = "Response: $-1#";
+    logEntry("Empty log", "", LOG_INFO);
+    EXPECT_FALSE(parseMission(missionEmpty));
+    EXPECT_STRNE(getMockLog(), "Empty log");
+
+    char missionNoHead[] = "H53.1019446_107.3774394_846.22&T5.0&W0.0_53.1020863_107.3774180_5.0&S5.0_1200.0&L53.1019446_107.3774394_846.22#";
+    logEntry("Empty log", "", LOG_INFO);
+    EXPECT_FALSE(parseMission(missionNoHead));
+    EXPECT_STRNE(getMockLog(), "Empty log");
+}
+
 //Logger
-    //logEntry
+TEST(Logger, AddLogEntry) {
+    EXPECT_TRUE(createLog());
+
+    FILE* redir = freopen("console.txt", "w", stdout);
+    addLogEntry("Unit-test entry", LogLevel::LOG_INFO);
+    sleep(10);
+    fclose(redir);
+
+    int file = open("/logs/flight_controller.log", O_RDONLY);
+    EXPECT_NE(file, -1);
+    int i = 0;
+    char fileStr[256] = {0};
+    while (i < 256) {
+        char letter;
+        EXPECT_EQ(read(file, &letter, 1), 1);
+        if ((letter == '\n') || (letter == '\0'))
+            break;
+        fileStr[i] = letter;
+        i++;
+    }
+    close(file);
+    char* fileStart = strstr(fileStr, "[info]");
+    EXPECT_TRUE(fileStart);
+    EXPECT_STREQ(fileStart, "[info]Unit-test entry");
+
+    int console = open("console.txt", O_RDONLY);
+    EXPECT_NE(console, -1);
+    i = 0;
+    char consoleStr[256] = {0};
+    while (i < 256) {
+        char letter;
+        EXPECT_EQ(read(console, &letter, 1), 1);
+        if ((letter == '\n') || (letter == '\0'))
+            break;
+        consoleStr[i] = letter;
+        i++;
+    }
+    close(console);
+    char* consoleStart = strstr(consoleStr, "[info]");
+    EXPECT_TRUE(consoleStart);
+    EXPECT_STREQ(consoleStart, "[info]Unit-test entry");
+
+    EXPECT_STREQ(fileStr, consoleStr);
+}
 
 //Autopilot Connector
     //simulator -- write to socket/read

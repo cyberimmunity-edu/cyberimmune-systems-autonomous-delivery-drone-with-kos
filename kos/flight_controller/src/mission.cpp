@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 
 #define COMMAND_MAX_STRING_LEN 32
 
@@ -18,25 +19,34 @@ int isStopSymbol(char character) {
 int parseInt(char*& string, int32_t& value, uint32_t numAfterPoint) {
     char stringValue[COMMAND_MAX_STRING_LEN];
     uint32_t strPtr = 0, valPtr = 0;
-    while (!isStopSymbol(string[strPtr])) {
+    while (string[strPtr] != '.') {
         if (valPtr >= COMMAND_MAX_STRING_LEN) {
-            logEntry("Failed to parse mission command", ENTITY_NAME, LogLevel::LOG_WARNING);
+            logEntry("Failed to parse int value: too long", ENTITY_NAME, LogLevel::LOG_WARNING);
             return 0;
         }
-        else if (string[strPtr] == '.') {
-            strPtr++;
+        else if (isStopSymbol(string[strPtr])) {
+            strPtr--;
             break;
         }
-        else {
+        else if (isdigit(string[strPtr])) {
             stringValue[valPtr] = string[strPtr];
             strPtr++;
             valPtr++;
         }
+        else {
+            logEntry("Failed to parse int value: contains non-digit symbols", ENTITY_NAME, LogLevel::LOG_WARNING);
+            return 0;
+        }
     }
+    strPtr++;
     int i = 0;
     while (!isStopSymbol(string[strPtr])) {
         if (valPtr >= COMMAND_MAX_STRING_LEN) {
-            logEntry("Failed to parse mission command", ENTITY_NAME, LogLevel::LOG_WARNING);
+            logEntry("Failed to parse int value: too long", ENTITY_NAME, LogLevel::LOG_WARNING);
+            return 0;
+        }
+        else if (!isdigit(string[strPtr])) {
+            logEntry("Failed to parse int value: contains non-digit symbols", ENTITY_NAME, LogLevel::LOG_WARNING);
             return 0;
         }
         else if (i < numAfterPoint) {
@@ -51,7 +61,7 @@ int parseInt(char*& string, int32_t& value, uint32_t numAfterPoint) {
     string += strPtr + 1;
     for (int j = i; j < numAfterPoint; j++) {
         if (valPtr >= COMMAND_MAX_STRING_LEN) {
-            logEntry("Failed to parse mission command", ENTITY_NAME, LogLevel::LOG_WARNING);
+            logEntry("Failed to parse int value: too many digits after point is required", ENTITY_NAME, LogLevel::LOG_WARNING);
             return 0;
         }
         else {
