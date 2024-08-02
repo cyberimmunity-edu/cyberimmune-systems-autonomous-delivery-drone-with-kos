@@ -1,7 +1,7 @@
 #!/bin/bash
 
 SCRIPT_DIR="$(dirname "$(realpath "${0}")")"
-BUILD="${SCRIPT_DIR}/build_sim_offline"
+BUILD="${SCRIPT_DIR}/build_unit_tests"
 
 export LANG=C
 export TARGET="aarch64-kos"
@@ -13,8 +13,8 @@ export PATH="$SDK_PREFIX/toolchain/bin:$PATH"
 export BUILD_WITH_CLANG=
 export BUILD_WITH_GCC=
 
-BOARD_ID="3"
-SIMULATOR_IP="10.0.2.2"
+SIMULATION="FALSE"
+KOS_TARGET="kos-image"
 
 set -eu
 
@@ -30,6 +30,8 @@ function help
     -s, --sdk-path,
              Path to KasperskyOS Community Edition SDK
              Default: ${SDK_PREFIX}
+    --unit-tests,
+             Run unit tests
 
   Examples:
       bash cross-build.sh -s /opt/KasperskyOS-Community-Edition-1.2.0.89
@@ -49,11 +51,9 @@ do
         --sdk-path|-s)
             SDK_PREFIX=$2
             ;;
-        --simulator_ip)
-            SIMULATOR_IP=$2
-            ;;
-        --board_id)
-            BOARD_ID=$2
+        --sim)
+            SIMULATION="TRUE"
+            KOS_TARGET="sim"
             ;;
         -*)
             echo "Invalid option: $key"
@@ -74,13 +74,11 @@ if [ "$BUILD_WITH_GCC" == "y" ];then
 fi
 
 "$SDK_PREFIX/toolchain/bin/cmake" -G "Unix Makefiles" -B "$BUILD" \
-      -D SIMULATION="TRUE" \
-      -D SERVER="FALSE" \
-      -D UNIT_TESTS="FALSE" \
-      -D BOARD_ID=$BOARD_ID \
-      -D SIMULATOR_IP=$SIMULATOR_IP \
+      -D SIMULATION=$SIMULATION \
+      -D UNIT_TESTS="TRUE" \
+      -D BOARD_ID="0" \
       -D CMAKE_BUILD_TYPE:STRING=Debug \
       -D CMAKE_INSTALL_PREFIX:STRING="$INSTALL_PREFIX" \
       -D CMAKE_FIND_ROOT_PATH="${SDK_PREFIX}/sysroot-$TARGET" \
       -D CMAKE_TOOLCHAIN_FILE="$SDK_PREFIX/toolchain/share/toolchain-$TARGET$TOOLCHAIN_SUFFIX.cmake" \
-      "$SCRIPT_DIR/" && "$SDK_PREFIX/toolchain/bin/cmake" --build "$BUILD" --target sim
+      "$SCRIPT_DIR/" && "$SDK_PREFIX/toolchain/bin/cmake" --build "$BUILD" --target "$KOS_TARGET"

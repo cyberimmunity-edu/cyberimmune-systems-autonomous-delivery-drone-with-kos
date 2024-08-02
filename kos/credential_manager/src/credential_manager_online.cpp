@@ -27,6 +27,12 @@ uint8_t hexCharToInt(char c) {
 void stringToBytes(char* source, uint32_t sourceSize, uint8_t* destination) {
     int j = 127;
     for (int32_t i = sourceSize - 1; i >= 0; i -= 2) {
+        if (j < 0) {
+            char logBuffer[512];
+            snprintf(logBuffer, 512, "String '%s' contains more bytes than expected", source);
+            logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
+            return;
+        }
         if (i > 0)
             destination[j] = 16 * hexCharToInt(source[i - 1]) + hexCharToInt(source[i]);
         else

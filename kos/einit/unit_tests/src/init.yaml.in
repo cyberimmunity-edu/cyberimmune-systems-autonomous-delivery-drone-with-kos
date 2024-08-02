@@ -1,0 +1,6 @@
+entities:
+
+- name: drone_controller.UnitTests
+@INIT_UnitTests_ENTITY_CONNECTIONS@
+
+@INIT_EXTERNAL_ENTITIES@
