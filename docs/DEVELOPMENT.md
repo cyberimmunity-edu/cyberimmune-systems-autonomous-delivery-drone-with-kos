@@ -67,7 +67,7 @@ cd planner/
 git clone https://github.com/cyberimmunity-edu/cyberimmune-systems-autonomous-delivery-drone-with-kos.git
 ```
 
-1. Перейти в скачанную папку и изменить ветку на 'simulation'
+1. Перейти в скачанную папку
 
 ```bash
 cd cyberimmune-systems-autonomous-delivery-drone-with-kos

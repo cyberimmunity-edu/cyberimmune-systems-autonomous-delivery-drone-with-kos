@@ -22,6 +22,8 @@ MISSION_NOT_ACCEPTED = 1
 NOT_FOUND = '$-1'
 OK = '$OK'
 
+LOGS_PATH = './logs'
+
 loaded_keys = {}
 
 
@@ -74,20 +76,28 @@ def read_mission(file_str: str) -> list:
                     drone_home = None
                 cmd = land_handler(lat=ln_param5, lon=ln_param6, alt=ln_param7, home=drone_home)
             else:
-                print('Ошибка: использована неизвестная команда. Список разрешенных команд: 16, 21, 22, 183.')
-                missionlist = []
-                break
+                # print(f'Error: unknown command {ln_command}. Allowed commands: 16, 21, 22, 183.')
+                # missionlist = []
+                # break
+                continue
             
             missionlist.append(cmd)
     return missionlist
 
 def home_handler(lat: float, lon: float, alt: float) -> list:
+    lat = round(lat, 7)
+    lon = round(lon, 7)
+    alt = round(alt, 2)
     return ['H', str(lat), str(lon), str(alt)]
 
 def takeoff_handler(alt: float) -> list:
+    alt = round(alt, 2)
     return ['T', str(alt)]
 
 def waypoint_handler(hold: float, lat: float, lon: float, alt: float) -> list:
+    lat = round(lat, 7)
+    lon = round(lon, 7)
+    alt = round(alt, 2)
     return ['W', str(hold), str(lat), str(lon), str(alt)]
 
 def servo_handler(number: float, pwm: float) -> list:
@@ -95,15 +105,19 @@ def servo_handler(number: float, pwm: float) -> list:
 
 def land_handler(lat: float, lon: float, alt: float, home: list = None) -> list:
     if home == None:
-        ret_lat = str(lat)
-        ret_lon = str(lon)
-        ret_alt = str(alt)
+        ret_lat = lat
+        ret_lon = lon
+        ret_alt = alt
     else:
-        ret_lat = home[1] if lat == 0. else str(lat)
-        ret_lon = home[2] if lon == 0. else str(lon)
-        ret_alt = home[3] if alt == 0. else str(alt)
+        ret_lat = float(home[1]) if lat == 0. else lat
+        ret_lon = float(home[2]) if lon == 0. else lon
+        ret_alt = float(home[3]) if alt == 0. else alt
     
-    return ['L', ret_lat, ret_lon, ret_alt]
+    ret_lat = round(ret_lat, 7)
+    ret_lon = round(ret_lon, 7)
+    ret_alt = round(ret_alt, 2)
+    
+    return ['L', str(ret_lat), str(ret_lon), str(ret_alt)]
 
 
 def encode_mission(mission_list: list) -> list:
@@ -125,11 +139,18 @@ def sign(message: str, key_group: str) -> int:
 
 
 def verify(message: str, signature: int, key_group: str) -> bool:
-    n, e = get_key(key_group, private=False)
-    msg_bytes = message.encode()
-    hash = int.from_bytes(sha256(msg_bytes).digest(), byteorder='big', signed=False)
-    hashFromSignature = pow(signature, e, n)
-    return hash == hashFromSignature
+    try:
+        key_set = get_key(key_group, private=False)
+        if len(key_set) == 2:
+            n, e = key_set
+        else:
+            return False
+        msg_bytes = message.encode()
+        hash = int.from_bytes(sha256(msg_bytes).digest(), byteorder='big', signed=False)
+        hashFromSignature = pow(signature, e, n)
+        return hash == hashFromSignature
+    except:
+        return False
 
 # для теста
 def mock_verifier(*args, **kwargs):
