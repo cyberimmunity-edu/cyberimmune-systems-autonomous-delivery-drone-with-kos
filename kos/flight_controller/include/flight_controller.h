@@ -50,5 +50,25 @@ struct MissionCommand {
     CommandContent content;
 };
 
+struct Point2D {
+    int32_t latitude;
+    int32_t longitude;
+
+    Point2D(int32_t lat, int32_t lng) {
+        latitude = lat;
+        longitude = lng;
+    }
+};
+
+struct NoFlightArea {
+    int pointNum;
+    Point2D* points;
+};
+
 int parseMission(char* response);
 void printMission();
+MissionCommand* getMissionCommands(int &num);
+
+int parseNoFlightAreas(char* response);
+void printNoFlightAreas();
+NoFlightArea* getNoFlightAreas(int &num);

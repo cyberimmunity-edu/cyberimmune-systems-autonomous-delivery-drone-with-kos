@@ -1,4 +1,4 @@
-#include "../include/mission.h"
+#include "../include/flight_controller.h"
 #include "../../shared/include/initialization_interface.h"
 #include "../../shared/include/ipc_messages_initialization.h"
 #include "../../shared/include/ipc_messages_autopilot_connector.h"
@@ -26,7 +26,7 @@ int sendSignedMessage(char* method, char* response, char* errorMessage, uint8_t 
 
     while (!signMessage(message, signature)) {
         char logBuffer[256];
-        snprintf(logBuffer, 256, "Failed to sign %s message at Credential Manager. Trying again in %ds", errorMessage, delay);
+        snprintf(logBuffer, 256, "Failed to sign '%s' message at Credential Manager. Trying again in %ds", errorMessage, delay);
         logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
         sleep(delay);
     }
@@ -34,7 +34,7 @@ int sendSignedMessage(char* method, char* response, char* errorMessage, uint8_t 
 
     while (!sendRequest(request, response)) {
         char logBuffer[256];
-        snprintf(logBuffer, 256, "Failed to send %s request through Server Connector. Trying again in %ds", errorMessage, delay);
+        snprintf(logBuffer, 256, "Failed to send '%s' request through Server Connector. Trying again in %ds", errorMessage, delay);
         logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
         sleep(delay);
     }
@@ -42,7 +42,7 @@ int sendSignedMessage(char* method, char* response, char* errorMessage, uint8_t 
     uint8_t authenticity = 0;
     while (!checkSignature(response, authenticity) || !authenticity) {
         char logBuffer[256];
-        snprintf(logBuffer, 256, "Failed to check signature of %s response received through Server Connector. Trying again in %ds", errorMessage, delay);
+        snprintf(logBuffer, 256, "Failed to check signature of '%s' response received through Server Connector. Trying again in %ds", errorMessage, delay);
         logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
         sleep(delay);
     }
@@ -98,6 +98,17 @@ int main(void) {
     char authResponse[1024] = {0};
     sendSignedMessage("/api/auth", authResponse, "authentication", RETRY_DELAY_SEC);
     logEntry("Successfully authenticated on the server", ENTITY_NAME, LogLevel::LOG_INFO);
+
+    //Constantly ask server, if no flight areas are available.
+    while (true) {
+        char areasResponse[1024] = {0};
+        if (sendSignedMessage("/api/get_all_forbidden_zones", areasResponse, "no-flight areas", RETRY_DELAY_SEC)
+            && parseNoFlightAreas(areasResponse)) {
+            logEntry("Successfully received no-flight areas from the server", ENTITY_NAME, LogLevel::LOG_INFO);
+            break;
+        }
+        sleep(RETRY_REQUEST_DELAY_SEC);
+    }
 
     //Constantly ask server, if mission for the drone is available. Parse it and ensure, that mission is correct
     while (true) {
