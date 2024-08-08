@@ -10,8 +10,8 @@
 #include <unistd.h>
 
 mbedtls_rsa_context rsaSelf;
-char keyE[257] = {0};
 char keyN[257] = {0};
+char keyE[257] = {0};
 char keyD[257] = {0};
 
 void hashToKey(uint8_t* source, uint32_t sourceSize, uint8_t* destination) {

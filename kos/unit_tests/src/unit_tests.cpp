@@ -4,6 +4,7 @@
 
 #include "../include/mock_declaration.h"
 #include "../../shared/include/ipc_messages_logger.h"
+#include "../../credential_manager/include/credential_manager.h"
 #include "../../flight_controller/include/mission.h"
 #include "../../logger/include/logger.h"
 
@@ -160,6 +161,24 @@ TEST(CredentialManager, BytesToString) {
     EXPECT_STREQ(getMockLog(), "Empty log");
 }
 
+TEST(CredentialManager, RSA) {
+    EXPECT_TRUE(generateRsaKey());
+
+    char message[] = "Unit test message";
+    char sign[257] = {0};
+    EXPECT_TRUE(signMessage(message, sign));
+
+    char key[1024] = {0};
+    snprintf(key, 1024, "$Key: %s %s", getKeyN(), getKeyE());
+    EXPECT_TRUE(setRsaKey(key));
+
+    char signedMessage[1024] = {0};
+    snprintf(signedMessage, 1024, "%s#%s", message, sign);
+    uint8_t correct = 0;
+    EXPECT_TRUE(checkSignature(signedMessage, correct));
+    EXPECT_TRUE(correct);
+}
+
 //Flight Controller
 TEST(FlighController, IsStopSymbol) {
     EXPECT_TRUE(isStopSymbol('_'));
@@ -308,7 +327,7 @@ TEST(Logger, AddLogEntry) {
     EXPECT_TRUE(createLog());
 
     FILE* redir = freopen("console.txt", "w", stdout);
-    addLogEntry("Unit-test entry", LogLevel::LOG_INFO);
+    addLogEntry("Unit test entry", LogLevel::LOG_INFO);
     fclose(redir);
 
     int file = open("/logs/flight_controller.log", O_RDONLY);
@@ -326,7 +345,7 @@ TEST(Logger, AddLogEntry) {
     close(file);
     char* fileStart = strstr(fileStr, "[info]");
     EXPECT_TRUE(fileStart);
-    EXPECT_STREQ(fileStart, "[info]Unit-test entry");
+    EXPECT_STREQ(fileStart, "[info]Unit test entry");
 
     int console = open("console.txt", O_RDONLY);
     EXPECT_NE(console, -1);
@@ -343,7 +362,7 @@ TEST(Logger, AddLogEntry) {
     close(console);
     char* consoleStart = strstr(consoleStr, "[info]");
     EXPECT_TRUE(consoleStart);
-    EXPECT_STREQ(consoleStart, "[info]Unit-test entry");
+    EXPECT_STREQ(consoleStart, "[info]Unit test entry");
 
     EXPECT_STREQ(fileStr, consoleStr);
 }
