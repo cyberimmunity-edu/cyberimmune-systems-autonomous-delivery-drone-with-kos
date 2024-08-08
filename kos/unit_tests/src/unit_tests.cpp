@@ -309,7 +309,6 @@ TEST(Logger, AddLogEntry) {
 
     FILE* redir = freopen("console.txt", "w", stdout);
     addLogEntry("Unit-test entry", LogLevel::LOG_INFO);
-    sleep(10);
     fclose(redir);
 
     int file = open("/logs/flight_controller.log", O_RDONLY);
@@ -349,22 +348,76 @@ TEST(Logger, AddLogEntry) {
     EXPECT_STREQ(fileStr, consoleStr);
 }
 
-//Autopilot Connector
-    //simulator -- write to socket/read
 //Credential Manager
     //RSA save/load/read/sign/etc
+
 //Navigation System
-    //hasPosition
-    //setGpsInfo
-    //getGpsInfo
-    //setAltitude
-    //setCoords
-    //getCoords
+TEST(NavigationSystem, NoPosition) {
+    EXPECT_FALSE(hasPosition());
+
+    float dop = -1.0f;
+    int32_t sats = -1;
+    EXPECT_FALSE(getGpsInfo(dop, sats));
+    EXPECT_EQ(dop, 0.0f);
+    EXPECT_EQ(sats, 0);
+
+    int32_t lat = -1, lng = -1, alt = -1;
+    EXPECT_FALSE(getCoords(lat, lng, alt));
+    EXPECT_EQ(lat, 0);
+    EXPECT_EQ(lng, 0);
+    EXPECT_EQ(alt, 0);
+}
+
+TEST(NavigationSystem, SetGetCoords) {
+    int32_t testLat = 142, testLng = -546, testAlt = 11;
+    setCoords(testLat, 0);
+    setAltitude(testAlt);
+    EXPECT_FALSE(hasPosition());
+
+    setCoords(0, testLng);
+    EXPECT_FALSE(hasPosition());
+
+    setCoords(testLat, testLng);
+    EXPECT_TRUE(hasPosition());
+
+    int32_t lat = -1, lng = -1, alt = -1;
+    EXPECT_TRUE(getCoords(lat, lng, alt));
+    EXPECT_EQ(lat, testLat);
+    EXPECT_EQ(lng, testLng);
+    EXPECT_EQ(alt, testAlt);
+}
+
+TEST(NavigationSystem, SetGetGpsInfo) {
+    float testDop = 0.7f;
+    int32_t testSats = 13;
+    setGpsInfo(testDop, testSats);
+
+    float dop = -1.0f;
+    int32_t sats = -1;
+    EXPECT_TRUE(getGpsInfo(dop, sats));
+    EXPECT_EQ(dop, testDop);
+    EXPECT_EQ(sats, testSats);
+}
+
 //Periphery Controller
-    //turnKS
-    //buzzer -- sim
-//Server Connector
-    //simulator -- write to socket/read
+TEST(PeripheryController, Buzz) {
+    setMockBuzzer(true);
+    EXPECT_TRUE(getMockBuzzer());
+    buzz();
+    EXPECT_FALSE(getMockBuzzer());
+}
+
+TEST(PeripheryController, EnableBuzzer) {
+    setMockBuzzer(false);
+    EXPECT_FALSE(getMockBuzzer());
+
+    EXPECT_TRUE(enableBuzzer());
+    EXPECT_FALSE(enableBuzzer());
+
+    EXPECT_TRUE(getMockBuzzer());
+    sleep(3);
+    EXPECT_FALSE(getMockBuzzer());
+}
 
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);

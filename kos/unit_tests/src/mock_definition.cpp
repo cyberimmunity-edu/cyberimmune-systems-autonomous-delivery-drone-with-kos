@@ -2,9 +2,18 @@
 #include <string.h>
 
 char mockLog[1024] = {0};
+bool mockBuzzerEnabled = false;
 
 char* getMockLog() {
     return mockLog;
+}
+
+bool getMockBuzzer() {
+    return mockBuzzerEnabled;
+}
+
+void setMockBuzzer(bool enable) {
+    mockBuzzerEnabled = enable;
 }
 
 int logEntry(char* entry, char* entity, LogLevel level) {
@@ -13,5 +22,18 @@ int logEntry(char* entry, char* entity, LogLevel level) {
 }
 
 int sendRequest(char* query, char* response) {
+    return 1;
+}
+
+bool isKillSwitchEnabled() {
+    return false;
+}
+
+int setBuzzer(bool enable) {
+    mockBuzzerEnabled = enable;
+    return 1;
+}
+
+int setKillSwitch(bool enable) {
     return 1;
 }
