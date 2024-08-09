@@ -157,6 +157,40 @@ def change_fly_accept():
     else:
         return bad_request('Wrong id/decision')
 
+@app.route('/admin/get_forbidden_zone')
+def get_forbidden_zone():
+    name = str(request.args.get('name'))
+    token = request.args.get('token')
+    if name:
+        return authorized_request(handler_func=get_forbidden_zone_handler, token=token, name=name)
+    else:
+        return bad_request('Wrong name')
+
+@app.route('/admin/get_forbidden_zones_names')
+def get_forbidden_zones_names():
+    token = request.args.get('token')
+    return authorized_request(handler_func=get_forbidden_zones_names_handler, token=token)
+    
+@app.route('/admin/set_forbidden_zone', methods=['POST'])
+def set_forbidden_zone():
+    geometry = request.json.get('geometry')
+    name = request.json.get('name')
+    token = request.json.get('token')
+    if name:
+        return authorized_request(handler_func=set_forbidden_zone_handler, token=token, name=name, geometry=geometry)
+    else:
+        return bad_request('Wrong name')
+
+
+@app.route('/admin/delete_forbidden_zone')
+def delete_forbidden_zone():
+    name = str(request.args.get('name'))
+    token = request.args.get('token')
+    if name:
+        return authorized_request(handler_func=delete_forbidden_zone_handler, token=token, name=name)
+    else:
+        return bad_request('Wrong name')
+
 
 @app.route('/logs')
 def logs_page():
@@ -280,6 +314,17 @@ def fmission_kos():
     if id:
         return signed_request(handler_func=fmission_kos_handler, verifier_func=verify, signer_func=sign,
                           query_str=f'/api/fmission_kos?id={id}', key_group=f'kos{id}', sig=sig, id=id)
+    else:
+        return bad_request('Wrong id')
+    
+
+@app.route('/api/get_all_forbidden_zones')
+def get_all_forbidden_zones():
+    id = cast_wrapper(request.args.get('id'), int)
+    sig = request.args.get('sig')
+    if id:
+        return signed_request(handler_func=get_all_forbidden_zones_handler, verifier_func=verify, signer_func=sign,
+                          query_str=f'/api/get_all_forbidden_zones?id={id}', key_group=f'kos{id}', sig=sig, id=id)
     else:
         return bad_request('Wrong id')
 

@@ -1,3 +1,4 @@
+from flask import jsonify
 from utils.db_utils import *
 from utils.utils import *
 
@@ -177,7 +178,19 @@ def fmission_kos_handler(id: int):
                 mission_steps = list(map(lambda e: e.operation, mission_steps))
                 return f'$FlightMission {"&".join(mission_steps)}'
     return NOT_FOUND
+
             
+def get_all_forbidden_zones_handler(id: int):
+    with open(FORBIDDEN_ZONES_PATH, 'r', encoding='utf-8') as f:
+        forbidden_zones = json.load(f)
+        result_str = f'$ForbiddenZones {len(forbidden_zones["features"])}'
+        for zone in forbidden_zones['features']:
+            coordinates = zone['geometry']['coordinates'][0]
+            result_str += f'&{len(coordinates)}&{"&".join(list(map(lambda e: str(e[0]) + "_" + str(e[1]), coordinates)))}'
+        return result_str
+
+    return NOT_FOUND
+
 
 def fmission_ms_handler(id: int, mission_str: str):
     mission_entity = get_entity_by_key(Mission, id)
@@ -345,3 +358,77 @@ def change_fly_accept_handler(id: int, decision: int):
         commit_changes()
         return OK
     return NOT_FOUND
+
+
+def get_forbidden_zone_handler(name: str):
+    with open(FORBIDDEN_ZONES_PATH, 'r', encoding='utf-8') as f:
+        forbidden_zones = json.load(f)
+        matching_zone = None
+        for zone in forbidden_zones['features']:
+            if zone['properties'].get('name') == name:
+                matching_zone = zone
+                break
+        if matching_zone:
+            return jsonify(matching_zone['geometry']['coordinates'][0])
+        else:
+            return NOT_FOUND
+    return NOT_FOUND
+
+
+def get_forbidden_zones_names_handler():
+    with open(FORBIDDEN_ZONES_PATH, 'r', encoding='utf-8') as f:
+        forbidden_zones = json.load(f)
+        zones_names = []
+        for zone in forbidden_zones['features']:
+            zones_names.append(zone['properties'].get('name'))
+        return jsonify(zones_names)
+        
+    return NOT_FOUND
+
+
+def set_forbidden_zone_handler(name: str, geometry: str):
+    geometry_coordinates = cast_wrapper(geometry, ast.literal_eval)
+    if geometry_coordinates == None:
+        return 'Bad geometry'
+    for idx in range(len(geometry_coordinates)):
+        geometry_coordinates[idx][0] = round(geometry_coordinates[idx][0], 7)
+        geometry_coordinates[idx][1] = round(geometry_coordinates[idx][1], 7)
+        
+    forbidden_zones = None
+    
+    with open(FORBIDDEN_ZONES_PATH, 'r', encoding='utf-8') as f:
+        forbidden_zones = json.load(f)
+        existing_zone = False
+        for zone in forbidden_zones['features']:
+            if zone['properties'].get('name') == name:
+                zone['geometry']['coordinates'][0] = geometry_coordinates
+                existing_zone = True
+        
+        if not existing_zone:
+            new_feature = get_new_polygon_feature(name, geometry_coordinates)
+            forbidden_zones['features'].append(new_feature)
+    
+    if forbidden_zones != None:
+        with open(FORBIDDEN_ZONES_PATH, 'w', encoding='utf-8') as f:
+            json.dump(forbidden_zones, f, ensure_ascii=False, indent=4)
+    
+    return OK
+
+
+def delete_forbidden_zone_handler(name: str):
+    forbidden_zones = None
+    
+    with open(FORBIDDEN_ZONES_PATH, 'r', encoding='utf-8') as f:
+        forbidden_zones = json.load(f)
+        for idx, zone in enumerate(forbidden_zones['features']):
+            if zone['properties'].get('name') == name:
+                forbidden_zones['features'].pop(idx)
+                break
+        
+    if forbidden_zones != None:
+        with open(FORBIDDEN_ZONES_PATH, 'w', encoding='utf-8') as f:
+            json.dump(forbidden_zones, f, ensure_ascii=False, indent=4)
+            return OK
+    
+    return NOT_FOUND
+    
