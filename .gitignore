@@ -41,6 +41,7 @@ build
 *.bkp
 
 *.zip
+*.deb
 
 *.deb
 # Ignore IDE files.

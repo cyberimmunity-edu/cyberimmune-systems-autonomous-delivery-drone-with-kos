@@ -12,7 +12,7 @@ bool killSwitchEnabled;
 
 int initPeripheryController() {
     if (!wait_for_network()) {
-        fprintf(stderr, "[%s] Error: Connection to network has failed\n", ENTITY_NAME);
+        logEntry("Connection to network has failed", ENTITY_NAME, LogLevel::LOG_ERROR);
         return 0;
     }
 
@@ -23,7 +23,7 @@ int initGpioPins() {
     peripherySocket = NULL;
 
     if ((peripherySocket = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
-        fprintf(stderr, "[%s] Warning: Failed to create socket\n", ENTITY_NAME);
+        logEntry("Failed to create socket", ENTITY_NAME, LogLevel::LOG_WARNING);
         return 0;
     }
 
@@ -33,7 +33,9 @@ int initGpioPins() {
     address.sin_port = htons(peripheryPort);
 
     if (connect(peripherySocket, (struct sockaddr*)&address, sizeof(address)) != 0) {
-        fprintf(stderr, "[%s] Warning: Connection to %s:%d has failed\n", ENTITY_NAME, SIMULATOR_IP, peripheryPort);
+        char logBuffer[256];
+        snprintf(logBuffer, 256, "Connection to %s:%d has failed", SIMULATOR_IP, peripheryPort);
+        logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
         return 0;
     }
 
@@ -45,7 +47,9 @@ bool isKillSwitchEnabled() {
 }
 
 int setBuzzer(bool enable) {
-    fprintf(stderr, "[%s] Info: Buzzer is %s\n", ENTITY_NAME, enable ? "enabled" : "disabled");
+    char logBuffer[256];
+    snprintf(logBuffer, 256, "Buzzer is %s", enable ? "enabled" : "disabled");
+    logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_INFO);
 
     return 1;
 }

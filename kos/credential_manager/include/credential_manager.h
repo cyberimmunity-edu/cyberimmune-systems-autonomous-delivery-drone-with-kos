@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../../shared/include/ipc_messages_logger.h"
 #include <stdint.h>
 
 int generateRsaKey();

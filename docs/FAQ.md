@@ -48,7 +48,7 @@ Docker при сборке создаёт образ т.н. слоями. Каж
 FROM ubuntu:22.04
 
 ENV DEBIAN_FRONTEND noninteractive
-ENV PATH="${PATH}:/opt/KasperskyOS-Community-Edition-1.2.0.45/toolchain/bin:/home/user/.local/bin"
+ENV PATH="${PATH}:/opt/KasperskyOS-Community-Edition-1.2.0.89_en.deb/toolchain/bin:/home/user/.local/bin"
 RUN apt-get update && \
     apt install -y \
         net-tools \
@@ -72,13 +72,12 @@ RUN apt-get update && \
         && adduser --disabled-password --gecos "" user \
         && echo 'user ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers
 
-COPY ./KasperskyOS-Community-Edition-1.2.0.45.zip /tmp
+COPY ./KasperskyOS-Community-Edition-1.2.0.89_en.deb /tmp
 
-RUN unzip /tmp/KasperskyOS-Community-Edition-1.2.0.45 -d /opt \
-    && rm /tmp/*.zip \
-    && ln -s /opt/KasperskyOS-Community-Edition-1.2.0.45 /opt/KasperskyOS-Local-Edition \
-    && echo '/opt/KasperskyOS-Community-Edition-1.2.0.45/toolchain/lib' >> /etc/ld.so.conf.d/KasperskyOS.conf \
-    && echo '/opt/KasperskyOS-Community-Edition-1.2.0.45/toolchain/x86_64-pc-linux-gnu/aarch64-kos/lib/' >> /etc/ld.so.conf.d/KasperskyOS.conf \
+RUN apt install /tmp/KasperskyOS-Community-Edition-1.2.0.89_en.deb --assume-yes
+RUN rm /tmp/KasperskyOS-Community-Edition-1.2.0.89_en.deb \
+    && echo '/opt/KasperskyOS-Community-Edition-1.2.0.89/toolchain/lib' >> /etc/ld.so.conf.d/KasperskyOS.conf \
+    && echo '/opt/KasperskyOS-Community-Edition-1.2.0.89/toolchain/x86_64-pc-linux-gnu/aarch64-kos/lib/' >> /etc/ld.so.conf.d/KasperskyOS.conf \
     && ldconfig
 
 RUN su -c 'pip3 install PyYAML mavproxy pymavlink --user --upgrade' user
@@ -97,25 +96,26 @@ CMD ["bash"]
 
 ```bash
 → docker history simulator
-IMAGE          CREATED       CREATED BY                                      SIZE      COMMENT
-2ed6960ffbb5   2 weeks ago   CMD ["bash"]                                    0B        buildkit.dockerfile.v0
-<missing>      2 weeks ago   RUN /bin/sh -c chown -R 1000:1000 /home/user…   400MB     buildkit.dockerfile.v0
-<missing>      2 weeks ago   COPY ./tests /home/user/tests # buildkit        7.54kB    buildkit.dockerfile.v0
-<missing>      2 weeks ago   COPY ./planner /home/user/planner # buildkit    55.6MB    buildkit.dockerfile.v0
-<missing>      2 weeks ago   COPY ./kos /home/user/kos # buildkit            178kB     buildkit.dockerfile.v0
-<missing>      2 weeks ago   COPY ./ardupilot /home/user/ardupilot # buil…   166MB     buildkit.dockerfile.v0
-<missing>      2 weeks ago   RUN /bin/sh -c su -c 'pip3 install PyYAML ma…   179MB     buildkit.dockerfile.v0
-<missing>      2 weeks ago   RUN /bin/sh -c unzip /tmp/KasperskyOS-Commun…   1.89GB    buildkit.dockerfile.v0
-<missing>      2 weeks ago   COPY ./KasperskyOS-Community-Edition-1.2.0.4…   511MB     buildkit.dockerfile.v0
-<missing>      2 weeks ago   RUN /bin/sh -c apt-get update &&     apt ins…   1.83GB    buildkit.dockerfile.v0
-<missing>      2 weeks ago   ENV PATH=/usr/local/sbin:/usr/local/bin:/usr…   0B        buildkit.dockerfile.v0
-<missing>      2 weeks ago   ENV DEBIAN_FRONTEND=noninteractive              0B        buildkit.dockerfile.v0
-<missing>      4 weeks ago   /bin/sh -c #(nop)  CMD ["/bin/bash"]            0B        
-<missing>      4 weeks ago   /bin/sh -c #(nop) ADD file:a5d32dc2ab15ff0d7…   77.9MB    
-<missing>      4 weeks ago   /bin/sh -c #(nop)  LABEL org.opencontainers.…   0B        
-<missing>      4 weeks ago   /bin/sh -c #(nop)  LABEL org.opencontainers.…   0B        
-<missing>      4 weeks ago   /bin/sh -c #(nop)  ARG LAUNCHPAD_BUILD_ARCH     0B        
-<missing>      4 weeks ago   /bin/sh -c #(nop)  ARG RELEASE                  0B        
+IMAGE          CREATED          CREATED BY                                      SIZE      COMMENT
+c11168bc9996   10 minutes ago   CMD ["bash"]                                    0B        buildkit.dockerfile.v0
+<missing>      10 minutes ago   RUN /bin/sh -c chown -R 1000:1000 /home/user…   400MB     buildkit.dockerfile.v0
+<missing>      10 minutes ago   COPY ./tests /home/user/tests # buildkit        11.4kB    buildkit.dockerfile.v0
+<missing>      10 minutes ago   COPY ./planner /home/user/planner # buildkit    55.6MB    buildkit.dockerfile.v0
+<missing>      10 minutes ago   COPY ./kos /home/user/kos # buildkit            210kB     buildkit.dockerfile.v0
+<missing>      10 minutes ago   COPY ./ardupilot /home/user/ardupilot # buil…   165MB     buildkit.dockerfile.v0
+<missing>      10 minutes ago   RUN /bin/sh -c su -c 'pip3 install PyYAML ma…   179MB     buildkit.dockerfile.v0
+<missing>      11 minutes ago   RUN /bin/sh -c rm /tmp/KasperskyOS-Community…   99.1kB    buildkit.dockerfile.v0
+<missing>      11 minutes ago   RUN /bin/sh -c apt install /tmp/KasperskyOS-…   2.27GB    buildkit.dockerfile.v0
+<missing>      19 minutes ago   COPY ./KasperskyOS-Community-Edition-1.2.0.8…   263MB     buildkit.dockerfile.v0
+<missing>      22 minutes ago   RUN /bin/sh -c apt-get update &&     apt ins…   1.86GB    buildkit.dockerfile.v0
+<missing>      22 minutes ago   ENV PATH=/usr/local/sbin:/usr/local/bin:/usr…   0B        buildkit.dockerfile.v0
+<missing>      22 minutes ago   ENV DEBIAN_FRONTEND=noninteractive              0B        buildkit.dockerfile.v0
+<missing>      13 months ago    /bin/sh -c #(nop)  CMD ["/bin/bash"]            0B
+<missing>      13 months ago    /bin/sh -c #(nop) ADD file:140fb5108b4a2861b…   77.8MB
+<missing>      13 months ago    /bin/sh -c #(nop)  LABEL org.opencontainers.…   0B
+<missing>      13 months ago    /bin/sh -c #(nop)  LABEL org.opencontainers.…   0B
+<missing>      13 months ago    /bin/sh -c #(nop)  ARG LAUNCHPAD_BUILD_ARCH     0B
+<missing>      13 months ago    /bin/sh -c #(nop)  ARG RELEASE                  0B
 ```
 
 Тут же можно увидеть и размер слоёв.

@@ -28,7 +28,9 @@ bool killSwitchEnabled;
 int setPin(uint8_t pin, bool mode) {
     Retcode rc = GpioOut(gpioHandler, pin, mode);
     if (rcOk != rc) {
-        fprintf(stderr, "[%s] Warning: Failed to set GPIO pin %d to %d ("RETCODE_HR_FMT")\n", ENTITY_NAME, pin, mode, RETCODE_HR_PARAMS(rc));
+        char logBuffer[256];
+        snprintf(logBuffer, 256, "Failed to set GPIO pin %d to %d ("RETCODE_HR_FMT")", pin, mode, RETCODE_HR_PARAMS(rc));
+        logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
         return 0;
     }
 
@@ -38,29 +40,35 @@ int setPin(uint8_t pin, bool mode) {
 int initPeripheryController() {
     char boardName[NAME_MAX_LENGTH] = {0};
     if (KnHalGetEnv("board", boardName, sizeof(boardName)) != rcOk) {
-        fprintf(stderr, "[%s] Error: Failed to get board name\n", ENTITY_NAME);
+        logEntry("Failed to get board name", ENTITY_NAME, LogLevel::LOG_ERROR);
         return 0;
     }
 
     char gpioConfig[NAME_MAX_LENGTH];
     if (snprintf(gpioConfig, NAME_MAX_LENGTH, "%s.%s", boardName, gpioConfigSuffix) < 0) {
-        fprintf(stderr, "[%s] Error: Failed to generate GPIO config name\n", ENTITY_NAME);
+        logEntry("Failed to generate GPIO config name", ENTITY_NAME, LogLevel::LOG_ERROR);
         return 0;
     }
 
     Retcode rc = BspInit(NULL);
     if (rc != rcOk) {
-        fprintf(stderr, "[%s] Error: Failed to initialize BSP ("RETCODE_HR_FMT")\n", ENTITY_NAME, RETCODE_HR_PARAMS(rc));
+        char logBuffer[256];
+        snprintf(logBuffer, 256, "Failed to initialize BSP ("RETCODE_HR_FMT")", RETCODE_HR_PARAMS(rc));
+        logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_ERROR);
         return 0;
     }
     rc = BspSetConfig(gpio, gpioConfig);
     if (rc != rcOk) {
-        fprintf(stderr, "[%s] Error: Failed to set BSP config for GPIO %s ("RETCODE_HR_FMT")\n", ENTITY_NAME, gpio, RETCODE_HR_PARAMS(rc));
+        char logBuffer[256];
+        snprintf(logBuffer, 256, "Failed to set BSP config for GPIO %s ("RETCODE_HR_FMT")", gpio, RETCODE_HR_PARAMS(rc));
+        logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_ERROR);
         return 0;
     }
     rc = GpioInit();
     if (rc != rcOk) {
-        fprintf(stderr, "[%s] Error: Failed to initialize GPIO ("RETCODE_HR_FMT")\n", ENTITY_NAME, RC_GET_CODE(rc));
+        char logBuffer[256];
+        snprintf(logBuffer, 256, "Failed to initialize GPIO ("RETCODE_HR_FMT")", RC_GET_CODE(rc));
+        logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_ERROR);
         return 0;
     }
 
@@ -70,7 +78,9 @@ int initPeripheryController() {
 int initGpioPins() {
     Retcode rc = GpioOpenPort(gpio, &gpioHandler);
     if (rcOk != rc) {
-        fprintf(stderr, "[%s] Warning: Failed top open GPIO %s ("RETCODE_HR_FMT")\n", ENTITY_NAME, gpio, RETCODE_HR_PARAMS(rc));
+        char logBuffer[256];
+        snprintf(logBuffer, 256, "Failed top open GPIO %s ("RETCODE_HR_FMT")", gpio, RETCODE_HR_PARAMS(rc));
+        logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
         return 0;
     }
 
@@ -78,7 +88,9 @@ int initGpioPins() {
     for (uint8_t pin : pins) {
         rc = GpioSetMode(gpioHandler, pin, GPIO_DIR_OUT);
         if (rcOk != rc) {
-            fprintf(stderr, "[%s] Warning: Failed to set GPIO pin %u mode ("RETCODE_HR_FMT")\n", ENTITY_NAME, pin, RETCODE_HR_PARAMS(rc));
+            char logBuffer[256];
+            snprintf(logBuffer, 256, "Failed to set GPIO pin %u mode ("RETCODE_HR_FMT")", pin, RETCODE_HR_PARAMS(rc));
+            logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
             return 0;
         }
     }

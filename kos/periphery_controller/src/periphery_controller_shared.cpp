@@ -40,7 +40,7 @@ void checkKillSwitchPermission() {
 
     snprintf(request, 1024, "/api/kill_switch?%s", BOARD_ID);
     while (!signMessage(request, signature)) {
-        fprintf(stderr, "[%s] Warning: Failed to sign 'kill switch permission' message at Credential Manager. Trying again in 1s\n", ENTITY_NAME);
+        logEntry("Failed to sign 'kill switch permission' message at Credential Manager. Trying again in 1s", ENTITY_NAME, LogLevel::LOG_WARNING);
         sleep(1);
     }
     snprintf(request, 1024, "%s&sig=0x%s", request, signature);
@@ -50,14 +50,14 @@ void checkKillSwitchPermission() {
         if (isKillSwitchEnabled()) {
             authenticity = 0;
             if (!sendRequest(request, response))
-                fprintf(stderr, "[%s] Warning: Failed to send 'kill switch permission' request through Server Connector. Trying again in 500ms\n", ENTITY_NAME);
+                logEntry("Failed to send 'kill switch permission' request through Server Connector. Trying again in 500ms", ENTITY_NAME, LogLevel::LOG_WARNING);
             else if (!checkSignature(response, authenticity) || !authenticity)
-                fprintf(stderr, "[%s] Warning: Failed to check signature of 'kill switch permission' response received through Server Connector. Trying again in 500ms\n", ENTITY_NAME);
+                logEntry("Failed to check signature of 'kill switch permission' response received through Server Connector. Trying again in 500ms", ENTITY_NAME, LogLevel::LOG_WARNING);
             else if (strstr(response, "$KillSwitch: 0#") != NULL) {
                 if (!enableBuzzer())
-                    fprintf(stderr, "[%s] Warning: Failed to enable buzzer\n", ENTITY_NAME);
+                    logEntry("Failed to enable buzzer", ENTITY_NAME, LogLevel::LOG_WARNING);
                 while (!setKillSwitch(false)) {
-                    fprintf(stderr, "[%s] Warning: Failed to forbid motor usage. Trying again in 1s\n", ENTITY_NAME);
+                    logEntry("Failed to forbid motor usage. Trying again in 1s", ENTITY_NAME, LogLevel::LOG_WARNING);
                     sleep(1);
                 }
             }

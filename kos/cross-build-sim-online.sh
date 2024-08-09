@@ -6,7 +6,7 @@ BUILD="${SCRIPT_DIR}/build_sim_online"
 export LANG=C
 export TARGET="aarch64-kos"
 export PKG_CONFIG=""
-export SDK_PREFIX="/opt/KasperskyOS-Local-Edition"
+export SDK_PREFIX="/opt/KasperskyOS-Community-Edition-1.2.0.89"
 export INSTALL_PREFIX="$BUILD/../install"
 export PATH="$SDK_PREFIX/toolchain/bin:$PATH"
 
@@ -33,7 +33,7 @@ function help
              Default: ${SDK_PREFIX}
 
   Examples:
-      bash cross-build.sh -s /opt/KasperskyOS-Community-Edition-1.1.1.13
+      bash cross-build.sh -s /opt/KasperskyOS-Community-Edition-1.2.0.89
 
 EOF
 }

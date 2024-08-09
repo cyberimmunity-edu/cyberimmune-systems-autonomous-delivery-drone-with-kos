@@ -17,7 +17,9 @@ uint8_t hexCharToInt(char c) {
     else if (c >= 'A' && c <= 'F')
         return c - 'A' + 10;
     else {
-        fprintf(stderr, "[%s] Warning: %c is not a viable hex value\n", ENTITY_NAME, c);
+        char logBuffer[256];
+        snprintf(logBuffer, 256, "%c is not a viable hex value", c);
+        logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
         return 0;
     }
 }
@@ -40,14 +42,14 @@ int getRsaKey() {
             return 0;
         file = open("/rsa", O_RDWR | O_CREAT);
         if (file == -1) {
-            fprintf(stderr, "[%s] Warning: Failed to create file to store generated RSA key\n", ENTITY_NAME);
+            logEntry("Failed to create file to store generated RSA key", ENTITY_NAME, LogLevel::LOG_ERROR);
             return 0;
         }
         char key[1024] = {0};
         sprintf(key, "%s\n%s\n%s\n", getKeyN(), getKeyE(), getKeyD());
         uint32_t len = strlen(key);
         if (write(file, key, len) != len) {
-            fprintf(stderr, "[%s] Warning: Failed to store RSA key in file\n", ENTITY_NAME);
+            logEntry("Failed to store RSA key in file", ENTITY_NAME, LogLevel::LOG_ERROR);
             close(file);
             return 0;
         }
@@ -62,7 +64,7 @@ int getRsaKey() {
             while (true) {
                 char letter;
                 if (read(file, &letter, 1) != 1) {
-                    fprintf(stderr, "[%s] Warning: Failed to read RSA key from file\n", ENTITY_NAME);
+                    logEntry("Failed to read RSA key from file", ENTITY_NAME, LogLevel::LOG_ERROR);
                     close(file);
                     return 0;
                 }
@@ -91,7 +93,7 @@ int setRsaKey(char* key) {
     char* nStart = strstr(key, header);
 
     if (nStart == NULL) {
-        fprintf(stderr, "[%s] Warning: Failed to parse public RSA key received from the server\n", ENTITY_NAME);
+        logEntry("Failed to parse public RSA key received from the server", ENTITY_NAME, LogLevel::LOG_WARNING);
         return 0;
     }
 
@@ -99,7 +101,7 @@ int setRsaKey(char* key) {
     char* eStart = strstr(nStart, " ");
 
     if (eStart == NULL) {
-        fprintf(stderr, "[%s] Warning: Failed to parse public RSA key received from the server\n", ENTITY_NAME);
+        logEntry("Failed to parse public RSA key received from the server", ENTITY_NAME, LogLevel::LOG_WARNING);
         return 0;
     }
 
@@ -121,7 +123,7 @@ int checkSignature(char* message, uint8_t &correct) {
 
     char* signatureStart = strstr(message, "#");
     if (signatureStart == NULL) {
-        fprintf(stderr, "[%s] Warning: Received mission has no signature\n", ENTITY_NAME);
+        logEntry("Received mission has no signature", ENTITY_NAME, LogLevel::LOG_WARNING);
         return 0;
     }
     uint32_t messageLength = signatureStart - message;
@@ -130,17 +132,17 @@ int checkSignature(char* message, uint8_t &correct) {
     mbedtls_sha256_context sha256;
     mbedtls_sha256_init(&sha256);
     if (mbedtls_sha256_starts(&sha256, 0) != 0) {
-        fprintf(stderr, "[%s] Warning: Failed to calculate hash of received message\n", ENTITY_NAME);
+        logEntry("Failed to calculate hash of received message", ENTITY_NAME, LogLevel::LOG_WARNING);
         mbedtls_sha256_free(&sha256);
         return 0;
     }
     if (mbedtls_sha256_update(&sha256, (unsigned char*)message, messageLength) != 0) {
-        fprintf(stderr, "[%s] Warning: Failed to calculate hash of received message\n", ENTITY_NAME);
+        logEntry("Failed to calculate hash of received message", ENTITY_NAME, LogLevel::LOG_WARNING);
         mbedtls_sha256_free(&sha256);
         return 0;
     }
     if (mbedtls_sha256_finish(&sha256, hash) != 0) {
-        fprintf(stderr, "[%s] Warning: Failed to calculate hash of received message\n", ENTITY_NAME);
+        logEntry("Failed to calculate hash of received message", ENTITY_NAME, LogLevel::LOG_WARNING);
         mbedtls_sha256_free(&sha256);
         return 0;
     }
@@ -151,7 +153,7 @@ int checkSignature(char* message, uint8_t &correct) {
     signatureStart++;
     stringToBytes(signatureStart, strlen(signatureStart), signature);
     if (mbedtls_rsa_public(&rsaServer, signature, result) != 0) {
-        fprintf(stderr, "[%s] Warning: Failed to decode server signature\n", ENTITY_NAME);
+        logEntry("Failed to decode server signature", ENTITY_NAME, LogLevel::LOG_WARNING);
         return 0;
     }
 
@@ -159,7 +161,7 @@ int checkSignature(char* message, uint8_t &correct) {
     for (int i = 127; i >= 0; i--) {
         int check = (j >= 0) ? (result[i] == hash[j]) : !result[i];
         if (!check) {
-            fprintf(stderr, "[%s] Warning: Authenticity is not confirmed\n", ENTITY_NAME);
+            logEntry("Authenticity is not confirmed", ENTITY_NAME, LogLevel::LOG_WARNING);
             return 0;
         }
         j--;
