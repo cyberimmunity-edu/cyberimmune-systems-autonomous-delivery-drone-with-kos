@@ -108,12 +108,17 @@ request {
             match method=SetCargoLock { grant () }
         }
         match dst=drone_controller.ServerConnector interface=drone_controller.ServerConnectorInterface {
+            match method=GetBoardId { grant () }
             match method=SendRequest { grant () }
         }
     }
 
-    match src=drone_controller.CredentialManager dst=drone_controller.ServerConnector interface=drone_controller.ServerConnectorInterface {
-        match method=SendRequest { grant () }
+    match src=drone_controller.CredentialManager dst=drone_controller.ServerConnector {
+        match interface=drone_controller.Initialization method=WaitForInit { grant () }
+        match interface=drone_controller.ServerConnectorInterface {
+            match method=GetBoardId { grant () }
+            match method=SendRequest { grant () }
+        }
     }
 
     match src=drone_controller.NavigationSystem {
@@ -121,6 +126,7 @@ request {
             match method=SignMessage { grant () }
         }
         match dst=drone_controller.ServerConnector interface=drone_controller.ServerConnectorInterface {
+            match method=GetBoardId { grant () }
             match method=SendRequest { grant () }
         }
     }
@@ -131,6 +137,7 @@ request {
             match method=CheckSignature { grant () }
         }
         match dst=drone_controller.ServerConnector interface=drone_controller.ServerConnectorInterface {
+            match method=GetBoardId { grant () }
             match method=SendRequest { grant () }
         }
     }
@@ -237,12 +244,17 @@ response {
             match method=SetCargoLock { grant () }
         }
         match src=drone_controller.ServerConnector interface=drone_controller.ServerConnectorInterface {
+            match method=GetBoardId { grant () }
             match method=SendRequest { grant () }
         }
     }
 
-    match dst=drone_controller.CredentialManager src=drone_controller.ServerConnector interface=drone_controller.ServerConnectorInterface {
-        match method=SendRequest { grant () }
+    match dst=drone_controller.CredentialManager src=drone_controller.ServerConnector {
+        match interface=drone_controller.Initialization method=WaitForInit { grant () }
+        match interface=drone_controller.ServerConnectorInterface {
+            match method=GetBoardId { grant () }
+            match method=SendRequest { grant () }
+        }
     }
 
     match dst=drone_controller.NavigationSystem {
@@ -250,6 +262,7 @@ response {
             match method=SignMessage { grant () }
         }
         match src=drone_controller.ServerConnector interface=drone_controller.ServerConnectorInterface {
+            match method=GetBoardId { grant () }
             match method=SendRequest { grant () }
         }
     }
@@ -260,6 +273,7 @@ response {
             match method=CheckSignature { grant () }
         }
         match src=drone_controller.ServerConnector interface=drone_controller.ServerConnectorInterface {
+            match method=GetBoardId { grant () }
             match method=SendRequest { grant () }
         }
     }

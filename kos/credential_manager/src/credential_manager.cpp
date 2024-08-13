@@ -1,4 +1,5 @@
 #include "../include/credential_manager.h"
+#include "../../shared/include/ipc_messages_initialization.h"
 #include "../../shared/include/ipc_messages_server_connector.h"
 
 #include <mbedtls_v3/ctr_drbg.h>
@@ -36,6 +37,11 @@ void bytesToString(uint8_t* source, char* destination) {
 }
 
 int generateRsaKey() {
+    while (!waitForInit("server_connector_connection", "ServerConnector")) {
+        logEntry("Failed to receive initialization notification from ServerConnector. Trying again in 1s", ENTITY_NAME, LogLevel::LOG_WARNING);
+        sleep(1);
+    }
+
     mbedtls_entropy_context entropy;
     mbedtls_ctr_drbg_context drbg;
     mbedtls_mpi N, E, D;
@@ -47,7 +53,13 @@ int generateRsaKey() {
     mbedtls_mpi_init(&E);
     mbedtls_mpi_init(&D);
 
-    if (mbedtls_ctr_drbg_seed(&drbg, mbedtls_entropy_func, &entropy, (unsigned char*)BOARD_ID, strlen(BOARD_ID)) != 0) {
+    char boardId[32] = {0};
+    while (!getBoardId(boardId)) {
+        logEntry("Failed to get board ID from ServerConnector. Trying again in 1s", ENTITY_NAME, LogLevel::LOG_WARNING);
+        sleep(1);
+    }
+
+    if (mbedtls_ctr_drbg_seed(&drbg, mbedtls_entropy_func, &entropy, (unsigned char*)boardId, strlen(boardId)) != 0) {
         logEntry("Failed to get drbg seed", ENTITY_NAME, LogLevel::LOG_ERROR);
         mbedtls_entropy_free(&entropy);
         mbedtls_ctr_drbg_free(&drbg);
@@ -97,9 +109,15 @@ int loadRsaKey(uint8_t* N, uint8_t* D, char* n, char* e, uint32_t nLen, uint32_t
 }
 
 int shareRsaKey() {
+    char boardId[32] = {0};
+    while (!getBoardId(boardId)) {
+        logEntry("Failed to get board ID from ServerConnector. Trying again in 1s", ENTITY_NAME, LogLevel::LOG_WARNING);
+        sleep(1);
+    }
+
     char rsaServerRequest[1024] = {0};
     char rsaServerResponse[1024] = {0};
-    snprintf(rsaServerRequest, 1024, "/api/key?%s&e=0x%s&n=0x%s", BOARD_ID, keyE, keyN);
+    snprintf(rsaServerRequest, 1024, "/api/key?%s&e=0x%s&n=0x%s", boardId, keyE, keyN);
     while (!sendRequest(rsaServerRequest, rsaServerResponse)) {
         logEntry("Failed to share RSA key. Trying again in 1s", ENTITY_NAME, LogLevel::LOG_WARNING);
         sleep(1);

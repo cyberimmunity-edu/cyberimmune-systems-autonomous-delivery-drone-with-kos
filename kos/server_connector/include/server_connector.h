@@ -4,4 +4,7 @@
 
 int initServerConnector();
 
+void setBoardName(char* id);
+char* getBoardName();
+
 int sendRequest(char* query, char* response);

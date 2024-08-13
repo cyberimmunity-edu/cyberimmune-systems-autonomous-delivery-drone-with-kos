@@ -10,14 +10,13 @@ else ()
     set (NAVIGATION_SYSTEM_SRC "src/navigation_system_real.cpp")
 endif ()
 
-add_executable (NavigationSystem "src/main.cpp" "src/navigation_system_shared.cpp" ${NAVIGATION_SYSTEM_SRC}
+add_executable (NavigationSystem "src/main.cpp" "src/navigation_system.cpp" ${NAVIGATION_SYSTEM_SRC}
     "src/navigation_system_interface.cpp" "../shared/src/initialization_interface.cpp"
     "../shared/src/ipc_messages_credential_manager.cpp" "../shared/src/ipc_messages_server_connector.cpp"
     "../shared/src/ipc_messages_initialization.cpp" "../shared/src/ipc_messages_logger.cpp")
 add_dependencies (NavigationSystem navigation_system_edl_files)
 
 target_compile_definitions (NavigationSystem PRIVATE ENTITY_NAME="Navigation System")
-target_compile_definitions (NavigationSystem PRIVATE BOARD_ID="id=${BOARD_ID}")
 
 if (SIMULATION)
     target_compile_definitions (NavigationSystem PRIVATE SIMULATOR_IP="${SIMULATOR_IP}")

@@ -34,11 +34,17 @@ int enableBuzzer() {
 }
 
 void checkKillSwitchPermission() {
+    char boardId[32] = {0};
+    while (!getBoardId(boardId)) {
+        logEntry("Failed to get board ID from ServerConnector. Trying again in 1s", ENTITY_NAME, LogLevel::LOG_WARNING);
+        sleep(1);
+    }
+
     char signature[257] = {0};
     char request[1024] = {0};
     char response[1024] = {0};
 
-    snprintf(request, 1024, "/api/kill_switch?%s", BOARD_ID);
+    snprintf(request, 1024, "/api/kill_switch?%s", boardId);
     while (!signMessage(request, signature)) {
         logEntry("Failed to sign 'kill switch permission' message at Credential Manager. Trying again in 1s", ENTITY_NAME, LogLevel::LOG_WARNING);
         sleep(1);

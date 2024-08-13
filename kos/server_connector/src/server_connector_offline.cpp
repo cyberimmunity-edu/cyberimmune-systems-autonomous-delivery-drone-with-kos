@@ -4,6 +4,8 @@
 #include <string.h>
 
 int initServerConnector() {
+    setBoardName("offline-drone");
+
     return 1;
 }
 

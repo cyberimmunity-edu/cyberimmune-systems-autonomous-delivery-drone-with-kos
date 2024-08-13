@@ -34,7 +34,6 @@ set_target_properties (${wpa_SUPPLICANT_ENTITY} PROPERTIES
     VFS_FILESYSTEM_BACKEND: client:kl.VfsNet
     VFS_NETWORK_BACKEND: client:kl.VfsNet"
     EXTRA_ARGS "\
-    - '-dddddd'
     - '-ien1'
     - '-c/etc/wpa_supplicant.conf'")
 set_target_properties (${precompiled_vfsVfsSdCardFs} PROPERTIES
