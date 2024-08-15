@@ -2,6 +2,14 @@ import datetime
 from orvd_server import db
 
 class User(db.Model):
+    """
+    Модель пользователя.
+    
+    Attributes:
+        username: имя пользователя (первичный ключ)
+        password_hash: хэш пароля
+        access_token: токен доступа
+    """
     __tablename__ = 'user'
     username = db.Column(db.String(64), index=True, primary_key=True)
     password_hash = db.Column(db.String(128))
@@ -12,6 +20,16 @@ class User(db.Model):
 
 
 class Uav(db.Model):
+    """
+    Модель БПЛА.
+    
+    Attributes:
+        id: идентификатор БПЛА (первичный ключ)
+        is_armed: состояние арма
+        state: текущее состояние БПЛА
+        kill_switch_state: состояние аварийного выключателя
+        created_date: дата создания записи
+    """
     __tablename__ = 'uav'
     id = db.Column(db.Integer, primary_key=True, autoincrement=False)
     is_armed = db.Column(db.Boolean, default=False)
@@ -24,6 +42,14 @@ class Uav(db.Model):
 
 
 class UavPublicKeys(db.Model):
+    """
+    Модель публичных ключей БПЛА.
+    
+    Attributes:
+        uav_id: идентификатор БПЛА (первичный ключ)
+        n: модуль открытого ключа
+        e: экспонента открытого ключа
+    """
     __tablename__ = 'uav_public_keys'
     uav_id = db.Column(db.Integer, primary_key=True)
     n = db.Column(db.String(1024))
@@ -34,6 +60,14 @@ class UavPublicKeys(db.Model):
     
 
 class MissionSenderPublicKeys(db.Model):
+    """
+    Модель публичных ключей отправителя миссии.
+    
+    Attributes:
+        uav_id: идентификатор БПЛА (первичный ключ)
+        n: модуль открытого ключа
+        e: экспонента открытого ключа
+    """
     __tablename__ = 'mission_sender_public_keys'
     uav_id = db.Column(db.Integer, primary_key=True)
     n = db.Column(db.String(1024))
@@ -44,6 +78,13 @@ class MissionSenderPublicKeys(db.Model):
     
 
 class Mission(db.Model):
+    """
+    Модель миссии БПЛА.
+    
+    Attributes:
+        uav_id: идентификатор БПЛА (первичный ключ, внешний ключ)
+        is_accepted: статус принятия миссии
+    """
     __tablename__ = 'mission'
     uav_id = db.Column(db.Integer, db.ForeignKey('uav.id'), primary_key=True)
     is_accepted = db.Column(db.Boolean, default=False)
@@ -53,6 +94,14 @@ class Mission(db.Model):
 
 
 class MissionStep(db.Model):
+    """
+    Модель шага миссии.
+    
+    Attributes:
+        mission_id: идентификатор миссии (внешний ключ)
+        step: номер шага
+        operation: операция, выполняемая на данном шаге
+    """
     __tablename__ = 'mission_step'
     mission_id = db.Column(db.Integer, db.ForeignKey('mission.uav_id'))
     step = db.Column(db.Integer)
@@ -69,6 +118,18 @@ class MissionStep(db.Model):
     
 
 class UavTelemetry(db.Model):
+    """
+    Модель телеметрии БПЛА.
+    
+    Attributes:
+        uav_id: идентификатор БПЛА (первичный ключ, внешний ключ)
+        lat: широта
+        lon: долгота
+        alt: высота
+        azimuth: азимут
+        dop: снижение точности
+        sats: количество спутников
+    """
     __tablename__ = 'uav_telemetry'
     uav_id = db.Column(db.Integer, db.ForeignKey('uav.id'), primary_key=True)
     lat = db.Column(db.Float(precision=8))

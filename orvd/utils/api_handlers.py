@@ -5,9 +5,34 @@ from utils.utils import *
 arm_queue = set()
 
 def bad_request(message: str):
+    """
+    Возвращает сообщение об ошибке с кодом 400 (Bad Request).
+
+    Args:
+        message (str): Сообщение об ошибке.
+
+    Returns:
+        tuple: Кортеж с сообщением об ошибке и кодом состояния 400.
+    """
     return message, 400
-        
-def signed_request(handler_func, verifier_func, signer_func, query_str, key_group, sig, **kwargs):
+
+
+def signed_request(handler_func, verifier_func, signer_func, query_str: str, key_group: str, sig: str, **kwargs):
+    """
+    Обрабатывает подписанный запрос, проверяя подпись и выполняя указанную функцию-обработчик.
+
+    Args:
+        handler_func (callable): Функция-обработчик запроса.
+        verifier_func (callable): Функция для проверки подписи.
+        signer_func (callable): Функция для подписи ответа.
+        query_str (str): Строка запроса.
+        key_group (str): Группа ключей.
+        sig (str): Подпись запроса.
+        **kwargs: Дополнительные аргументы для функции-обработчика.
+
+    Returns:
+        tuple: Кортеж с ответом и кодом состояния.
+    """
     if sig != None and verifier_func(query_str, int(sig, 16), key_group):
         answer = handler_func(**kwargs)
         ret_code = 200
@@ -18,7 +43,19 @@ def signed_request(handler_func, verifier_func, signer_func, query_str, key_grou
     answer = f'{answer}#{hex(signer_func(answer, "orvd"))[2:]}'
     return answer, ret_code
 
-def authorized_request(handler_func, token, **kwargs):
+
+def authorized_request(handler_func, token: str, **kwargs):
+    """
+    Обрабатывает авторизованный запрос, проверяя токен и выполняя указанную функцию-обработчик.
+
+    Args:
+        handler_func (callable): Функция-обработчик запроса.
+        token (str): Токен авторизации.
+        **kwargs: Дополнительные аргументы для функции-обработчика.
+
+    Returns:
+        tuple: Кортеж с ответом и кодом состояния.
+    """
     if check_user_token(token):
         answer = handler_func(**kwargs)
         ret_code = 200
@@ -27,14 +64,35 @@ def authorized_request(handler_func, token, **kwargs):
         ret_code = 401
     return answer, ret_code
 
+
 def check_user_token(token):
+    """
+    Проверяет валидность токена пользователя.
+
+    Args:
+        token (str): Токен для проверки.
+
+    Returns:
+        bool: True, если токен валиден, иначе False.
+    """
     users = get_entities_by_field(User, User.access_token, token)
     if users and users.count() != 0:
         return True
     else:
         return False
-    
+
+
 def regular_request(handler_func, **kwargs):
+    """
+    Обрабатывает обычный запрос, выполняя указанную функцию-обработчик.
+
+    Args:
+        handler_func (callable): Функция-обработчик запроса.
+        **kwargs: Дополнительные аргументы для функции-обработчика.
+
+    Returns:
+        tuple: Кортеж с ответом и кодом состояния.
+    """
     try:
         answer = handler_func(**kwargs)
         ret_code = 200
@@ -45,6 +103,17 @@ def regular_request(handler_func, **kwargs):
 
     
 def key_kos_exchange_handler(id: int, n: str, e: str):
+    """
+    Обрабатывает обмен ключами с KOS.
+
+    Args:
+        id (int): Идентификатор БПЛА.
+        n (str): Модуль открытого ключа.
+        e (str): Экспонента открытого ключа.
+
+    Returns:
+        str: Строка с открытым ключом ORVD.
+    """
     n, e = str(int(n, 16)), str(int(e, 16))
     key_entity = get_entity_by_key(UavPublicKeys, id)
     if key_entity == None:
@@ -53,7 +122,17 @@ def key_kos_exchange_handler(id: int, n: str, e: str):
     str_to_send = f'$Key: {hex(orvd_n)[2:]} {hex(orvd_e)[2:]}'
     return str_to_send
 
+
 def key_ms_exchange_handler(id: int):
+    """
+    Обрабатывает обмен ключами с Mission Sender.
+
+    Args:
+        id (int): Идентификатор отправителя миссии.
+
+    Returns:
+        str: Строка с открытым ключом ORVD.
+    """
     key_group = f'ms{id}'
     if f'ms{id}' not in loaded_keys:
         generate_keys(ORVD_KEY_SIZE, key_group)
@@ -71,7 +150,17 @@ def key_ms_exchange_handler(id: int):
     str_to_send = f'$Key: {hex(orvd_n)[2:]} {hex(orvd_e)[2:]}'
     return str_to_send
 
+
 def auth_handler(id: int):
+    """
+    Обрабатывает аутентификацию БПЛА.
+
+    Args:
+        id (int): Идентификатор БПЛА.
+
+    Returns:
+        str: Строка подтверждения аутентификации.
+    """
     uav_entity = get_entity_by_key(Uav, id)
     if not uav_entity:
         uav_entity = Uav(id=id, is_armed=False, state='В сети', kill_switch_state=False)
@@ -84,7 +173,17 @@ def auth_handler(id: int):
     
     return f'$Auth id={id}'
 
+
 def arm_handler(id: int):
+    """
+    Обрабатывает запрос на арм БПЛА.
+
+    Args:
+        id (int): Идентификатор БПЛА.
+
+    Returns:
+        str: Статус арма БПЛА.
+    """
     uav_entity = get_entity_by_key(Uav, id)
     if not uav_entity:
         return NOT_FOUND
@@ -106,7 +205,17 @@ def arm_handler(id: int):
         else:
             return f'$Arm: {DISARMED}'
 
+
 def _arm_wait_decision(id: int):
+    """
+    Ожидает решения об арме БПЛА.
+
+    Args:
+        id (int): Идентификатор БПЛА.
+
+    Returns:
+        str: Решение об арме (ARMED или DISARMED).
+    """
     while id in arm_queue:
         time.sleep(0.1)
     uav_entity = get_entity_by_key(Uav, id)
@@ -115,7 +224,17 @@ def _arm_wait_decision(id: int):
     else:
         return DISARMED
 
+
 def fly_accept_handler(id: int):
+    """
+    Обрабатывает запрос на принятие полета БПЛА.
+
+    Args:
+        id (int): Идентификатор БПЛА.
+
+    Returns:
+        str: Статус арма БПЛА.
+    """
     uav_entity = get_entity_by_key(Uav, id)
     if not uav_entity:
         return NOT_FOUND
@@ -124,7 +243,17 @@ def fly_accept_handler(id: int):
     else:
         return f'$Arm: {DISARMED}'
 
+
 def kill_switch_handler(id: int):
+    """
+    Обрабатывает запрос на проверку состояния аварийного выключателя БПЛА.
+
+    Args:
+        id (int): Идентификатор БПЛА.
+
+    Returns:
+        str: Состояние аварийного выключателя.
+    """
     uav_entity = get_entity_by_key(Uav, id)
     if not uav_entity:
         return NOT_FOUND
@@ -132,9 +261,25 @@ def kill_switch_handler(id: int):
         return f'$KillSwitch: {KILL_SWITCH_ON}'
     else:
         return f'$KillSwitch: {KILL_SWITCH_OFF}'
-    
+
+
 def telemetry_handler(id: int, lat: float, lon: float, alt: float,
                       azimuth: float, dop: float, sats: float):
+    """
+    Обрабатывает телеметрию БПЛА.
+
+    Args:
+        id (int): Идентификатор БПЛА.
+        lat (float): Широта.
+        lon (float): Долгота.
+        alt (float): Высота.
+        azimuth (float): Азимут.
+        dop (float): Снижение точности.
+        sats (float): Количество спутников.
+
+    Returns:
+        str: Статус арма БПЛА.
+    """
     uav_entity = get_entity_by_key(Uav, id)
     if not uav_entity:
         return NOT_FOUND
@@ -169,6 +314,15 @@ def telemetry_handler(id: int, lat: float, lon: float, alt: float,
     
 
 def fmission_kos_handler(id: int):
+    """
+    Обрабатывает запрос на получение полетного задания для KOS.
+
+    Args:
+        id (int): Идентификатор БПЛА.
+
+    Returns:
+        str: Строка с полетным заданием или NOT_FOUND.
+    """
     uav_entity = get_entity_by_key(Uav, id)
     if uav_entity:
         mission = get_entity_by_key(Mission, id)
@@ -181,6 +335,15 @@ def fmission_kos_handler(id: int):
 
             
 def get_all_forbidden_zones_handler(id: int):
+    """
+    Обрабатывает запрос на получение всех запрещенных для полета зон.
+
+    Args:
+        id (int): Идентификатор БПЛА.
+
+    Returns:
+        str: Строка с информацией о запрещенных зонах или NOT_FOUND.
+    """
     with open(FORBIDDEN_ZONES_PATH, 'r', encoding='utf-8') as f:
         forbidden_zones = json.load(f)
         result_str = f'$ForbiddenZones {len(forbidden_zones["features"])}'
@@ -193,6 +356,16 @@ def get_all_forbidden_zones_handler(id: int):
 
 
 def fmission_ms_handler(id: int, mission_str: str):
+    """
+    Обрабатывает запрос на сохранение полетного задания от Mission Sender.
+
+    Args:
+        id (int): Идентификатор БПЛА.
+        mission_str (str): Строка с полетным заданием.
+
+    Returns:
+        str: OK в случае успешного сохранения.
+    """
     mission_entity = get_entity_by_key(Mission, id)
     if mission_entity:
         get_entities_by_field(MissionStep, MissionStep.mission_id, id).delete()
@@ -211,6 +384,15 @@ def fmission_ms_handler(id: int, mission_str: str):
 
 
 def get_logs_handler(id: int):
+    """
+    Обрабатывает запрос на получение логов БПЛА.
+
+    Args:
+        id (int): Идентификатор БПЛА.
+
+    Returns:
+        str: Строка с логами или NOT_FOUND.
+    """
     uav_log = None
     try:
         with open(f'{LOGS_PATH}/{id}.txt') as f:
@@ -222,7 +404,18 @@ def get_logs_handler(id: int):
     except:
         return NOT_FOUND
 
+
 def save_logs_handler(id: int, log: str):
+    """
+    Обрабатывает запрос на сохранение логов БПЛА.
+
+    Args:
+        id (int): Идентификатор БПЛА.
+        log (str): Строка с логами для сохранения.
+
+    Returns:
+        str: OK в случае успешного сохранения.
+    """
     try:
         if not os.path.exists(LOGS_PATH):
             os.makedirs(LOGS_PATH)
@@ -234,6 +427,16 @@ def save_logs_handler(id: int, log: str):
 
 
 def admin_auth_handler(login: str, password: str):
+    """
+    Обрабатывает запрос на аутентификацию администратора.
+
+    Args:
+        login (str): Логин администратора.
+        password (str): Пароль администратора.
+
+    Returns:
+        str: Токен доступа или пустая строка в случае неудачи.
+    """
     user_entity = get_entity_by_key(User, login)
     if not user_entity:
         return NOT_FOUND
@@ -246,6 +449,16 @@ def admin_auth_handler(login: str, password: str):
 
 
 def arm_decision_handler(id: int, decision: int):
+    """
+    Обрабатывает решение об арме БПЛА.
+
+    Args:
+        id (int): Идентификатор БПЛА.
+        decision (int): Решение об арме (ARMED или DISARMED).
+
+    Returns:
+        str: Статус арма или NOT_FOUND.
+    """
     uav_entity = get_entity_by_key(Uav, id)
     if not uav_entity:
         return NOT_FOUND
@@ -257,7 +470,17 @@ def arm_decision_handler(id: int, decision: int):
     else:
         return f'$Arm: -1'
 
+
 def force_disarm_handler(id: int):
+    """
+    Обрабатывает запрос на принудительный дизарм БПЛА.
+
+    Args:
+        id (int): Идентификатор БПЛА.
+
+    Returns:
+        str: OK в случае успешного дизарма или NOT_FOUND.
+    """
     uav_entity = get_entity_by_key(Uav, id)
     if not uav_entity:
         return NOT_FOUND
@@ -267,7 +490,14 @@ def force_disarm_handler(id: int):
         commit_changes()
         return OK
 
+
 def force_disarm_all_handler():
+    """
+    Обрабатывает запрос на принудительный дизарм всех БПЛА.
+
+    Returns:
+        str: OK в случае успешного дизарма всех БПЛА.
+    """
     uav_entities = Uav.query.all()
     for uav_entity in uav_entities:
         uav_entity.is_armed = False
@@ -275,14 +505,34 @@ def force_disarm_all_handler():
     commit_changes()
     return OK
 
+
 def get_state_handler(id: int):
+    """
+    Обрабатывает запрос на получение состояния БПЛА.
+
+    Args:
+        id (int): Идентификатор БПЛА.
+
+    Returns:
+        str: Состояние БПЛА или NOT_FOUND.
+    """
     uav_entity = get_entity_by_key(Uav, id)
     if not uav_entity:
         return NOT_FOUND
     else:
         return uav_entity.state
 
+
 def get_mission_handler(id: int):
+    """
+    Обрабатывает запрос на получение полетного задания БПЛА.
+
+    Args:
+        id (int): Идентификатор БПЛА.
+
+    Returns:
+        str: Строка с полетным заданием или NOT_FOUND.
+    """
     uav_entity = get_entity_by_key(Uav, id)
     if uav_entity:
         mission = get_entity_by_key(Mission, id)
@@ -293,7 +543,17 @@ def get_mission_handler(id: int):
                 return "&".join(mission_steps)
     return NOT_FOUND
 
+
 def get_telemetry_handler(id: int):
+    """
+    Обрабатывает запрос на получение телеметрии БПЛА.
+
+    Args:
+        id (int): Идентификатор БПЛА.
+
+    Returns:
+        str: Строка с телеметрическими данными или NOT_FOUND.
+    """
     uav_telemetry_entity = get_entity_by_key(UavTelemetry, id)
     if not uav_telemetry_entity:
         return NOT_FOUND
@@ -305,9 +565,26 @@ def get_telemetry_handler(id: int):
         
 
 def get_waiter_number_handler():
+    """
+    Обрабатывает запрос на получение количества БПЛА, ожидающих решения об арме.
+
+    Returns:
+        str: Количество ожидающих БПЛА.
+    """
     return str(len(arm_queue))
 
+
 def mission_decision_handler(id: int, decision: int):
+    """
+    Обрабатывает решение о принятии или отклонении миссии.
+
+    Args:
+        id (int): Идентификатор БПЛА.
+        decision (int): Решение (0 - принять, 1 - отклонить).
+
+    Returns:
+        str: OK в случае успешной обработки или NOT_FOUND.
+    """
     mission_entity = get_entity_by_key(Mission, id)
     if not mission_entity:
         return NOT_FOUND
@@ -319,7 +596,17 @@ def mission_decision_handler(id: int, decision: int):
         commit_changes()
         return OK
 
+
 def admin_kill_switch_handler(id: int):
+    """
+    Обрабатывает запрос на активацию аварийного выключателя БПЛА администратором.
+
+    Args:
+        id (int): Идентификатор БПЛА.
+
+    Returns:
+        str: OK в случае успешной активации или NOT_FOUND.
+    """
     uav_entity = get_entity_by_key(Uav, id)
     if not uav_entity:
         return NOT_FOUND
@@ -330,12 +617,29 @@ def admin_kill_switch_handler(id: int):
         commit_changes()
         return OK
 
+
 def get_id_list_handler():
+    """
+    Обрабатывает запрос на получение списка идентификаторов всех БПЛА.
+
+    Returns:
+        str: Строка со списком идентификаторов БПЛА
+    """
     uav_entities = Uav.query.order_by(Uav.created_date).all()
     uav_ids = list(map(lambda e: e.id, uav_entities))
     return str(uav_ids)
 
+
 def get_mission_state_handler(id: int):
+    """
+    Обрабатывает запрос на получение состояния миссии БПЛА.
+    
+    Args:
+        id (int): Идентификатор БПЛА.
+
+    Returns:
+        str: Состояние миссии (принята/не принята) или NOT_FOUND.
+    """
     uav_entity = get_entity_by_key(Uav, id)
     if uav_entity:
         mission = get_entity_by_key(Mission, id)
@@ -346,7 +650,18 @@ def get_mission_state_handler(id: int):
                 return str(MISSION_NOT_ACCEPTED)
     return NOT_FOUND
 
+
 def change_fly_accept_handler(id: int, decision: int):
+    """
+    Обрабатывает запрос на изменение статуса принятия полета БПЛА.
+
+    Args:
+        id (int): Идентификатор БПЛА.
+        decision (int): Решение (0 - принять, 1 - отклонить).
+
+    Returns:
+        str: OK в случае успешного изменения или NOT_FOUND.
+    """
     uav_entity = get_entity_by_key(Uav, id)
     if uav_entity:
         if decision == 0:
@@ -361,6 +676,15 @@ def change_fly_accept_handler(id: int, decision: int):
 
 
 def get_forbidden_zone_handler(name: str):
+    """
+    Обрабатывает запрос на получение координат запрещенной для полета зоны по ее имени.
+
+    Args:
+        name (str): Имя запрещенной зоны.
+
+    Returns:
+        json: JSON-массив с координатами зоны или NOT_FOUND.
+    """
     with open(FORBIDDEN_ZONES_PATH, 'r', encoding='utf-8') as f:
         forbidden_zones = json.load(f)
         matching_zone = None
@@ -376,6 +700,12 @@ def get_forbidden_zone_handler(name: str):
 
 
 def get_forbidden_zones_names_handler():
+    """ 
+    Обрабатывает запрос на получение имен всех запрещенных зон.
+
+    Returns:
+        json: JSON-массив с именами запрещенных зон или NOT_FOUND.
+    """
     with open(FORBIDDEN_ZONES_PATH, 'r', encoding='utf-8') as f:
         forbidden_zones = json.load(f)
         zones_names = []
@@ -387,6 +717,16 @@ def get_forbidden_zones_names_handler():
 
 
 def set_forbidden_zone_handler(name: str, geometry: str):
+    """
+    Обрабатывает запрос на установку или обновление запрещенной для полета зоны.
+
+    Args:
+        name (str): Имя запрещенной зоны.
+        geometry (str): Строка с координатами зоны.
+
+    Returns:
+        str: OK в случае успешной установки или сообщение об ошибке.
+    """
     geometry_coordinates = cast_wrapper(geometry, ast.literal_eval)
     if geometry_coordinates == None:
         return 'Bad geometry'
@@ -416,6 +756,15 @@ def set_forbidden_zone_handler(name: str, geometry: str):
 
 
 def delete_forbidden_zone_handler(name: str):
+    """
+    Обрабатывает запрос на удаление запрещенной для полета зоны.
+
+    Args:
+        name (str): Имя запрещенной зоны для удаления.
+
+    Returns:
+        str: OK в случае успешного удаления или NOT_FOUND.
+    """
     forbidden_zones = None
     
     with open(FORBIDDEN_ZONES_PATH, 'r', encoding='utf-8') as f:
