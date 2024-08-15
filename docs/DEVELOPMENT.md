@@ -36,8 +36,11 @@ sudo usermod -aG sudo,docker,dialout user
 # Клонирование репозитория с симулятором (вместо cyberimmunity-edu может быть ваш fork)
 git clone https://github.com/cyberimmunity-edu/cyberimmune-systems-autonomous-delivery-drone-with-kos.git
 
-# Размещение KasperskyOS CE SDK 1.2 в папке проекта (копия репозитория)
+# Размещение KasperskyOS CE SDK 1.2.0.89 в папке проекта (копия репозитория)
 cp ~/Downloads/KasperskyOS-Community-Edition-1.2.0.89_en.deb cyberimmune-systems-autonomous-delivery-drone-with-kos/
+
+# Размещение KasperskyOS CE SDK 1.2.0.45 в папке проекта (копия репозитория)
+cp ~/Downloads/KasperskyOS-Community-Edition-1.2.0.45.zip cyberimmune-systems-autonomous-delivery-drone-with-kos/
 ```
 
 Запуск цифрового двойника:
@@ -73,13 +76,13 @@ git clone https://github.com/cyberimmunity-edu/cyberimmune-systems-autonomous-de
 cd cyberimmune-systems-autonomous-delivery-drone-with-kos
 ```
 
+1. Разместить KasperskyOS-Community-Edition-1.2.0.89_en.deb и KasperskyOS-Community-Edition-1.2.0.45.zip в скачанной папке
+
 1. Установить необходимые для работы компоненты, запустив скрипт `install_dependencies.sh`
 
 ```bash
 ./install_dependencies.sh
 ```
-
-1. Скачать и установить KasperskyOS-Community-Edition-1.2.0.89_en.deb (расположив содержимое в /opt)
 
 1. Сборка и запуск осуществляется при помощи скрипта `run.sh`
     1. Если в доступной сети развернут и запущен сервер ОРВД, то дополнительных аргументов при запуске скрипта не требуется
