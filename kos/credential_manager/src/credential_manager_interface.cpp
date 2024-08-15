@@ -1,3 +1,9 @@
+/**
+ * \file
+ * \~English \brief Implementation of CredentialManagerInterface IDL-interface methods.
+ * \~Russian \brief Реализация методов IDL-интерфейса CredentialManagerInterface.
+ */
+
 #include "../include/credential_manager_interface.h"
 #include "../include/credential_manager.h"
 

@@ -1,3 +1,9 @@
+/**
+ * \file
+ * \~English \brief Implementation of NavigationSystemInterface IDL-interface methods.
+ * \~Russian \brief Реализация методов IDL-интерфейса NavigationSystemInterface.
+ */
+
 #include "../include/navigation_system.h"
 #include "../include/navigation_system_interface.h"
 

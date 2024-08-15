@@ -1,3 +1,9 @@
+/**
+ * \file
+ * \~English \brief Implementation of ServerConnectorInterface IDL-interface methods.
+ * \~Russian \brief Реализация методов IDL-интерфейса ServerConnectorInterface.
+ */
+
 #include "../include/server_connector_interface.h"
 #include "../include/server_connector.h"
 

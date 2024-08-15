@@ -1,3 +1,9 @@
+/**
+ * \file
+ * \~English \brief Implementation of LoggerInterface IDL-interface methods.
+ * \~Russian \brief Реализация методов IDL-интерфейса LoggerInterface.
+ */
+
 #include "../include/logger_interface.h"
 #include "../include/logger.h"
 
