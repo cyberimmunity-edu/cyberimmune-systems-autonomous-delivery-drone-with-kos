@@ -1,3 +1,9 @@
+/**
+ * \file
+ * \~English \brief Implementation of the security module AutopilotConnector component main loop.
+ * \~Russian \brief Реализация основного цикла компонента AutopilotConnector модуля безопасности.
+ */
+
 #include "../include/autopilot_connector.h"
 #include "../include/autopilot_connector_interface.h"
 #include "../../shared/include/initialization_interface.h"
@@ -10,6 +16,17 @@
 #define NK_USE_UNQUALIFIED_NAMES
 #include <drone_controller/AutopilotConnector.edl.h>
 
+/**
+ * \~English \brief AutopilotConnector main program entry point.
+ * \details First, waits for the Logger component to initialize. After that,
+ * communication with the autopilot is prepared and established. Then the program
+ * enters a loop, where it receives IPC messages from other security module components,
+ * performs the requested actions and sends IPC responses.
+ * \~Russian \brief Точка входа в основную программу компонента AutopilotConnector.
+ * \details Сначала производится ожидание инициализации компонента Logger. После этого подготавливается
+ * и устанавливается связь с автопилотом. Далее программа входит в цикл, в котором получает IPC-сообщения
+ * от других компонентов модуля безопасности, исполняет запрашиваемые действия и отправляет IPC-ответы.
+ */
 int main(void) {
     while (!waitForInit("logger_connection", "Logger")) {
         logEntry("Failed to receive initialization notification from Logger. Trying again in 1s", ENTITY_NAME, LogLevel::LOG_WARNING);
