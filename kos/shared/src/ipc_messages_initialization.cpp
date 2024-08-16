@@ -1,9 +1,18 @@
+/**
+ * \file
+ * \~English \brief Implementation of wrapper methods that send IPC messages
+ * to any security module component (except for FlightController).
+ * \~Russian \brief Реализация методов-оберток, общих для всех компонентов модуля безопасности (кроме FlightController).
+ */
+
 #include "../include/ipc_messages_initialization.h"
 #include "../include/initialization_interface.h"
 
 #include <stddef.h>
 
+/** \cond */
 #define MAX_METHOD_IMPL_LEN 128
+/** \endcond */
 
 #define NK_USE_UNQUALIFIED_NAMES
 #include <drone_controller/Initialization.idl.h>

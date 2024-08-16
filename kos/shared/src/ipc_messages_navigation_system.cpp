@@ -1,3 +1,9 @@
+/**
+ * \file
+ * \~English \brief Implementation of wrapper methods that send IPC messages to NavigationSystem component.
+ * \~Russian \brief Реализация методов-оберток для отправки IPC-сообщений компоненту NavigationSystem.
+ */
+
 #include "../include/ipc_messages_navigation_system.h"
 #include "../include/initialization_interface.h"
 
