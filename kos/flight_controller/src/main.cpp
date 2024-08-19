@@ -18,11 +18,13 @@
 #define RETRY_REQUEST_DELAY_SEC 5
 #define FLY_ACCEPT_PERIOD_US 500000
 
+char boardId[32] = {0};
+
 int sendSignedMessage(char* method, char* response, char* errorMessage, uint8_t delay) {
     char message[512] = {0};
     char signature[257] = {0};
     char request[1024] = {0};
-    snprintf(message, 512, "%s?%s", method, BOARD_ID);
+    snprintf(message, 512, "%s?%s", method, boardId);
 
     while (!signMessage(message, signature)) {
         char logBuffer[256];
@@ -88,7 +90,15 @@ int main(void) {
         logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
         sleep(RETRY_DELAY_SEC);
     }
-    logEntry("Initialization is finished", ENTITY_NAME, LogLevel::LOG_INFO);
+
+    //Get ID from ServerConnector
+    while (!getBoardId(boardId)) {
+        logEntry("Failed to get board ID from ServerConnector. Trying again in 1s", ENTITY_NAME, LogLevel::LOG_WARNING);
+        sleep(1);
+    }
+    char initNotification[64] = {0};
+    snprintf(initNotification, 64, "Board '%s' is initialized", boardId);
+    logEntry(initNotification, ENTITY_NAME, LogLevel::LOG_INFO);
 
     //Enable buzzer to indicate, that all modules has been initialized
     if (!enableBuzzer())

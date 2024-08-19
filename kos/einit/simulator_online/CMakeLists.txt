@@ -25,18 +25,6 @@ set_target_properties (${rump_DHCPCD_ENTITY} PROPERTIES
     - '-4'
     - -f
     - /etc/dhcpcd.conf")
-set_target_properties (${wpa_SUPPLICANT_ENTITY} PROPERTIES
-    DEPENDS_ON_ENTITY ""
-    EXTRA_CONNECTIONS "\
-  - target: kl.VfsNet
-    id: kl.VfsNet"
-    EXTRA_ENV "\
-    VFS_FILESYSTEM_BACKEND: client:kl.VfsNet
-    VFS_NETWORK_BACKEND: client:kl.VfsNet"
-    EXTRA_ARGS "\
-    - '-dddddd'
-    - '-ien1'
-    - '-c/etc/wpa_supplicant.conf'")
 set_target_properties (${precompiled_vfsVfsSdCardFs} PROPERTIES
     EXTRA_ARGS "\
     - -l

@@ -6,13 +6,48 @@
 
 uint16_t serverPort = 8080;
 
+int setMacId() {
+    ifaddrs *address;
+    if (getifaddrs(&address) == -1) {
+        logEntry("Failed to get 'en0' MAC-address", ENTITY_NAME, LogLevel::LOG_ERROR);
+        return 0;
+    }
+
+    uint8_t mac[ETHER_ADDR_LEN] = {0};
+    for (ifaddrs *ifa = address; ifa != NULL; ifa = ifa->ifa_next) {
+        char *name = ifa->ifa_name;
+        if (strcmp(name, "en0") || (ifa->ifa_flags & IFF_LOOPBACK))
+            continue;
+        struct sockaddr_in *sock = (struct sockaddr_in*)(ifa->ifa_addr);
+        if ((sock == NULL) || (sock->sin_family != AF_LINK))
+            continue;
+        struct sockaddr_dl *sdl = satosdl(sock);
+        if (sdl->sdl_alen != ETHER_ADDR_LEN)
+            continue;
+        memcpy(mac, LLADDR(sdl), sdl->sdl_alen);
+        break;
+    }
+    freeifaddrs(address);
+
+    char name[32] = {0};
+    snprintf(name, 32, "%02x:%02x:%02x:%02x:%02x:%02x", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+    setBoardName(name);
+
+    return 1;
+}
+
 int initServerConnector() {
     if (!wait_for_network()) {
         logEntry("Connection to network has failed", ENTITY_NAME, LogLevel::LOG_ERROR);
         return 0;
     }
 
-    return 1;
+    if (strlen(BOARD_ID)) {
+        setBoardName(BOARD_ID);
+        return 1;
+    }
+    else
+        return setMacId();
 }
 
 int sendRequest(char* query, char* response) {
