@@ -4,7 +4,10 @@
 #include <string.h>
 
 int initServerConnector() {
-    setBoardName("offline-drone");
+    if (strlen(BOARD_ID))
+        setBoardName(BOARD_ID);
+    else
+        setBoardName("00:00:00:00:00:00");
 
     return 1;
 }

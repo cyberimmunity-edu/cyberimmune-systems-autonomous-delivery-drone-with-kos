@@ -6,12 +6,7 @@
 
 uint16_t serverPort = 8080;
 
-int initServerConnector() {
-    if (!wait_for_network()) {
-        logEntry("Connection to network has failed", ENTITY_NAME, LogLevel::LOG_ERROR);
-        return 0;
-    }
-
+int setMacId() {
     ifaddrs *address;
     if (getifaddrs(&address) == -1) {
         logEntry("Failed to get 'en0' MAC-address", ENTITY_NAME, LogLevel::LOG_ERROR);
@@ -39,6 +34,20 @@ int initServerConnector() {
     setBoardName(name);
 
     return 1;
+}
+
+int initServerConnector() {
+    if (!wait_for_network()) {
+        logEntry("Connection to network has failed", ENTITY_NAME, LogLevel::LOG_ERROR);
+        return 0;
+    }
+
+    if (strlen(BOARD_ID)) {
+        setBoardName(BOARD_ID);
+        return 1;
+    }
+    else
+        return setMacId();
 }
 
 int sendRequest(char* query, char* response) {

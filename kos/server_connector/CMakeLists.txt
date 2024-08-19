@@ -16,6 +16,7 @@ add_executable (ServerConnector "src/main.cpp" "src/server_connector.cpp" ${SERV
 add_dependencies (ServerConnector server_connector_edl_files)
 
 target_compile_definitions (ServerConnector PRIVATE ENTITY_NAME="Server Connector")
+target_compile_definitions (ServerConnector PRIVATE BOARD_ID="${BOARD_ID}")
 
 if (SERVER)
     target_compile_definitions (ServerConnector PRIVATE SERVER_IP="${SERVER_IP}")

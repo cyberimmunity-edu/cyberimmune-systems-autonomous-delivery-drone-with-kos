@@ -15,6 +15,7 @@ export BUILD_WITH_GCC=
 
 SIMULATOR_IP="${1:-"10.0.2.2"}"
 SERVER_IP="${2:-"10.0.2.2"}"
+BOARD_ID=""
 
 set -eu
 
@@ -30,6 +31,8 @@ function help
     -s, --sdk-path,
              Path to KasperskyOS Community Edition SDK
              Default: ${SDK_PREFIX}
+    --board-id,
+             Use user-defined board ID instead of MAC-address
 
   Examples:
       bash cross-build.sh -s /opt/KasperskyOS-Community-Edition-1.2.0.89
@@ -48,6 +51,9 @@ do
             ;;
         --sdk-path|-s)
             SDK_PREFIX=$2
+            ;;
+        --board-id)
+            BOARD_ID=$2
             ;;
         -*)
             echo "Invalid option: $key"
@@ -70,6 +76,7 @@ fi
 "$SDK_PREFIX/toolchain/bin/cmake" -G "Unix Makefiles" -B "$BUILD" \
       -D SIMULATION="TRUE" \
       -D SERVER="TRUE" \
+      -D BOARD_ID="$BOARD_ID" \
       -D SIMULATOR_IP=$SIMULATOR_IP \
       -D SERVER_IP=$SERVER_IP \
       -D CMAKE_BUILD_TYPE:STRING=Debug \
