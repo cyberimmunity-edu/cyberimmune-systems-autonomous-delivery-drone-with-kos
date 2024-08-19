@@ -102,27 +102,48 @@ const tileLayer = new ol.layer.Tile({
   })
 });
 
-const vectorLayer = new ol.layer.Vector({
-  source: new ol.source.Vector({
-    url: '/static/resources/area.kml',
-    format: new ol.format.KML()
-  })
+const map = new ol.Map({
+  target: 'map',
+  layers: [
+    tileLayer
+  ],
+  view: new ol.View({
+    center: place,
+    zoom: 15,
+  }),
 });
 
-const map = new ol.Map({
-target: 'map',
-layers: [
-  tileLayer, vectorLayer
-],
-view: new ol.View({
-  center: place,
-  zoom: 15,
-}),
+const styles = {
+  'Polygon': new ol.style.Style({
+    stroke: new ol.style.Stroke({
+      color: 'red',
+      lineDash: [4],
+      width: 3,
+    }),
+    fill: new ol.style.Fill({
+      color: 'rgba(255, 0, 0, 0.1)',
+    }),
+  })
+};
+
+const styleFunction = function (feature) {
+  return styles[feature.getGeometry().getType()];
+};
+
+  
+const geoJSONLayer = new ol.layer.Vector({
+  source: new ol.source.Vector({
+    url: '/static/resources/forbidden_zones.json',
+    format: new ol.format.GeoJSON()
+  }),
+  style: styleFunction
 });
+map.addLayer(geoJSONLayer);
 
 var markers = new ol.layer.Vector({
   source: new ol.source.Vector(),
 });
+
 map.addLayer(markers);
 
 const info = document.getElementById('info');
