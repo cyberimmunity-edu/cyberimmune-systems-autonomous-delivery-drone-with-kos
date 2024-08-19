@@ -21,7 +21,7 @@ nk_err_t SignMessageImpl(struct CredentialManagerInterface *self,
         return NK_EBADMSG;
     strcpy(message, msg);
 
-    res->success = signMessage(message, signature);
+    res->success = getMessageSignature(message, signature);
 
     msg = nk_arena_alloc(nk_char_t, resArena, &(res->signature), strlen(signature) + 1);
     if (msg == NULL)
@@ -42,7 +42,7 @@ nk_err_t CheckSignatureImpl(struct CredentialManagerInterface *self,
         return NK_EBADMSG;
     strcpy(message, msg);
 
-    res->success = checkSignature(message, res->correct);
+    res->success = checkMessageSignature(message, res->correct);
 
     return NK_EOK;
 }

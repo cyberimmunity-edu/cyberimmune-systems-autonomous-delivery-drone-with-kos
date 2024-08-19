@@ -1,3 +1,9 @@
+/**
+ * \file
+ * \~English \brief Implementation of the security module Logger component main loop.
+ * \~Russian \brief Реализация основного цикла компонента Logger модуля безопасности.
+ */
+
 #include "../include/logger.h"
 #include "../include/logger_interface.h"
 #include "../../shared/include/initialization_interface.h"
@@ -9,6 +15,16 @@
 #define NK_USE_UNQUALIFIED_NAMES
 #include <drone_controller/Logger.edl.h>
 
+/**
+ * \~English \brief Logger component main program entry point.
+ * \details First, creates a log, that saves all logged messages to a file and prints them
+ * to the console at the same time. Then the program enters a loop, where it receives
+ * IPC messages from other security module components, performs the requested actions and sends IPC responses.
+ * \~Russian \brief Точка входа в основную программу компонента Logger.
+ * \details Сначала создается лог, производящий запись логируемых сообщений в файл и их параллельный вывод в консоль.
+ * Далее программа входит в цикл, в котором получает IPC-сообщения от других компонентов модуля
+ * безопасности, исполняет запрашиваемые действия и отправляет IPC-ответы.
+ */
 int main(void) {
     if (!createLog())
         return EXIT_FAILURE;

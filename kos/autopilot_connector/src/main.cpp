@@ -17,7 +17,7 @@
 #include <drone_controller/AutopilotConnector.edl.h>
 
 /**
- * \~English \brief AutopilotConnector main program entry point.
+ * \~English \brief AutopilotConnector component main program entry point.
  * \details First, waits for the Logger component to initialize. After that,
  * communication with the autopilot is prepared and established. Then the program
  * enters a loop, where it receives IPC messages from other security module components,
