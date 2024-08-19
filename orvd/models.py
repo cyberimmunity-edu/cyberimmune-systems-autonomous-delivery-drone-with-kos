@@ -31,7 +31,7 @@ class Uav(db.Model):
         created_date: дата создания записи
     """
     __tablename__ = 'uav'
-    id = db.Column(db.Integer, primary_key=True, autoincrement=False)
+    id = db.Column(db.String(64), primary_key=True, autoincrement=False)
     is_armed = db.Column(db.Boolean, default=False)
     state = db.Column(db.String(64))
     kill_switch_state = db.Column(db.Boolean, default=False)
@@ -51,12 +51,12 @@ class UavPublicKeys(db.Model):
         e: экспонента открытого ключа
     """
     __tablename__ = 'uav_public_keys'
-    uav_id = db.Column(db.Integer, primary_key=True)
+    uav_id = db.Column(db.String(64), primary_key=True)
     n = db.Column(db.String(1024))
     e = db.Column(db.String(1024))
     
     def __repr__(self):
-        return f'UAV id={self.uav_id}, KOS key={public_key}'
+        return f'UAV id={self.uav_id}, KOS key={self.n} {self.e}'
     
 
 class MissionSenderPublicKeys(db.Model):
@@ -69,12 +69,12 @@ class MissionSenderPublicKeys(db.Model):
         e: экспонента открытого ключа
     """
     __tablename__ = 'mission_sender_public_keys'
-    uav_id = db.Column(db.Integer, primary_key=True)
+    uav_id = db.Column(db.String(64), primary_key=True)
     n = db.Column(db.String(1024))
     e = db.Column(db.String(1024))
     
     def __repr__(self):
-        return f'UAV id={self.uav_id}, MS key={public_key}'
+        return f'UAV id={self.uav_id}, MS key={self.n} {self.e}'
     
 
 class Mission(db.Model):
@@ -86,7 +86,7 @@ class Mission(db.Model):
         is_accepted: статус принятия миссии
     """
     __tablename__ = 'mission'
-    uav_id = db.Column(db.Integer, db.ForeignKey('uav.id'), primary_key=True)
+    uav_id = db.Column(db.String(64), db.ForeignKey('uav.id'), primary_key=True)
     is_accepted = db.Column(db.Boolean, default=False)
     
     def __repr__(self):
@@ -103,7 +103,7 @@ class MissionStep(db.Model):
         operation: операция, выполняемая на данном шаге
     """
     __tablename__ = 'mission_step'
-    mission_id = db.Column(db.Integer, db.ForeignKey('mission.uav_id'))
+    mission_id = db.Column(db.String(64), db.ForeignKey('mission.uav_id'))
     step = db.Column(db.Integer)
     operation = db.Column(db.String(64))
     
@@ -114,7 +114,7 @@ class MissionStep(db.Model):
     )
     
     def __repr__(self):
-        return f'Mission id={self.mission_id}, step={step}, operation={operation}'
+        return f'Mission id={self.mission_id}, step={self.step}, operation={self.operation}'
     
 
 class UavTelemetry(db.Model):
@@ -131,7 +131,7 @@ class UavTelemetry(db.Model):
         sats: количество спутников
     """
     __tablename__ = 'uav_telemetry'
-    uav_id = db.Column(db.Integer, db.ForeignKey('uav.id'), primary_key=True)
+    uav_id = db.Column(db.String(64), db.ForeignKey('uav.id'), primary_key=True)
     lat = db.Column(db.Float(precision=8))
     lon = db.Column(db.Float(precision=8))
     alt = db.Column(db.Float(precision=8))
@@ -140,4 +140,4 @@ class UavTelemetry(db.Model):
     sats = db.Column(db.Integer)
     
     def __repr__(self):
-        return f'UAV id={self.uav_id}, lat={lat}, lon={lon}, alt={alt}, azimuth={azimuth}'
+        return f'UAV id={self.uav_id}, lat={self.lat}, lon={self.lon}, alt={self.alt}, azimuth={self.azimuth}'

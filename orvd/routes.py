@@ -140,7 +140,7 @@ def arm_decision():
     parameters:
       - name: id
         in: query
-        type: integer
+        type: string
         required: true
         description: Идентификатор БПЛА.
       - name: decision
@@ -166,7 +166,7 @@ def arm_decision():
           type: string
           example: "Wrong id/decision"
     """
-    id = cast_wrapper(request.args.get('id'), int)
+    id = cast_wrapper(request.args.get('id'), str)
     decision = cast_wrapper(request.args.get('decision'), int)
     token = request.args.get('token')
     if id:
@@ -186,7 +186,7 @@ def mission_decision():
     parameters:
       - name: id
         in: query
-        type: integer
+        type: string
         required: true
         description: Идентификатор миссии.
       - name: decision
@@ -212,7 +212,7 @@ def mission_decision():
           type: string
           example: "Wrong id/decision"
     """
-    id = cast_wrapper(request.args.get('id'), int)
+    id = cast_wrapper(request.args.get('id'), str)
     decision = cast_wrapper(request.args.get('decision'), int)
     token = request.args.get('token')
     if id:
@@ -232,7 +232,7 @@ def force_disarm():
     parameters:
       - name: id
         in: query
-        type: integer
+        type: string
         required: true
         description: Идентификатор БПЛА.
       - name: token
@@ -252,7 +252,7 @@ def force_disarm():
           type: string
           example: "Wrong id"
     """
-    id = cast_wrapper(request.args.get('id'), int)
+    id = cast_wrapper(request.args.get('id'), str)
     token = request.args.get('token')
     if id:
         return authorized_request(handler_func=force_disarm_handler, token=token, id=id)
@@ -294,7 +294,7 @@ def admin_kill_switch():
     parameters:
       - name: id
         in: query
-        type: integer
+        type: string
         required: true
         description: Идентификатор БПЛА.
       - name: token
@@ -314,7 +314,7 @@ def admin_kill_switch():
           type: string
           example: "Wrong id"
     """
-    id = cast_wrapper(request.args.get('id'), int)
+    id = cast_wrapper(request.args.get('id'), str)
     token = request.args.get('token')
     if id:
         return authorized_request(handler_func=admin_kill_switch_handler, token=token, id=id)
@@ -332,7 +332,7 @@ def get_state():
     parameters:
       - name: id
         in: query
-        type: integer
+        type: string
         required: true
         description: Идентификатор БПЛА.
       - name: token
@@ -352,7 +352,7 @@ def get_state():
           type: string
           example: "Wrong id"
     """
-    id = cast_wrapper(request.args.get('id'), int)
+    id = cast_wrapper(request.args.get('id'), str)
     token = request.args.get('token')
     if id:
         return authorized_request(handler_func=get_state_handler, token=token, id=id)
@@ -370,7 +370,7 @@ def get_mission_state():
     parameters:
       - name: id
         in: query
-        type: integer
+        type: string
         required: true
         description: Идентификатор БПЛА.
       - name: token
@@ -390,7 +390,7 @@ def get_mission_state():
           type: string
           example: "Wrong id"
     """
-    id = cast_wrapper(request.args.get('id'), int)
+    id = cast_wrapper(request.args.get('id'), str)
     token = request.args.get('token')
     if id:
         return authorized_request(handler_func=get_mission_state_handler, token=token, id=id)
@@ -408,7 +408,7 @@ def get_mission():
     parameters:
       - name: id
         in: query
-        type: integer
+        type: string
         required: true
         description: Идентификатор БПЛА.
       - name: token
@@ -427,7 +427,7 @@ def get_mission():
           type: string
           example: "Wrong id"
     """
-    id = cast_wrapper(request.args.get('id'), int)
+    id = cast_wrapper(request.args.get('id'), str)
     token = request.args.get('token')
     if id:
         return authorized_request(handler_func=get_mission_handler, token=token, id=id)
@@ -445,7 +445,7 @@ def get_telemetry():
     parameters:
       - name: id
         in: query
-        type: integer
+        type: string
         required: true
         description: Идентификатор БПЛА.
       - name: token
@@ -465,7 +465,7 @@ def get_telemetry():
           type: string
           example: "Wrong id"
     """
-    id = cast_wrapper(request.args.get('id'), int)
+    id = cast_wrapper(request.args.get('id'), str)
     token = request.args.get('token')
     if id:
         return authorized_request(handler_func=get_telemetry_handler, token=token, id=id)
@@ -531,7 +531,7 @@ def change_fly_accept():
     parameters:
       - name: id
         in: query
-        type: integer
+        type: string
         required: true
         description: Идентификатор БПЛА.
       - name: decision
@@ -557,7 +557,7 @@ def change_fly_accept():
           type: string
           example: "Wrong id/decision"
     """
-    id = cast_wrapper(request.args.get('id'), int)
+    id = cast_wrapper(request.args.get('id'), str)
     decision = cast_wrapper(request.args.get('decision'), int)
     token = request.args.get('token')
     if id:
@@ -739,7 +739,7 @@ def get_logs():
     parameters:
       - name: id
         in: query
-        type: integer
+        type: string
         required: true
         description: Идентификатор БПЛА.
     responses:
@@ -753,7 +753,7 @@ def get_logs():
           type: string
           example: "Wrong id"
     """
-    id = cast_wrapper(request.args.get('id'), int)
+    id = cast_wrapper(request.args.get('id'), str)
     if id:
         return regular_request(handler_func=get_logs_handler, id=id)
     else:
@@ -770,7 +770,7 @@ def save_logs():
     parameters:
       - name: id
         in: query
-        type: integer
+        type: string
         required: true
         description: Идентификатор БПЛА.
       - name: log
@@ -790,7 +790,7 @@ def save_logs():
           type: string
           example: "Wrong id"
     """
-    id = cast_wrapper(request.args.get('id'), int)
+    id = cast_wrapper(request.args.get('id'), str)
     log = cast_wrapper(request.args.get('log'), str)
     if id:
         return regular_request(handler_func=save_logs_handler, id=id, log=log)
@@ -826,7 +826,7 @@ def fmission():
     parameters:
       - name: id
         in: query
-        type: integer
+        type: string
         required: true
         description: Идентификатор БПЛА.
       - name: sig
@@ -849,7 +849,7 @@ def fmission():
       403:
         description: Ошибка проверки подписи.
     """
-    id = cast_wrapper(request.args.get('id'), int)
+    id = cast_wrapper(request.args.get('id'), str)
     mission_str = request.get_data().decode()
     sig = request.args.get('sig')
     if id:
@@ -869,7 +869,7 @@ def key_ms_exchange():
     parameters:
       - name: id
         in: query
-        type: integer
+        type: string
         required: true
         description: Идентификатор отправителя миссии.
     responses:
@@ -882,7 +882,7 @@ def key_ms_exchange():
       409:
         description: Конфликт ключей
     """
-    id = cast_wrapper(request.args.get('id'), int)
+    id = cast_wrapper(request.args.get('id'), str)
     if id:
         return regular_request(handler_func=key_ms_exchange_handler, id=id)
     else:
@@ -899,7 +899,7 @@ def key_kos_exchange():
     parameters:
       - name: id
         in: query
-        type: integer
+        type: string
         required: true
         description: Идентификатор БПЛА.
       - name: n
@@ -926,7 +926,7 @@ def key_kos_exchange():
       409:
         description: Конфликт ключей
     """
-    id = cast_wrapper(request.args.get('id'), int)
+    id = cast_wrapper(request.args.get('id'), str)
     n = request.args.get('n')
     e = request.args.get('e')
     if id:
@@ -945,7 +945,7 @@ def arm_request():
     parameters:
       - name: id
         in: query
-        type: integer
+        type: string
         required: true
         description: Идентификатор БПЛА.
       - name: sig
@@ -967,7 +967,7 @@ def arm_request():
       403:
         description: Ошибка проверки подписи.
     """
-    id = cast_wrapper(request.args.get('id'), int)
+    id = cast_wrapper(request.args.get('id'), str)
     sig = request.args.get('sig')
     if id:
         return signed_request(handler_func=arm_handler, verifier_func=verify, signer_func=sign,
@@ -986,7 +986,7 @@ def auth():
     parameters:
       - name: id
         in: query
-        type: integer
+        type: string
         required: true
         description: Идентификатор БПЛА.
       - name: sig
@@ -1008,7 +1008,7 @@ def auth():
       403:
         description: Ошибка проверки подписи.
     """
-    id = cast_wrapper(request.args.get('id'), int)
+    id = cast_wrapper(request.args.get('id'), str)
     sig = request.args.get('sig')
     if id:
         return signed_request(handler_func=auth_handler, verifier_func=verify, signer_func=sign,
@@ -1027,7 +1027,7 @@ def fly_accept():
     parameters:
       - name: id
         in: query
-        type: integer
+        type: string
         required: true
         description: Идентификатор БПЛА.
       - name: sig
@@ -1049,7 +1049,7 @@ def fly_accept():
       403:
         description: Ошибка проверки подписи.
     """
-    id = cast_wrapper(request.args.get('id'), int)
+    id = cast_wrapper(request.args.get('id'), str)
     sig = request.args.get('sig')
     if id:
         return signed_request(handler_func=fly_accept_handler, verifier_func=verify, signer_func=sign,
@@ -1068,7 +1068,7 @@ def telemetry():
     parameters:
       - name: id
         in: query
-        type: integer
+        type: string
         required: true
         description: Идентификатор БПЛА.
       - name: sig
@@ -1120,7 +1120,7 @@ def telemetry():
       403:
         description: Ошибка проверки подписи.
     """
-    id = cast_wrapper(request.args.get('id'), int)
+    id = cast_wrapper(request.args.get('id'), str)
     sig = request.args.get('sig')
     lat = request.args.get('lat')
     lon = request.args.get('lon')
@@ -1145,7 +1145,7 @@ def kill_switch():
     parameters:
       - name: id
         in: query
-        type: integer
+        type: string
         required: true
         description: Идентификатор БПЛА.
       - name: sig
@@ -1167,7 +1167,7 @@ def kill_switch():
       403:
         description: Ошибка проверки подписи.
     """
-    id = cast_wrapper(request.args.get('id'), int)
+    id = cast_wrapper(request.args.get('id'), str)
     sig = request.args.get('sig')
     if id:
         return signed_request(handler_func=kill_switch_handler, verifier_func=verify, signer_func=sign,
@@ -1186,7 +1186,7 @@ def fmission_kos():
     parameters:
       - name: id
         in: query
-        type: integer
+        type: string
         required: true
         description: Идентификатор БПЛА.
       - name: sig
@@ -1208,7 +1208,7 @@ def fmission_kos():
       403:
         description: Ошибка проверки подписи.
     """
-    id = cast_wrapper(request.args.get('id'), int)
+    id = cast_wrapper(request.args.get('id'), str)
     sig = request.args.get('sig')
     if id:
         return signed_request(handler_func=fmission_kos_handler, verifier_func=verify, signer_func=sign,
@@ -1227,7 +1227,7 @@ def get_all_forbidden_zones():
     parameters:
       - name: id
         in: query
-        type: integer
+        type: string
         required: true
         description: Идентификатор БПЛА.
       - name: sig
@@ -1249,7 +1249,7 @@ def get_all_forbidden_zones():
       403:
         description: Ошибка проверки подписи.
     """
-    id = cast_wrapper(request.args.get('id'), int)
+    id = cast_wrapper(request.args.get('id'), str)
     sig = request.args.get('sig')
     if id:
         return signed_request(handler_func=get_all_forbidden_zones_handler, verifier_func=verify, signer_func=sign,
