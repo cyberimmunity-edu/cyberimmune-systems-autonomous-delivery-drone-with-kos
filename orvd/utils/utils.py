@@ -305,14 +305,14 @@ def get_key(key_group: str, private: bool):
     
     else:
         if 'kos' in key_group:
-            id = int(key_group.split('kos')[1])
+            id = key_group.split('kos')[1]
             key = get_entity_by_key(UavPublicKeys, id)
             if key == None:
                 return -1
             n, e = int(key.n), int(key.e)
             
         elif 'ms' in key_group:
-            id = int(key_group.split('ms')[1])
+            id = key_group.split('ms')[1]
             key = get_entity_by_key(MissionSenderPublicKeys, id)
             if key == None:
                 return -1
@@ -355,10 +355,10 @@ def save_public_key(n: str, e: str, key_group: str) -> None:
         key_group (str): Группа ключей.
     """
     if 'kos' in key_group:
-        id = int(key_group.split('kos')[1])
+        id = key_group.split('kos')[1]
         entity = UavPublicKeys(uav_id=id, n=n, e=e)
     elif 'ms' in key_group:
-        id = int(key_group.split('ms')[1])
+        id = key_group.split('ms')[1]
         entity = MissionSenderPublicKeys(uav_id=id, n=n, e=e)
     else:
         print('Wrong group in utils.save_public_key')
