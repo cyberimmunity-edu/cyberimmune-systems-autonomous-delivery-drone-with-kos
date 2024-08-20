@@ -102,12 +102,12 @@ def regular_request(handler_func, **kwargs):
     return answer, ret_code
 
     
-def key_kos_exchange_handler(id: int, n: str, e: str):
+def key_kos_exchange_handler(id: str, n: str, e: str):
     """
     Обрабатывает обмен ключами с KOS.
 
     Args:
-        id (int): Идентификатор БПЛА.
+        id (str): Идентификатор БПЛА.
         n (str): Модуль открытого ключа.
         e (str): Экспонента открытого ключа.
 
@@ -123,12 +123,12 @@ def key_kos_exchange_handler(id: int, n: str, e: str):
     return str_to_send
 
 
-def key_ms_exchange_handler(id: int):
+def key_ms_exchange_handler(id: str):
     """
     Обрабатывает обмен ключами с Mission Sender.
 
     Args:
-        id (int): Идентификатор отправителя миссии.
+        id (str): Идентификатор отправителя миссии.
 
     Returns:
         str: Строка с открытым ключом ORVD.
@@ -151,12 +151,12 @@ def key_ms_exchange_handler(id: int):
     return str_to_send
 
 
-def auth_handler(id: int):
+def auth_handler(id: str):
     """
     Обрабатывает аутентификацию БПЛА.
 
     Args:
-        id (int): Идентификатор БПЛА.
+        id (str): Идентификатор БПЛА.
 
     Returns:
         str: Строка подтверждения аутентификации.
@@ -174,12 +174,12 @@ def auth_handler(id: int):
     return f'$Auth id={id}'
 
 
-def arm_handler(id: int):
+def arm_handler(id: str):
     """
     Обрабатывает запрос на арм БПЛА.
 
     Args:
-        id (int): Идентификатор БПЛА.
+        id (str): Идентификатор БПЛА.
 
     Returns:
         str: Статус арма БПЛА.
@@ -206,12 +206,12 @@ def arm_handler(id: int):
             return f'$Arm: {DISARMED}'
 
 
-def _arm_wait_decision(id: int):
+def _arm_wait_decision(id: str):
     """
     Ожидает решения об арме БПЛА.
 
     Args:
-        id (int): Идентификатор БПЛА.
+        id (str): Идентификатор БПЛА.
 
     Returns:
         str: Решение об арме (ARMED или DISARMED).
@@ -225,12 +225,12 @@ def _arm_wait_decision(id: int):
         return DISARMED
 
 
-def fly_accept_handler(id: int):
+def fly_accept_handler(id: str):
     """
     Обрабатывает запрос на принятие полета БПЛА.
 
     Args:
-        id (int): Идентификатор БПЛА.
+        id (str): Идентификатор БПЛА.
 
     Returns:
         str: Статус арма БПЛА.
@@ -244,12 +244,12 @@ def fly_accept_handler(id: int):
         return f'$Arm: {DISARMED}'
 
 
-def kill_switch_handler(id: int):
+def kill_switch_handler(id: str):
     """
     Обрабатывает запрос на проверку состояния аварийного выключателя БПЛА.
 
     Args:
-        id (int): Идентификатор БПЛА.
+        id (str): Идентификатор БПЛА.
 
     Returns:
         str: Состояние аварийного выключателя.
@@ -263,13 +263,13 @@ def kill_switch_handler(id: int):
         return f'$KillSwitch: {KILL_SWITCH_OFF}'
 
 
-def telemetry_handler(id: int, lat: float, lon: float, alt: float,
+def telemetry_handler(id: str, lat: float, lon: float, alt: float,
                       azimuth: float, dop: float, sats: float):
     """
     Обрабатывает телеметрию БПЛА.
 
     Args:
-        id (int): Идентификатор БПЛА.
+        id (str): Идентификатор БПЛА.
         lat (float): Широта.
         lon (float): Долгота.
         alt (float): Высота.
@@ -313,12 +313,12 @@ def telemetry_handler(id: int, lat: float, lon: float, alt: float,
             return f'$Arm: {ARMED}'
     
 
-def fmission_kos_handler(id: int):
+def fmission_kos_handler(id: str):
     """
     Обрабатывает запрос на получение полетного задания для KOS.
 
     Args:
-        id (int): Идентификатор БПЛА.
+        id (str): Идентификатор БПЛА.
 
     Returns:
         str: Строка с полетным заданием или NOT_FOUND.
@@ -334,12 +334,12 @@ def fmission_kos_handler(id: int):
     return NOT_FOUND
 
             
-def get_all_forbidden_zones_handler(id: int):
+def get_all_forbidden_zones_handler(id: str):
     """
     Обрабатывает запрос на получение всех запрещенных для полета зон.
 
     Args:
-        id (int): Идентификатор БПЛА.
+        id (str): Идентификатор БПЛА.
 
     Returns:
         str: Строка с информацией о запрещенных зонах или NOT_FOUND.
@@ -355,12 +355,12 @@ def get_all_forbidden_zones_handler(id: int):
     return NOT_FOUND
 
 
-def fmission_ms_handler(id: int, mission_str: str):
+def fmission_ms_handler(id: str, mission_str: str):
     """
     Обрабатывает запрос на сохранение полетного задания от Mission Sender.
 
     Args:
-        id (int): Идентификатор БПЛА.
+        id (str): Идентификатор БПЛА.
         mission_str (str): Строка с полетным заданием.
 
     Returns:
@@ -383,12 +383,12 @@ def fmission_ms_handler(id: int, mission_str: str):
     return OK
 
 
-def get_logs_handler(id: int):
+def get_logs_handler(id: str):
     """
     Обрабатывает запрос на получение логов БПЛА.
 
     Args:
-        id (int): Идентификатор БПЛА.
+        id (str): Идентификатор БПЛА.
 
     Returns:
         str: Строка с логами или NOT_FOUND.
@@ -405,12 +405,12 @@ def get_logs_handler(id: int):
         return NOT_FOUND
 
 
-def save_logs_handler(id: int, log: str):
+def save_logs_handler(id: str, log: str):
     """
     Обрабатывает запрос на сохранение логов БПЛА.
 
     Args:
-        id (int): Идентификатор БПЛА.
+        id (str): Идентификатор БПЛА.
         log (str): Строка с логами для сохранения.
 
     Returns:
@@ -448,12 +448,12 @@ def admin_auth_handler(login: str, password: str):
             return ''
 
 
-def arm_decision_handler(id: int, decision: int):
+def arm_decision_handler(id: str, decision: int):
     """
     Обрабатывает решение об арме БПЛА.
 
     Args:
-        id (int): Идентификатор БПЛА.
+        id (str): Идентификатор БПЛА.
         decision (int): Решение об арме (ARMED или DISARMED).
 
     Returns:
@@ -471,12 +471,12 @@ def arm_decision_handler(id: int, decision: int):
         return f'$Arm: -1'
 
 
-def force_disarm_handler(id: int):
+def force_disarm_handler(id: str):
     """
     Обрабатывает запрос на принудительный дизарм БПЛА.
 
     Args:
-        id (int): Идентификатор БПЛА.
+        id (str): Идентификатор БПЛА.
 
     Returns:
         str: OK в случае успешного дизарма или NOT_FOUND.
@@ -506,12 +506,12 @@ def force_disarm_all_handler():
     return OK
 
 
-def get_state_handler(id: int):
+def get_state_handler(id: str):
     """
     Обрабатывает запрос на получение состояния БПЛА.
 
     Args:
-        id (int): Идентификатор БПЛА.
+        id (str): Идентификатор БПЛА.
 
     Returns:
         str: Состояние БПЛА или NOT_FOUND.
@@ -523,12 +523,12 @@ def get_state_handler(id: int):
         return uav_entity.state
 
 
-def get_mission_handler(id: int):
+def get_mission_handler(id: str):
     """
     Обрабатывает запрос на получение полетного задания БПЛА.
 
     Args:
-        id (int): Идентификатор БПЛА.
+        id (str): Идентификатор БПЛА.
 
     Returns:
         str: Строка с полетным заданием или NOT_FOUND.
@@ -544,12 +544,12 @@ def get_mission_handler(id: int):
     return NOT_FOUND
 
 
-def get_telemetry_handler(id: int):
+def get_telemetry_handler(id: str):
     """
     Обрабатывает запрос на получение телеметрии БПЛА.
 
     Args:
-        id (int): Идентификатор БПЛА.
+        id (str): Идентификатор БПЛА.
 
     Returns:
         str: Строка с телеметрическими данными или NOT_FOUND.
@@ -574,12 +574,12 @@ def get_waiter_number_handler():
     return str(len(arm_queue))
 
 
-def mission_decision_handler(id: int, decision: int):
+def mission_decision_handler(id: str, decision: int):
     """
     Обрабатывает решение о принятии или отклонении миссии.
 
     Args:
-        id (int): Идентификатор БПЛА.
+        id (str): Идентификатор БПЛА.
         decision (int): Решение (0 - принять, 1 - отклонить).
 
     Returns:
@@ -597,12 +597,12 @@ def mission_decision_handler(id: int, decision: int):
         return OK
 
 
-def admin_kill_switch_handler(id: int):
+def admin_kill_switch_handler(id: str):
     """
     Обрабатывает запрос на активацию аварийного выключателя БПЛА администратором.
 
     Args:
-        id (int): Идентификатор БПЛА.
+        id (str): Идентификатор БПЛА.
 
     Returns:
         str: OK в случае успешной активации или NOT_FOUND.
@@ -630,12 +630,12 @@ def get_id_list_handler():
     return str(uav_ids)
 
 
-def get_mission_state_handler(id: int):
+def get_mission_state_handler(id: str):
     """
     Обрабатывает запрос на получение состояния миссии БПЛА.
     
     Args:
-        id (int): Идентификатор БПЛА.
+        id (str): Идентификатор БПЛА.
 
     Returns:
         str: Состояние миссии (принята/не принята) или NOT_FOUND.
@@ -651,12 +651,12 @@ def get_mission_state_handler(id: int):
     return NOT_FOUND
 
 
-def change_fly_accept_handler(id: int, decision: int):
+def change_fly_accept_handler(id: str, decision: int):
     """
     Обрабатывает запрос на изменение статуса принятия полета БПЛА.
 
     Args:
-        id (int): Идентификатор БПЛА.
+        id (str): Идентификатор БПЛА.
         decision (int): Решение (0 - принять, 1 - отклонить).
 
     Returns:

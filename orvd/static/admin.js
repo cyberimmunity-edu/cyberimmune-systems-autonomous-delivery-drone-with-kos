@@ -233,7 +233,7 @@ function add_polyline(line_path) {
 
 function onChangeSelector() {
   let id_select = document.getElementById("id_select");
-  change_active_id(parseInt(id_select.options[id_select.selectedIndex].text));
+  change_active_id(id_select.options[id_select.selectedIndex].text);
 }
 
 async function arm() {
@@ -436,7 +436,7 @@ async function change_active_id(new_id) {
 async function get_ids() {
   let ids_resp = await fetch("admin/get_id_list" + "?token=" + access_token);
   let ids_text = await ids_resp.text();
-  let new_ids = JSON.parse(ids_text);
+  let new_ids = JSON.parse(ids_text.replace(/'/g, '"'));
   let old_ids_len = ids.length;
   ids = new_ids;
   if (active_id == null && ids.length > 0) {
