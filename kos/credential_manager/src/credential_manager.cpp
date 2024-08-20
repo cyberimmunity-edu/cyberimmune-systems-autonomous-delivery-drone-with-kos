@@ -117,7 +117,7 @@ int shareRsaKey() {
 
     char rsaServerRequest[1024] = {0};
     char rsaServerResponse[1024] = {0};
-    snprintf(rsaServerRequest, 1024, "/api/key?%s&e=0x%s&n=0x%s", boardId, keyE, keyN);
+    snprintf(rsaServerRequest, 1024, "/api/key?id=%s&e=0x%s&n=0x%s", boardId, keyE, keyN);
     while (!sendRequest(rsaServerRequest, rsaServerResponse)) {
         logEntry("Failed to share RSA key. Trying again in 1s", ENTITY_NAME, LogLevel::LOG_WARNING);
         sleep(1);

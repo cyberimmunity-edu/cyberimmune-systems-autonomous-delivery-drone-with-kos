@@ -44,7 +44,7 @@ void checkKillSwitchPermission() {
     char request[1024] = {0};
     char response[1024] = {0};
 
-    snprintf(request, 1024, "/api/kill_switch?%s", boardId);
+    snprintf(request, 1024, "/api/kill_switch?id=%s", boardId);
     while (!signMessage(request, signature)) {
         logEntry("Failed to sign 'kill switch permission' message at Credential Manager. Trying again in 1s", ENTITY_NAME, LogLevel::LOG_WARNING);
         sleep(1);

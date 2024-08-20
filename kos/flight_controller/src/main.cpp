@@ -24,7 +24,7 @@ int sendSignedMessage(char* method, char* response, char* errorMessage, uint8_t 
     char message[512] = {0};
     char signature[257] = {0};
     char request[1024] = {0};
-    snprintf(message, 512, "%s?%s", method, boardId);
+    snprintf(message, 512, "%s?id=%s", method, boardId);
 
     while (!signMessage(message, signature)) {
         char logBuffer[256];
