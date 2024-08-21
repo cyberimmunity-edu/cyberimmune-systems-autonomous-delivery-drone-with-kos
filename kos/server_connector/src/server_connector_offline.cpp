@@ -4,6 +4,11 @@
 #include <string.h>
 
 int initServerConnector() {
+    if (strlen(BOARD_ID))
+        setBoardName(BOARD_ID);
+    else
+        setBoardName("00:00:00:00:00:00");
+
     return 1;
 }
 

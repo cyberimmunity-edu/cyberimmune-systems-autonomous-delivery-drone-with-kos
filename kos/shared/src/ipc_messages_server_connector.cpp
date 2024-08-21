@@ -7,6 +7,32 @@
 #define NK_USE_UNQUALIFIED_NAMES
 #include <drone_controller/ServerConnectorInterface.idl.h>
 
+int getBoardId(char* id) {
+    NkKosTransport transport;
+    nk_iid_t riid;
+    initSenderInterface("server_connector_connection", "drone_controller.ServerConnector.interface", transport, riid);
+
+    struct ServerConnectorInterface_proxy proxy;
+    ServerConnectorInterface_proxy_init(&proxy, &transport.base, riid);
+
+    ServerConnectorInterface_GetBoardId_req req;
+    ServerConnectorInterface_GetBoardId_res res;
+    char resBuffer[ServerConnectorInterface_GetBoardId_res_arena_size];
+    struct nk_arena resArena = NK_ARENA_INITIALIZER(resBuffer, resBuffer + sizeof(resBuffer));
+    nk_arena_reset(&resArena);
+
+    if ((ServerConnectorInterface_GetBoardId(&proxy.base, &req, NULL, &res, &resArena) != rcOk) || !res.success)
+        return 0;
+
+    nk_uint32_t len = 0;
+    nk_char_t *msg = nk_arena_get(nk_char_t, &resArena, &(res.id), &len);
+    if (msg == NULL)
+        return 0;
+    strcpy(id, msg);
+
+    return 1;
+}
+
 int sendRequest(char* query, char* response) {
     NkKosTransport transport;
     nk_iid_t riid;

@@ -37,3 +37,12 @@ int setBuzzer(bool enable) {
 int setKillSwitch(bool enable) {
     return 1;
 }
+
+int waitForInit(const char* connection, const char* receiverEntity) {
+    return 1;
+}
+
+int getBoardId(char* id) {
+    strcpy(id, "00:00:00:00:00:00");
+    return 1;
+}

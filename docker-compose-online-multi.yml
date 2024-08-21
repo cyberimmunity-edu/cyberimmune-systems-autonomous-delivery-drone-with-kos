@@ -1,14 +1,14 @@
 
 services:
 #################################################
-# cross-build-sim-online.sh SIMULATOR_IP SERVER_IP BOARD_ID
+# cross-build-sim-online.sh SIMULATOR_IP SERVER_IP
   kos:
     image: simulator
     build:
       context: .
       dockerfile: ./Dockerfile
     container_name: kos
-    command: /home/user/kos/cross-build-sim-online.sh --simulator_ip 172.28.0.2 --server_ip 172.28.0.4 --board_id 1
+    command: /home/user/kos/cross-build-sim-online.sh --simulator-ip 172.28.0.2 --server-ip 172.28.0.4 --board-id 1
     working_dir: /home/user/kos
     user: user
     depends_on:
@@ -67,7 +67,7 @@ services:
       context: .
       dockerfile: ./Dockerfile
     container_name: kos1
-    command: /home/user/kos/cross-build-sim-online.sh --simulator_ip 172.28.0.12 --server_ip 172.28.0.4 --board_id  2
+    command: /home/user/kos/cross-build-sim-online.sh --simulator-ip 172.28.0.12 --server-ip 172.28.0.4 --board-id 2
     working_dir: /home/user/kos
     user: user
     depends_on:
@@ -112,7 +112,7 @@ services:
       context: .
       dockerfile: ./Dockerfile
     container_name: kos2
-    command: /home/user/kos/cross-build-sim-online.sh --simulator_ip 172.28.0.22 --server_ip 172.28.0.4 --board_id  3
+    command: /home/user/kos/cross-build-sim-online.sh --simulator-ip 172.28.0.22 --server-ip 172.28.0.4 --board-id 3
     working_dir: /home/user/kos
     user: user
     depends_on:

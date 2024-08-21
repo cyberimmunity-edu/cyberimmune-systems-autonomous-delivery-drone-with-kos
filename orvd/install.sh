@@ -19,7 +19,9 @@ apt-get -y install python3 \
         python3-pycryptodome \
         python3-typing-extensions \
         python3-werkzeug \
-        python3-jinja2
+        python3-jinja2 \
+        python3-pytest \
+        python3-flasgger
 
 apt-get -y install libapache2-mod-wsgi-py3
 cp -r ./ /var/www/orvd

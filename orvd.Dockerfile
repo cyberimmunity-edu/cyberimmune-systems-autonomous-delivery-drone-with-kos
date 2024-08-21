@@ -21,7 +21,9 @@ RUN apt-get update && \
         python3-pycryptodome \
         python3-typing-extensions \
         python3-werkzeug \
-        python3-jinja2 && \
+        python3-jinja2 \
+        python3-pytest \
+        python3-flasgger && \
         mkdir -p /var/www/orvd
 
 COPY ./orvd /var/www/orvd

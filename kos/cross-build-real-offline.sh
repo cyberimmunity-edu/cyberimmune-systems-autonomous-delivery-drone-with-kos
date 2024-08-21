@@ -13,7 +13,7 @@ export PATH="$SDK_PREFIX/toolchain/bin:$PATH"
 export BUILD_WITH_CLANG=
 export BUILD_WITH_GCC=
 
-BOARD_ID="4"
+BOARD_ID=""
 
 set -eu
 
@@ -29,6 +29,8 @@ function help
     -s, --sdk-path,
              Path to KasperskyOS Community Edition SDK
              Default: ${SDK_PREFIX}
+    --board-id,
+             Use user-defined board ID instead of MAC-address
 
   Examples:
       bash cross-build.sh -s /opt/KasperskyOS-Community-Edition-1.2.0.89
@@ -48,7 +50,7 @@ do
         --sdk-path|-s)
             SDK_PREFIX=$2
             ;;
-        --board_id)
+        --board-id)
             BOARD_ID=$2
             ;;
         -*)
@@ -73,7 +75,7 @@ fi
       -D SIMULATION="FALSE" \
       -D SERVER="FALSE" \
       -D UNIT_TESTS="FALSE" \
-      -D BOARD_ID=$BOARD_ID \
+      -D BOARD_ID="$BOARD_ID" \
       -D CMAKE_BUILD_TYPE:STRING=Debug \
       -D CMAKE_INSTALL_PREFIX:STRING="$INSTALL_PREFIX" \
       -D CMAKE_FIND_ROOT_PATH="${SDK_PREFIX}/sysroot-$TARGET" \

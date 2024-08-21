@@ -367,9 +367,6 @@ TEST(Logger, AddLogEntry) {
     EXPECT_STREQ(fileStr, consoleStr);
 }
 
-//Credential Manager
-    //RSA save/load/read/sign/etc
-
 //Navigation System
 TEST(NavigationSystem, NoPosition) {
     EXPECT_FALSE(hasPosition());

@@ -1,3 +1,6 @@
+const TILES_URL = "https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}";
+const TILES_LOCAL_PATH = "static/resources/tiles";
+
 function getSearchParameters() {
   var prmstr = window.location.search.substr(1);
   return prmstr != null && prmstr != "" ? transformToAssocArray(prmstr) : {};
@@ -23,7 +26,7 @@ document.getElementById('kill_switch').onclick = kill_switch;
 document.getElementById('fly_accept_checkbox').onclick = fly_accept;
 
 ol.proj.useGeographic()
-const place = [142.733472, 46.986186];
+const place = [142.812588, 46.617637];
 
 let ids = [];
 let active_id = null;
@@ -65,28 +68,82 @@ let polyline_style = new ol.style.Style({
     color: [0, 0, 0, 255],
     width: 2
   })
-})
+});
 
-const source = new ol.source.OSM({
-  attributions: ['',],
+let availableTiles = [];
+
+await fetch('/tiles/index')
+    .then(response => response.json())
+    .then(data => {
+        availableTiles = data;
+    });
+
+function customTileLoadFunction(imageTile, src) {
+  const urlPattern = /x=([0-9]+)&y=([0-9]+)&z=([0-9]+)/;
+  const matches = src.match(urlPattern);
+  const x = matches[1];
+  const y = matches[2];
+  const z = matches[3];
+  
+  const tilePath = `${z}/${x}/${y}`;
+  const localUrl = `${TILES_LOCAL_PATH}/${tilePath}.png`;
+
+  if (availableTiles.includes(tilePath)) {
+      imageTile.getImage().src = localUrl;
+  } else {
+      imageTile.getImage().src = src;
+  }
+}
+
+const tileLayer = new ol.layer.Tile({
+  source: new ol.source.XYZ({
+      url: TILES_URL,
+      tileLoadFunction: customTileLoadFunction
+  })
 });
-source.setUrl("https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}");
+
 const map = new ol.Map({
-target: 'map',
-layers: [
-  new ol.layer.Tile({
-    source: source,
+  target: 'map',
+  layers: [
+    tileLayer
+  ],
+  view: new ol.View({
+    center: place,
+    zoom: 15,
   }),
-],
-view: new ol.View({
-  center: place,
-  zoom: 15,
-}),
 });
+
+const styles = {
+  'Polygon': new ol.style.Style({
+    stroke: new ol.style.Stroke({
+      color: 'red',
+      lineDash: [4],
+      width: 3,
+    }),
+    fill: new ol.style.Fill({
+      color: 'rgba(255, 0, 0, 0.1)',
+    }),
+  })
+};
+
+const styleFunction = function (feature) {
+  return styles[feature.getGeometry().getType()];
+};
+
+  
+const geoJSONLayer = new ol.layer.Vector({
+  source: new ol.source.Vector({
+    url: '/static/resources/forbidden_zones.json',
+    format: new ol.format.GeoJSON()
+  }),
+  style: styleFunction
+});
+map.addLayer(geoJSONLayer);
 
 var markers = new ol.layer.Vector({
   source: new ol.source.Vector(),
 });
+
 map.addLayer(markers);
 
 const info = document.getElementById('info');
@@ -176,7 +233,7 @@ function add_polyline(line_path) {
 
 function onChangeSelector() {
   let id_select = document.getElementById("id_select");
-  change_active_id(parseInt(id_select.options[id_select.selectedIndex].text));
+  change_active_id(id_select.options[id_select.selectedIndex].text);
 }
 
 async function arm() {
@@ -379,7 +436,7 @@ async function change_active_id(new_id) {
 async function get_ids() {
   let ids_resp = await fetch("admin/get_id_list" + "?token=" + access_token);
   let ids_text = await ids_resp.text();
-  let new_ids = JSON.parse(ids_text);
+  let new_ids = JSON.parse(ids_text.replace(/'/g, '"'));
   let old_ids_len = ids.length;
   ids = new_ids;
   if (active_id == null && ids.length > 0) {
