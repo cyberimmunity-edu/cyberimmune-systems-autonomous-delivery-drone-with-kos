@@ -437,5 +437,7 @@ TEST(PeripheryController, EnableBuzzer) {
 
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
-    return RUN_ALL_TESTS();
+    if (!RUN_ALL_TESTS())
+        fprintf(stderr, "All unit tests are passed\n");
+    return EXIT_SUCCESS;
 }

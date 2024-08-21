@@ -1,0 +1,12 @@
+
+services:
+#################################################
+  kos:
+    image: simulator
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    container_name: kos
+    command: expect /home/user/tests/unit-tests.exp
+    working_dir: /home/user/kos
+    user: user
