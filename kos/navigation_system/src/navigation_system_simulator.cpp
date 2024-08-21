@@ -1,12 +1,61 @@
+/**
+ * \file
+ * \~English
+ * \brief Implementation of methods for obtaining simulator drone position.
+ * \details The file contains implementation of methods,
+ * that obtain current drone position from a compatible ArduPilot SITL firmware.
+ *
+ * \~Russian
+ * \brief Реализация методов для получения данных о местоположении симулятора дрона.
+ * \details В файле реализованы методы, обеспечивающие получение информации о
+ * текущем местоположении дрона от совместимой SITL-прошивки ArduPilot.
+ */
+
 #include "../include/navigation_system.h"
-#include "../include/sim_sensor_data_message.h"
 
 #include <kos_net.h>
 
 #include <math.h>
 
+/** \cond */
+#define SIM_SENSOR_DATA_MESSAGE_HEAD_SIZE 4
+
+static const uint8_t SimSensorDataMessageHead[SIM_SENSOR_DATA_MESSAGE_HEAD_SIZE] = { 0x71, 0x11, 0xda, 0x1a };
+/** \endcond */
+
+/**
+ * \~English A structure describing a message used by SITL firmware to
+ * transmit current drone position.
+ * \~Russian Структура, описывающая сообщение, использующееся SITL-прошивкой
+ * для передачи данных о текущем местоположении дрона.
+ */
+struct SimSensorDataMessage {
+    /**
+     * \~English Fixed header bytes that indicate the start of a new message.
+     * \~Russian Фиксированные заголовочные байты, указывающие на начало нового сообщения.
+     */
+    uint8_t head[SIM_SENSOR_DATA_MESSAGE_HEAD_SIZE];
+    /**
+     * \~English Latitude of the current drone position in degrees * 10^7.
+     * \~Russian Широта текущего местоположения дрона в градусах * 10^7.
+     */
+    int32_t latitude;
+    /**
+     * \~English Longitude of the current drone position in degrees * 10^7.
+     * \~Russian Долгота текущего местоположения дрона в градусах * 10^7.
+     */
+    int32_t longitude;
+    /**
+     * \~English Absolute altitude of the current drone position in cm.
+     * \~Russian Абсолютная высота текущего местоположения дрона в см.
+     */
+    int32_t altitude;
+};
+
+/** \cond */
 int simSensorSocket = NULL;
 uint16_t simSensorPort = 5766;
+/** \endcond */
 
 void getSensors() {
     bool restart;
@@ -74,7 +123,7 @@ int initSensors() {
         return 0;
     }
 
-    setGpsInfo(1.2f, 10);
+    setInfo(1.2f, 10);
 
     return 1;
 }

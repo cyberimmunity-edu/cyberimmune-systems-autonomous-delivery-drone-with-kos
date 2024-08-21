@@ -12,7 +12,7 @@ nk_err_t GetCoordsImpl(struct NavigationSystemInterface *self,
                     NavigationSystemInterface_GetCoords_res *res, struct nk_arena *resArena) {
     int32_t latitude, longitude, altitude;
 
-    res->success = getCoords(latitude, longitude, altitude);
+    res->success = getPosition(latitude, longitude, altitude);
     res->lat = latitude;
     res->lng = longitude;
     res->alt = altitude;
@@ -26,7 +26,7 @@ nk_err_t GetGpsInfoImpl(struct NavigationSystemInterface *self,
     float dop;
     int32_t sats;
 
-    res->success = getGpsInfo(dop, sats);
+    res->success = getInfo(dop, sats);
 
     memcpy(&(res->dop), &dop, sizeof(float));
     memcpy(&(res->sats), &sats, sizeof(int32_t));

@@ -1,3 +1,16 @@
+/**
+ * \file
+ * \~English
+ * \brief Implementation of methods for obtaining drone position.
+ * \details The file contains implementation of methods,
+ * that obtain current drone position from a compatible GNSS module and a barometer.
+ *
+ * \~Russian
+ * \brief Реализация методов для получения данных о местоположении дрона.
+ * \details В файле реализованы методы, обеспечивающие получение информации о
+ * текущем местоположении дрона от совместимых модуля GNSS и барометра.
+ */
+
 #include "../include/navigation_system.h"
 #include "../../shared/include/ipc_messages_initialization.h"
 
@@ -12,6 +25,7 @@
 #include <unistd.h>
 #include <math.h>
 
+/** \cond */
 #define NAME_MAX_LENGTH 64
 
 std::thread barometerThread;
@@ -28,7 +42,18 @@ int32_t tempCoefs[3];
 int32_t pressCoefs[9];
 
 float temperatureFine;
+/** \endcond */
 
+/**
+ * \~English Writes a byte of information to I2C interface register.
+ * \param[in] reg Register to write to.
+ * \param[in] val Value to write.
+ * \return Returns 1 on successful write, 0 otherwise.
+ * \~Russian Выполняет запись байта информации в регистр интерфейса I2C.
+ * \param[in] reg Регистр, куда выполняется запись.
+ * \param[in] val Записываемое значение.
+ * \return Возвращает 1 при успешной записи, иначе -- 0.
+ */
 int writeRegister(uint8_t reg, uint8_t val) {
     I2cMsg messages[1];
     uint8_t buf[2] = { reg, val };
@@ -45,6 +70,16 @@ int writeRegister(uint8_t reg, uint8_t val) {
     return 1;
 }
 
+/**
+ * \~English Reads 2 bytes of information from I2C interface register.
+ * \param[in] reg Register to read from.
+ * \param[out] val Read values.
+ * \return Returns 1 on successful read, 0 otherwise.
+ * \~Russian Выполняет чтение 2 байт информации из регистра интерфейса I2C.
+ * \param[in] reg Регистр, откуда выполняется чтение.
+ * \param[out] val Прочитанные значение.
+ * \return Возвращает 1 при успешном чтении, иначе -- 0.
+ */
 int readRegister16(uint8_t reg, uint8_t* val) {
     I2cMsg messages[2];
     uint8_t writeBuffer[1] = { reg };
@@ -70,6 +105,20 @@ int readRegister16(uint8_t reg, uint8_t* val) {
     return 1;
 }
 
+/**
+ * \~English Reads 3 bytes of information from I2C interface register.
+ * \param[in] reg Register to read from.
+ * \param[out] val Read value.
+ * \return Returns 1 on successful read, 0 otherwise.
+ * \note Due to the specifics of read bytes combining into a 4-byte value, the method is designed
+ * to read temperature and pressure values.
+ * \~Russian Выполняет чтение 3 байт информации из регистра интерфейса I2C.
+ * \param[in] reg Регистр, откуда выполняется чтение.
+ * \param[out] val Прочитанное значение.
+ * \return Возвращает 1 при успешном чтении, иначе -- 0.
+ * \note Из-за специфики объединения прочитанных байтов информации в 4-байтное значение,
+ * метод рассчитан на чтение значений температуры и давления.
+ */
 int readRegister24(uint8_t reg, int32_t &val) {
     I2cMsg messages[2];
     uint8_t writeBuffer[1] = { reg };
@@ -93,6 +142,14 @@ int readRegister24(uint8_t reg, int32_t &val) {
     return 1;
 }
 
+/**
+ * \~English Reads current temperature from the barometer via I2C interface.
+ * \param[out] temperature Current temperature.
+ * \return Returns 1 on successful read, 0 otherwise.
+ * \~Russian Выполняет чтение значения текущей температуры из барометра через интерфейс I2C.
+ * \param[out] temperature Текущая температура.
+ * \return Возвращает 1 при успешном чтении, иначе -- 0.
+ */
 int getTemperature(float &temperature) {
     int32_t temp;
     if (!readRegister24(0xFA, temp))
@@ -107,6 +164,14 @@ int getTemperature(float &temperature) {
     return 1;
 }
 
+/**
+ * \~English Reads current pressure from the barometer via I2C interface.
+ * \param[out] pressure Current pressure.
+ * \return Returns 1 on successful read, 0 otherwise.
+ * \~Russian Выполняет чтение значения текущего давления из барометра через интерфейс I2C.
+ * \param[out] pressure Текущее давление.
+ * \return Возвращает 1 при успешном чтении, иначе -- 0.
+ */
 int getPressure(float &pressure) {
     int32_t press;
     if (!readRegister24(0xF7, press))
@@ -129,6 +194,13 @@ int getPressure(float &pressure) {
     return 1;
 }
 
+/**
+ * \~English Procedure that receives drone altitude from a barometer and updates the current location
+ * with the received altitude using \ref setAltitude. It is assumed that this procedure is looped
+ * and is performed in a parallel thread.
+ * \~Russian Процедура, выполняющая получение данных о высоте дрона от барометра, и обновление текущего местоположения
+ * полученной высотой при помощи \ref setAltitude. Предполагается, что данная процедура выполняется циклически в параллельной нити.
+ */
 void getBarometer() {
     while (true) {
         float temp, press;
@@ -282,7 +354,7 @@ void getSensors() {
             latitude += 10000000 * atoi(latStr);
 
             setCoords(latitude, longitude);
-            setGpsInfo(atof(dopStr), atoi(satsStr));
+            setInfo(atof(dopStr), atoi(satsStr));
         }
         else
             logEntry("Failed to parse NMEA string from GPS", ENTITY_NAME, LogLevel::LOG_WARNING);

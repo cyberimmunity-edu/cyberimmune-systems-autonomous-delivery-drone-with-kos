@@ -124,7 +124,7 @@ struct AutopilotCommandMessage {
 /**
  * \~English Initializes softwate and hardware components required
  * for the interaction between the security module and an autopilot.
- * \return Returns 1 in successful initialization, 0 otherwise.
+ * \return Returns 1 on successful initialization, 0 otherwise.
  * \~Russian Производит инициализацию программных и аппаратных компонентов, необходимых
  * для взаимодействия между автопилотом и модулем безопасности.
  * \return Возвращает 1 при успешной инициализации, 0 -- иначе.

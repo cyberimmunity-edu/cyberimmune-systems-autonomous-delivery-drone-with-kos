@@ -1,3 +1,16 @@
+/**
+ * \file
+ * \~English
+ * \brief Implementation of methods for drone position update and transmit.
+ * \details The file contains implementation of methods, that update, store and
+ * transmit current drone position to the ATM server.
+ *
+ * \~Russian
+ * \brief Реализация методов для обновления и передачи данных о местоположении дрона.
+ * \details В файле реализованы методы, обеспечивающие обновление, хранение и
+ * передачу данных о текущем местоположении дрона на сервер ОРВД.
+ */
+
 #include "../include/navigation_system.h"
 #include "../../shared/include/ipc_messages_credential_manager.h"
 #include "../../shared/include/ipc_messages_server_connector.h"
@@ -7,6 +20,7 @@
 #include <math.h>
 #include <mutex>
 
+/** \cond */
 std::mutex sensorMutex;
 
 bool hasAlt = false;
@@ -17,6 +31,7 @@ int32_t sensorSats = 0;
 int32_t sensorLatitude = 0;
 int32_t sensorLongitude = 0;
 int32_t sensorAltitude = 0;
+/** \endcond */
 
 bool hasPosition() {
     return (hasAlt && hasCoords);
@@ -35,16 +50,16 @@ void sendCoords() {
 
     float dop;
     int32_t prevLat, prevLng, lat, lng, alt, azimuth, sats;
-    while (!getCoords(prevLat, prevLng, alt)) {
+    while (!getPosition(prevLat, prevLng, alt)) {
         logEntry("Failed to get coords from Navigation System. Trying again in 1s", ENTITY_NAME, LogLevel::LOG_WARNING);
         sleep(1);
     }
 
     while (true) {
-        if (!getCoords(lat, lng, alt))
+        if (!getPosition(lat, lng, alt))
             logEntry("Failed to get GPS coords. Trying again in 500ms", ENTITY_NAME, LogLevel::LOG_WARNING);
         else {
-            if (!getGpsInfo(dop, sats))
+            if (!getInfo(dop, sats))
                 logEntry("Failed to get GPS's sats and dop. Trying again in 500ms", ENTITY_NAME, LogLevel::LOG_WARNING);
             else {
                 azimuth = round(atan2(lng - prevLng, lat - prevLat) * 1800000000 / M_PI);
@@ -64,14 +79,14 @@ void sendCoords() {
     }
 }
 
-void setGpsInfo(float dop, int32_t sats) {
+void setInfo(float dop, int32_t sats) {
     sensorMutex.lock();
     sensorDop = dop;
     sensorSats = sats;
     sensorMutex.unlock();
 }
 
-int getGpsInfo(float& dop, int32_t& sats) {
+int getInfo(float& dop, int32_t& sats) {
     if (hasPosition()) {
         sensorMutex.lock();
         dop = sensorDop;
@@ -109,7 +124,7 @@ void setCoords(int32_t latitude, int32_t longitude) {
     }
 }
 
-int getCoords(int32_t &latitude, int32_t &longitude, int32_t &altitude) {
+int getPosition(int32_t &latitude, int32_t &longitude, int32_t &altitude) {
     if (hasPosition()) {
         sensorMutex.lock();
         latitude = sensorLatitude;

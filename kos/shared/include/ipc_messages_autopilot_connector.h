@@ -69,8 +69,8 @@ int changeSpeed(int32_t speed);
 int changeAltitude(int32_t altitude);
 /**
  * \~English Sends a message to autopilot demanding to change the current destination point.
- * \param[in] latitude Latitude of the point in degrees * 10 ^ 7 at which the drone should start moving.
- * \param[in] longitude Longitude of the point in degrees * 10 ^ 7 at which the drone should start moving.
+ * \param[in] latitude Latitude of the point in degrees * 10^7 at which the drone should start moving.
+ * \param[in] longitude Longitude of the point in degrees * 10^7 at which the drone should start moving.
  * \param[in] altitude Altitude of the point in cm at which the drone should start moving.
  * \return Returns 1 on succesful message send, 0 otherwise.
  * \~Russian Передает в автопилот сообщение с требованием изменить текущую точку назначения.
