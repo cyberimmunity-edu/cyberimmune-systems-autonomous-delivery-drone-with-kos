@@ -39,18 +39,7 @@ endif()
 
 set (ENTITIES AutopilotConnector CredentialManager FlightController NavigationSystem PeripheryController ServerConnector
     Logger ${precompiled_vfsVfsNet} ${rump_DHCPCD_ENTITY} ${wpa_SUPPLICANT_ENTITY} ${precompiled_vfsVfsSdCardFs} ${FS_IMAGE})
-
 set (FILES ${CMAKE_SOURCE_DIR}/resources/hdd/etc/wpa_supplicant.conf ${CMAKE_SOURCE_DIR}/resources/hdd/etc/dhcpcd.conf)
-
-build_kos_hw_image (kos-image
-                    EINIT_ENTITY EinitHw
-                    CONNECTIONS_CFG "src/init.yaml.in"
-                    SECURITY_PSL "src/security.psl.in"
-                    IMAGE_FILES ${ENTITIES} ${FILES})
-
-#build_sd_image (sd-image
-#                KOS_IMAGE_TARGET kos-image
-#                IMAGE_FS ${IMAGE_FS})
 
 set (QEMU_FLAGS "--nographic -monitor none -netdev user,id=net0,dhcpstart=10.0.2.15 -drive file=${FS_IMAGE},if=sd,format=raw")
 set (QEMU_ENV "QEMU_AUDIO_DRV=none")

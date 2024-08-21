@@ -7,7 +7,7 @@ services:
       context: .
       dockerfile: ./Dockerfile
     container_name: kos
-    command: /home/user/kos/cross-build-sim-offline.sh 172.28.0.2
+    command: /home/user/kos/cross-build-sim-offline.sh --simulator-ip 172.28.0.2
     working_dir: /home/user/kos
     user: user
     depends_on:

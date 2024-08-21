@@ -13,9 +13,9 @@ export PATH="$SDK_PREFIX/toolchain/bin:$PATH"
 export BUILD_WITH_CLANG=
 export BUILD_WITH_GCC=
 
-SIMULATOR_IP="${1:-"10.0.2.2"}"
-SERVER_IP="${2:-"10.0.2.2"}"
 BOARD_ID=""
+SIMULATOR_IP="10.0.2.2"
+SERVER_IP="10.0.2.2"
 
 set -eu
 
@@ -52,6 +52,12 @@ do
         --sdk-path|-s)
             SDK_PREFIX=$2
             ;;
+        --simulator-ip)
+            SIMULATOR_IP=$2
+            ;;
+        --server-ip)
+            SERVER_IP=$2
+            ;;
         --board-id)
             BOARD_ID=$2
             ;;
@@ -76,6 +82,7 @@ fi
 "$SDK_PREFIX/toolchain/bin/cmake" -G "Unix Makefiles" -B "$BUILD" \
       -D SIMULATION="TRUE" \
       -D SERVER="TRUE" \
+      -D UNIT_TESTS="FALSE" \
       -D BOARD_ID="$BOARD_ID" \
       -D SIMULATOR_IP=$SIMULATOR_IP \
       -D SERVER_IP=$SERVER_IP \

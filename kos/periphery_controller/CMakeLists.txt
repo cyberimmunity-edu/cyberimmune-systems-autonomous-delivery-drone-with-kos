@@ -24,5 +24,4 @@ if (SIMULATION)
 else ()
     target_link_libraries (PeripheryController ${bsp_CLIENT_LIB} ${gpio_CLIENT_LIB})
 endif()
-
 target_link_libraries (PeripheryController ${CMAKE_THREAD_LIBS_INIT})
