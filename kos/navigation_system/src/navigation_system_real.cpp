@@ -2,13 +2,13 @@
  * \file
  * \~English
  * \brief Implementation of methods for obtaining drone position.
- * \details The file contains implementation of methods,
- * that obtain current drone position from a compatible GNSS module and a barometer.
+ * \details The file contains implementation of methods, that obtain current drone position
+ * from a GNSS module via UART interface and from a barometer via I2C interface.
  *
  * \~Russian
  * \brief Реализация методов для получения данных о местоположении дрона.
- * \details В файле реализованы методы, обеспечивающие получение информации о
- * текущем местоположении дрона от совместимых модуля GNSS и барометра.
+ * \details В файле реализованы методы, для получения информации о текущем местоположении
+ * дрона от модуля GNSS через интерфейс UART и через интерфейс I2C -- от барометра.
  */
 
 #include "../include/navigation_system.h"

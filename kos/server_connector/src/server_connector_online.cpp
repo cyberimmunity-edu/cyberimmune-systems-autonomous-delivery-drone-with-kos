@@ -1,10 +1,25 @@
+/**
+ * \file
+ * \~English
+ * \brief Implementation of methods for communication with the ATM server.
+ * \details The file contains implementation of methods
+ * for requests to an ATM server send and for received responses process.
+ *
+ * \~Russian
+ * \brief Реализация методов для общения с сервером ОРВД.
+ * \details В файле реализованы методы для отправки запросов на сервер ОРВД
+ * и обработке полученных ответов.
+ */
+
 #include "../include/server_connector.h"
 
 #include <kos_net.h>
 
+/** \cond */
 #define BUFFER_SIZE 1024
 
 uint16_t serverPort = 8080;
+/** \endcond */
 
 int initServerConnector() {
     if (!wait_for_network()) {
@@ -41,7 +56,7 @@ int initServerConnector() {
     return 1;
 }
 
-int sendRequest(char* query, char* response) {
+int requestServer(char* query, char* response) {
     char request[BUFFER_SIZE] = {0};
     snprintf(request, BUFFER_SIZE, "GET %s HTTP/1.1\r\nHost: %s\r\nConnection: close\r\n\r\n", query, SERVER_IP);
 

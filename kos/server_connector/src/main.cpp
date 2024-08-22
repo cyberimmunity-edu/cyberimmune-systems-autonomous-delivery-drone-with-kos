@@ -1,3 +1,9 @@
+/**
+ * \file
+ * \~English \brief Implementation of the security module ServerConnector component main loop.
+ * \~Russian \brief Реализация основного цикла компонента ServerConnector модуля безопасности.
+ */
+
 #include "../include/server_connector.h"
 #include "../include/server_connector_interface.h"
 #include "../../shared/include/initialization_interface.h"
@@ -10,6 +16,16 @@
 #define NK_USE_UNQUALIFIED_NAMES
 #include <drone_controller/ServerConnector.edl.h>
 
+/**
+ * \~English \brief ServerConnector component main program entry point.
+ * \details First, waits for the Logger component to initialize. After that, the connection to the ATM server
+ * is established and the unique drone ID is determined. Then the program enters a loop,
+ * where it receives IPC messages from other security module components,
+ * \~Russian \brief Точка входа в основную программу компонента ServerConnector.
+ * \details Сначала производится ожидание инициализации компонента Logger. После этого инициализируется
+ * подключение к серверу ОРВД и определяется уникальный ID дрона. Далее программа входит в цикл, в котором
+ * получает IPC-сообщения от других компонентов модуля безопасности, исполняет запрашиваемые действияи отправляет IPC-ответы.
+ */
 int main(void) {
     while (!waitForInit("logger_connection", "Logger")) {
         logEntry("Failed to receive initialization notification from Logger. Trying again in 1s", ENTITY_NAME, LogLevel::LOG_WARNING);

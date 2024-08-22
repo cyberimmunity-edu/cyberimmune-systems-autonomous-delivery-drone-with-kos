@@ -2,13 +2,13 @@
  * \file
  * \~English
  * \brief Implementation of methods for obtaining simulator drone position.
- * \details The file contains implementation of methods,
- * that obtain current drone position from a compatible ArduPilot SITL firmware.
+ * \details The file contains implementation of methods, that obtain current
+ * drone position from a compatible ArduPilot SITL firmware via socket.
  *
  * \~Russian
  * \brief Реализация методов для получения данных о местоположении симулятора дрона.
  * \details В файле реализованы методы, обеспечивающие получение информации о
- * текущем местоположении дрона от совместимой SITL-прошивки ArduPilot.
+ * текущем местоположении дрона от совместимой SITL-прошивки ArduPilot через сокет.
  */
 
 #include "../include/navigation_system.h"

@@ -10,7 +10,7 @@
 nk_err_t EnableBuzzerImpl(struct PeripheryControllerInterface *self,
                     const PeripheryControllerInterface_EnableBuzzer_req *req, const struct nk_arena *reqArena,
                     PeripheryControllerInterface_EnableBuzzer_res *res, struct nk_arena *resArena) {
-    res->success = enableBuzzer();
+    res->success = startBuzzer();
 
     return NK_EOK;
 }
