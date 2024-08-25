@@ -65,7 +65,7 @@ void sendCoords() {
                 azimuth = round(atan2(lng - prevLng, lat - prevLat) * 1800000000 / M_PI);
                 prevLat = lat;
                 prevLng = lng;
-                snprintf(request, 1024, "/api/telemetry?%s&lat=%d&lon=%d&alt=%d&azimuth=%d&dop=%f&sats=%d", boardId, lat, lng, alt, azimuth, dop, sats);
+                snprintf(request, 1024, "/api/telemetry?id=%s&lat=%d&lon=%d&alt=%d&azimuth=%d&dop=%f&sats=%d", boardId, lat, lng, alt, azimuth, dop, sats);
                 if (!signMessage(request, signature))
                     logEntry("Failed to sign 'coordinate' message at Credential Manager. Trying again in 500ms", ENTITY_NAME, LogLevel::LOG_WARNING);
                 else {

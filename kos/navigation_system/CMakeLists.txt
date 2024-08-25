@@ -24,5 +24,4 @@ if (SIMULATION)
 else ()
     target_link_libraries (NavigationSystem ${bsp_CLIENT_LIB} ${uart_CLIENT_LIB} ${i2c_CLIENT_LIB})
 endif ()
-
 target_link_libraries (NavigationSystem ${CMAKE_THREAD_LIBS_INIT})

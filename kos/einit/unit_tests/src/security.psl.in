@@ -1,0 +1,12 @@
+/* Solution security policy */
+
+use nk.base._
+
+/* Including EDL files */
+use EDL Einit
+use EDL kl.core.Core
+use EDL drone_controller.UnitTests
+@INIT_EXTERNAL_ENTITIES@
+
+/* Security policy for tests allow any interprocess interaction. */
+use nonsecurity._

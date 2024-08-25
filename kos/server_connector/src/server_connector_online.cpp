@@ -21,12 +21,13 @@
 uint16_t serverPort = 8080;
 /** \endcond */
 
-int initServerConnector() {
-    if (!wait_for_network()) {
-        logEntry("Connection to network has failed", ENTITY_NAME, LogLevel::LOG_ERROR);
-        return 0;
-    }
-
+/**
+ * \~English Sets "en0" interface MAC-address as drone ID.
+ * \return Returns 1 on successful set, 0 otherwise.
+ * \~Russian Устанавливает MAC-адрес интерфейса "en0" в качестве идентификатора дрона.
+ * \return Возвращает 1 при успешной установке, иначе -- 0.
+ */
+int setMacId() {
     ifaddrs *address;
     if (getifaddrs(&address) == -1) {
         logEntry("Failed to get 'en0' MAC-address", ENTITY_NAME, LogLevel::LOG_ERROR);
@@ -54,6 +55,20 @@ int initServerConnector() {
     setBoardName(name);
 
     return 1;
+}
+
+int initServerConnector() {
+    if (!wait_for_network()) {
+        logEntry("Connection to network has failed", ENTITY_NAME, LogLevel::LOG_ERROR);
+        return 0;
+    }
+
+    if (strlen(BOARD_ID)) {
+        setBoardName(BOARD_ID);
+        return 1;
+    }
+    else
+        return setMacId();
 }
 
 int requestServer(char* query, char* response) {

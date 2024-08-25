@@ -34,7 +34,7 @@ int createLog() {
     logger = std::make_shared<spdlog::logger>("Flight Controller", sinks);
     spdlog::register_logger(logger);
     spdlog::set_default_logger(logger);
-    spdlog::flush_every (std::chrono::seconds(5));
+    spdlog::flush_on(spdlog::level::trace);
 
     return 1;
 }

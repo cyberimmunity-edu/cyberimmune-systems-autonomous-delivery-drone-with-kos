@@ -27,8 +27,8 @@
 
 /** \cond */
 mbedtls_rsa_context rsaSelf;
-char keyE[257] = {0};
 char keyN[257] = {0};
+char keyE[257] = {0};
 char keyD[257] = {0};
 /** \endcond */
 
@@ -47,7 +47,13 @@ char keyD[257] = {0};
  */
 void hashToKey(uint8_t* source, uint32_t sourceSize, uint8_t* destination) {
     int j = 127;
-    for (int i = sourceSize - 1; (i >= 0) && (j >= 0); i--) {
+    for (int i = sourceSize - 1; i >= 0; i--) {
+        if (j < 0) {
+            char logBuffer[128];
+            snprintf(logBuffer, 512, "Converted to key only 128 last bytes of source with size %d", sourceSize);
+            logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
+            return;
+        }
         destination[j] = source[i];
         j--;
     }
@@ -161,7 +167,7 @@ int shareRsaKey() {
 
     char rsaServerRequest[1024] = {0};
     char rsaServerResponse[1024] = {0};
-    snprintf(rsaServerRequest, 1024, "/api/key?%s&e=0x%s&n=0x%s", boardId, keyE, keyN);
+    snprintf(rsaServerRequest, 1024, "/api/key?id=%s&e=0x%s&n=0x%s", boardId, keyE, keyN);
     while (!sendRequest(rsaServerRequest, rsaServerResponse)) {
         logEntry("Failed to share RSA key. Trying again in 1s", ENTITY_NAME, LogLevel::LOG_WARNING);
         sleep(1);

@@ -9,12 +9,12 @@
 /**
  * \~English Returns drone ID.
  * \note In online build ID is the MAC address of the "en0" interface.
- * In offline build ID is "offline-drone" string.
+ * In offline build ID is "00:00:00:00:00:00".
  * \param[out] id Drone ID.
  * \return Returns 1 on successful ID retrieve, 0 otherwise.
  * \~Russian Возвращает ID дрона.
  * \note При online-сборке идентификатором является значение MAC-адреса интерфейса "en0".
- * При offline-сборке идентфикатором является строка "offline-drone".
+ * При offline-сборке идентфикатором является "00:00:00:00:00:00".
  * \param[out] id Идентификатор дрона.
  * \return Возвращает 1 при успешном получении ID дрона, иначе -- 0.
  */
