@@ -1,3 +1,9 @@
+/**
+ * \file
+ * \~English \brief Implementation of methods for flight mission management.
+ * \~Russian \brief Реализация методов для работы с полетной миссией.
+ */
+
 #include "../include/mission.h"
 #include "../../shared/include/ipc_messages_logger.h"
 
@@ -5,16 +11,45 @@
 #include <stdlib.h>
 #include <string.h>
 
+/** \cond */
 #define COMMAND_MAX_STRING_LEN 32
 
 uint32_t commandNum = 0;
 MissionCommand *commands = NULL;
 int hasMission = false;
+/** \endcond */
 
+
+/**
+ * \~English Identifies mission string number end character.
+ * \param [in] character Mission string character.
+ * \return Returns 1 if the character finishes number, 0 otherwise.
+ * \note Considered end characters: "_" -- separates arguments," & "-- separates commands and
+ * "#" -- finishes the entire mission.
+ * \~Russian Определяет символ окончания записи числа в миссии.
+ * \param[in] character Символ строки миссии.
+ * \return Возвращает 1 если символ оканчивает запись числа, иначе -- 0.
+ * \note Концом записи считаются: "_", отделяющий аргументы, "&" -- отделяющий команды и
+ * "#" -- завершающий всю миссию.
+ */
 int isStopSymbol(char character) {
     return ((character == '_') || (character == '&') || (character == '#'));
 }
 
+/**
+ * \~English Recognizes and converts fractional number from mission string to an integer.
+ * \param [in, out] str Pointer to a string. Will be shifted to the beginning of the next number/command.
+ * \param [out] value Recognized number.
+ * \param [in] numAfterPoint Number of decimal places. Excess places will be discarded. Missing zeroes will be added.
+ * \return Returns 1 on successful parse, 0 otherwise.
+ * \~Russian Распознает и преобразует дробную запись одного числа в строке миссии в целое.
+ * \param[in, out] str Указатель на строку. Будет сдвинут к началу следующего числа/команды.
+ * \param[out] value Распознанное число.
+ * \param[in] numAfterPoint Число точек, после запятой. Если в записи поданного числа цифр после запятой больше указанного,
+ * лишние будут отброшены. Если в записи поданного числа цифр после запятой меньше указанного, недостающие нули
+ * будут добавлены.
+ * \return Возвращает 1, если число было распознано, иначе -- 0.
+ */
 int parseInt(char*& string, int32_t& value, uint32_t numAfterPoint) {
     char stringValue[COMMAND_MAX_STRING_LEN];
     uint32_t strPtr = 0, valPtr = 0;
@@ -64,6 +99,14 @@ int parseInt(char*& string, int32_t& value, uint32_t numAfterPoint) {
     return 1;
 }
 
+/**
+ * \~English Parses mission commands.
+ * \param[in] str Pointer to mission string. Parses commands until "#" character.
+ * \return Returns 1 on successful parse, 0 otherwise.
+ * \~Russian Распознает команды миссии.
+ * \param[in] str Указатель на строку с миссией. Распознает команды до символа "#".
+ * \return Возвращает 1, если команды были распознаны, иначе -- 0.
+ */
 int parseCommands(char* str) {
     commandNum = 0;
     for (uint32_t i = 0; ; i++) {

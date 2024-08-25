@@ -81,7 +81,7 @@ enum AutopilotCommand : uint8_t {
 };
 
 /**
- * \~English A structure describing a main body of the message used for communication
+ * \~English Structure describing a main body of the message used for communication
  * between the security module and an autopilot.
  * \~Russian Структура, описывающая основное тело сообщения, использующегося
  * для коммуникации между модулем безопасности и автопилотом.
