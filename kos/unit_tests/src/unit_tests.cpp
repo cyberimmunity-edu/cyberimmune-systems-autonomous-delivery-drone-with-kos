@@ -2,11 +2,13 @@
 
 #include <fcntl.h>
 
-#include "../include/mock_declaration.h"
+#include "../include/mock.h"
 #include "../../shared/include/ipc_messages_logger.h"
 #include "../../credential_manager/include/credential_manager.h"
-#include "../../flight_controller/include/mission.h"
+#include "../../navigation_system/include/navigation_system.h"
+#include "../../periphery_controller/include/periphery_controller.h"
 #include "../../logger/include/logger.h"
+#include "../../flight_controller/include/mission.h"
 
 //Credential Manager
 TEST(CredentialManager, HexCharToInt) {
@@ -166,7 +168,7 @@ TEST(CredentialManager, RSA) {
 
     char message[] = "Unit test message";
     char sign[257] = {0};
-    EXPECT_TRUE(signMessage(message, sign));
+    EXPECT_TRUE(getMessageSignature(message, sign));
 
     char key[1024] = {0};
     snprintf(key, 1024, "$Key: %s %s", getKeyN(), getKeyE());
@@ -175,7 +177,7 @@ TEST(CredentialManager, RSA) {
     char signedMessage[1024] = {0};
     snprintf(signedMessage, 1024, "%s#%s", message, sign);
     uint8_t correct = 0;
-    EXPECT_TRUE(checkSignature(signedMessage, correct));
+    EXPECT_TRUE(checkMessageSignature(signedMessage, correct));
     EXPECT_TRUE(correct);
 }
 
@@ -373,18 +375,18 @@ TEST(NavigationSystem, NoPosition) {
 
     float dop = -1.0f;
     int32_t sats = -1;
-    EXPECT_FALSE(getGpsInfo(dop, sats));
+    EXPECT_FALSE(getInfo(dop, sats));
     EXPECT_EQ(dop, 0.0f);
     EXPECT_EQ(sats, 0);
 
     int32_t lat = -1, lng = -1, alt = -1;
-    EXPECT_FALSE(getCoords(lat, lng, alt));
+    EXPECT_FALSE(getPosition(lat, lng, alt));
     EXPECT_EQ(lat, 0);
     EXPECT_EQ(lng, 0);
     EXPECT_EQ(alt, 0);
 }
 
-TEST(NavigationSystem, SetGetCoords) {
+TEST(NavigationSystem, DronePosition) {
     int32_t testLat = 142, testLng = -546, testAlt = 11;
     setCoords(testLat, 0);
     setAltitude(testAlt);
@@ -397,20 +399,20 @@ TEST(NavigationSystem, SetGetCoords) {
     EXPECT_TRUE(hasPosition());
 
     int32_t lat = -1, lng = -1, alt = -1;
-    EXPECT_TRUE(getCoords(lat, lng, alt));
+    EXPECT_TRUE(getPosition(lat, lng, alt));
     EXPECT_EQ(lat, testLat);
     EXPECT_EQ(lng, testLng);
     EXPECT_EQ(alt, testAlt);
 }
 
-TEST(NavigationSystem, SetGetGpsInfo) {
+TEST(NavigationSystem, GPSInfo) {
     float testDop = 0.7f;
     int32_t testSats = 13;
-    setGpsInfo(testDop, testSats);
+    setInfo(testDop, testSats);
 
     float dop = -1.0f;
     int32_t sats = -1;
-    EXPECT_TRUE(getGpsInfo(dop, sats));
+    EXPECT_TRUE(getInfo(dop, sats));
     EXPECT_EQ(dop, testDop);
     EXPECT_EQ(sats, testSats);
 }
@@ -427,8 +429,8 @@ TEST(PeripheryController, EnableBuzzer) {
     setMockBuzzer(false);
     EXPECT_FALSE(getMockBuzzer());
 
-    EXPECT_TRUE(enableBuzzer());
-    EXPECT_FALSE(enableBuzzer());
+    EXPECT_TRUE(startBuzzer());
+    EXPECT_FALSE(startBuzzer());
 
     EXPECT_TRUE(getMockBuzzer());
     sleep(3);

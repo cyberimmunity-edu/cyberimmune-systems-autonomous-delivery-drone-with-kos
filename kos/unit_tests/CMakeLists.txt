@@ -10,7 +10,7 @@ set (FLIGHT_CONTROLLER_DIR ${CMAKE_SOURCE_DIR}/flight_controller)
 set (NAVIGATION_SYSTEM_DIR ${CMAKE_SOURCE_DIR}/navigation_system)
 set (PERIPHERY_CONTROLLER_DIR ${CMAKE_SOURCE_DIR}/periphery_controller)
 
-add_executable (UnitTests "src/unit_tests.cpp" "src/mock_definition.cpp"
+add_executable (UnitTests "src/unit_tests.cpp" "src/mock.cpp"
     "${CREDENTIAL_MANAGER_DIR}/src/credential_manager_online.cpp"
     "${CREDENTIAL_MANAGER_DIR}/src/credential_manager.cpp"
     "${LOGGER_DIR}/src/logger.cpp" "${FLIGHT_CONTROLLER_DIR}/src/mission.cpp"
