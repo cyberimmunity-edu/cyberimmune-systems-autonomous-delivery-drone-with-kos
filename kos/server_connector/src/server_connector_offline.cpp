@@ -1,3 +1,16 @@
+/**
+ * \file
+ * \~English
+ * \brief Implementation of methods for ATM server communication simulation.
+ * \details The file contains implementation of methods, that simulate
+ * requests to an ATM server send and received responses process.
+ *
+ * \~Russian
+ * \brief Реализация методов для имитации общения с сервером ОРВД.
+ * \details В файле реализованы методы, имитирующие отправку запросов на сервер ОРВД
+ * и обработку полученных ответов.
+ */
+
 #include "../include/server_connector.h"
 
 #include <stdio.h>
@@ -12,7 +25,7 @@ int initServerConnector() {
     return 1;
 }
 
-int sendRequest(char* query, char* response) {
+int requestServer(char* query, char* response) {
     if (strstr(query, "/api/kill_switch?") != NULL)
         strcpy(response, "$KillSwitch: 1#");
     else if (strstr(query, "/api/auth?") != NULL)

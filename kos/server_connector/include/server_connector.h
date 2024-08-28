@@ -1,10 +1,54 @@
+/**
+ * \file
+ * \~English
+ * \brief Declaration of methods for the ATM server communication.
+ * \details The file contains declaration of methods, that provide
+ * interaction between the security module and an ATM server.
+ *
+ * \~Russian
+ * \brief Объявление методов для взаимодействия с сервером ОРВД.
+ * \details В файле объявлены публичныe методы, необходимые
+ * для взаимодействия между модулем безопасности и сервером ОРВД.
+ */
+
 #pragma once
 
 #include "../../shared/include/ipc_messages_logger.h"
 
+/**
+ * \~English Initializes softwate and hardware components required
+ * for the ATM server communication establishment.
+ * \return Returns 1 on successful initialization, 0 otherwise.
+ * \~Russian Производит инициализацию программных и аппаратных компонентов, необходимых
+ * для установки связи с сервером ОРВД.
+ * \return Возвращает 1 при успешной инициализации, 0 -- иначе.
+ */
 int initServerConnector();
 
+/**
+ * \~English Saves given drone ID.
+ * \param[in] id New drone ID.
+ * \~Russian Запоминает поданный идентификатор дрона.
+ * \param[in] id Новый идентификатор дрона.
+ */
 void setBoardName(char* id);
+/**
+ * \~English Returns saved drone ID.
+ * \return Drone ID.
+ * \~Russian Возвращает сохраненный идентификатор дрона.
+ * \return Идентификатор дрона.
+ */
 char* getBoardName();
 
-int sendRequest(char* query, char* response);
+/**
+ * \~English Requests the ATM server and receives a response from it.
+ * \param[in] query Request to the ATM server.
+ * \param[out] response Response from the ATM server. Only a meaningfuk part of the response is returned.
+ * \return Returns 1 on successful message exchange with the ATM server, 0 otherwise.
+ * \return Возвращает 1, если обмен сообщениями с сервером был успешен, иначе -- 0.
+ * \~Russian Отправляет запрос на сервер ОРВД и получает от него ответ.
+ * \param[in] query Запрос к серверу ОРВД.
+ * \param[out] response Ответ от сервера ОРВД. Возвращается лишь значимая часть ответа.
+ * \return Возвращает 1, если обмен сообщениями с сервером был успешен, иначе -- 0.
+ */
+int requestServer(char* query, char* response);

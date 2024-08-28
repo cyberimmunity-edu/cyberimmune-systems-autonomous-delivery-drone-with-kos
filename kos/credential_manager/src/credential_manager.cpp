@@ -1,3 +1,18 @@
+/**
+ * \file
+ * \~English
+ * \brief Implementation of methods for managing security module RSA keys.
+ * \details The file contains implementation of methods, that read/write RSA key from/to a file,
+ * generate the key and sign messages for the ATM server.
+ * message authenticity check. These methods are intended for offline build,
+ * where there is no connection with the ATM server, and therefore any message is considered authentic.
+ *
+ * \~Russian
+ * \brief Реализация методов для работы с RSA-ключами модуля безопасности.
+ * \details В файле реализованы методы, предназначенные для чтения/записи RSA-ключа из/в файл,
+ * их генерации и подписи сообщений, предназначенных для отправки серверу ОРВД.
+ */
+
 #include "../include/credential_manager.h"
 #include "../../shared/include/ipc_messages_initialization.h"
 #include "../../shared/include/ipc_messages_server_connector.h"
@@ -10,11 +25,26 @@
 #include <string.h>
 #include <unistd.h>
 
+/** \cond */
 mbedtls_rsa_context rsaSelf;
 char keyN[257] = {0};
 char keyE[257] = {0};
 char keyD[257] = {0};
+/** \endcond */
 
+/**
+ * \~English Extends a smaller array to 128 bytes, placing significant bytes
+ * at the end of the extended array with byte order maintained.
+ * \param[in] source Pointer to a smaller array.
+ * \param[in] sourceSize Length of the smaller array. The length is expected to be less than 128 bytes.
+ * \param[out] destination Pointer to the array to store the result. This array is expected to be 128 bytes in size.
+ * \~Russian Расширяет меньший массив до 128 байт, помещая значимые байты в конец расширенного массива
+ * с сохранением порядка байтов.
+ * \param[in] source Указатель на меньший массив.
+ * \param[in] sourceSize Длина меньшего массива. Ожидается длина менее 128 байт.
+ * \param[out] destination Указатель на массив, куда будет записан результат. Ожидается,
+ * что целевой массив имеет размер в 128 байт.
+ */
 void hashToKey(uint8_t* source, uint32_t sourceSize, uint8_t* destination) {
     int j = 127;
     for (int i = sourceSize - 1; i >= 0; i--) {
@@ -29,6 +59,20 @@ void hashToKey(uint8_t* source, uint32_t sourceSize, uint8_t* destination) {
     }
 }
 
+/**
+ * \~English Converts a decimal array into a hexadecimal string.
+ * \details The method is designed to convert a message sign, that will be sent to the ATM server,
+ * and therefore it is designed to work with arrays no longer than 128 bytes.
+ * If the length is less than 128 bytes, the missing zeros are assumed to precede the array.
+ * \param[in] source Pointer to a decimal array.
+ * \param[out] destination Pointer to a string to write hexadecimal result.
+ * \~Russian Переводит 10-ричный массив в 16-ричную строку.
+ * \details Метод предназначен для перевода подписи сообщения, предназначенного для сервера ОРВД,
+ * поэтому рассчитан на работу с массивами в 128 байт. Если длина меньше 128 байт,
+ * считается, что перед массивом находятся недостающие нули.
+ * \param[in] source Указатель на 10-ричный массив.
+ * \param[out] destination Указатель на строку, куда будет записан 16-ричный результат.
+ */
 void bytesToString(uint8_t* source, char* destination) {
     int start = 0;
     for (int i = 0; i < 128; i++) {
@@ -131,7 +175,7 @@ int shareRsaKey() {
     return setRsaKey(rsaServerResponse);
 }
 
-int signMessage(char* message, char* sign) {
+int getMessageSignature(char* message, char* sign) {
     uint8_t hash[32] = {0};
     mbedtls_sha256_context sha256;
     mbedtls_sha256_init(&sha256);

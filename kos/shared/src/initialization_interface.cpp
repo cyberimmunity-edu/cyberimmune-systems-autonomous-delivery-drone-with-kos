@@ -1,3 +1,11 @@
+/**
+ * \file
+ * \~English \brief Implementation of Initialization IDL-interface methods and methods
+ * for wrappers over IPC message handlers.
+ * \~Russian \brief Реализация методов IDL-интерфейса Initialization и методов, необходимых
+ * оберткам над обработчиками IPC-сообщений.
+ */
+
 #include "../include/initialization_interface.h"
 
 #include <coresrv/sl/sl_api.h>

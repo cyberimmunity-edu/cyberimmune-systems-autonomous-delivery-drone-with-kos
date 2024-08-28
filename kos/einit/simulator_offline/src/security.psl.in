@@ -47,12 +47,14 @@ request {
 
     match dst=kl.VfsNet {
         match src=drone_controller.AutopilotConnector { grant () }
-        match src=drone_controller.CredentialManager { grant () }
         match src=drone_controller.NavigationSystem { grant () }
         match src=drone_controller.PeripheryController { grant () }
     }
 
-    match src=drone_controller.Logger dst=kl.VfsSdCardFs { grant () }
+    match dst=kl.VfsSdCardFs {
+        match src=drone_controller.CredentialManager { grant () }
+        match src=drone_controller.Logger { grant () }
+    }
 
     match src=drone_controller.FlightController {
         match interface=drone_controller.Initialization method=WaitForInit {
@@ -157,12 +159,14 @@ response {
 
     match src=kl.VfsNet {
         match dst=drone_controller.AutopilotConnector { grant () }
-        match dst=drone_controller.CredentialManager { grant () }
         match dst=drone_controller.NavigationSystem { grant () }
         match dst=drone_controller.PeripheryController { grant () }
     }
 
-    match dst=drone_controller.Logger src=kl.VfsSdCardFs { grant () }
+    match src=kl.VfsSdCardFs {
+        match dst=drone_controller.CredentialManager { grant () }
+        match dst=drone_controller.Logger { grant () }
+    }
 
     match dst=drone_controller.FlightController {
         match interface=drone_controller.Initialization method=WaitForInit {

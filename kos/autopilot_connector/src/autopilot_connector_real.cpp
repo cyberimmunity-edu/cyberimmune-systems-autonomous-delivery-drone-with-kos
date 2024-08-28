@@ -1,3 +1,18 @@
+/**
+ * \file
+ * \~English
+ * \brief Implementation of methods for hardware autopilot communication.
+ * \details The file contains implementation of methods,
+ * that provide interaction between the security module and a
+ * hardware flight controller with a compatible ArduPilot firmware.
+ *
+ * \~Russian
+ * \brief Реализация методов для взаимодействия с аппаратным автопилотом.
+ * \details В файле реализованы методы, обеспечивающие
+ * взаимодействие между модулем безопасности и аппаратным полетным
+ * контроллером с совместимой прошивкой ArduPilot.
+ */
+
 #include "../include/autopilot_connector.h"
 #include "../../shared/include/ipc_messages_initialization.h"
 
@@ -9,12 +24,22 @@
 #include <stdio.h>
 #include <unistd.h>
 
+/** \cond */
 #define NAME_MAX_LENGTH 64
 
 char autopilotUart[] = "uart2";
 char autopilotConfigSuffix[] = "default";
 UartHandle autopilotUartHandler = NULL;
+/** \endcond */
 
+/**
+ * \~English Sends the given value to the autopilot via UART interface.
+ * \param[in] value Value sent to autopilot.
+ * \return Returns 1 on successful value pass, 0 otherwise.
+ * \~Russian Передает в автопилот поданное значение через UART-интерфейс.
+ * \param[in] value Отправляемое в автопилот значение.
+ * \return Возвращает 1 при успешной передаче значения, 0 -- иначе.
+ */
 int writeIntValue(int32_t value) {
     rtl_size_t writtenBytes;
     ssize_t expectedSize = sizeof(int32_t);

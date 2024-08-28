@@ -1,3 +1,9 @@
+/**
+ * \file
+ * \~English \brief Implementation of wrapper methods that send IPC messages to Logger component.
+ * \~Russian \brief Реализация методов-оберток для отправки IPC-сообщений компоненту Logger.
+ */
+
 #include "../include/ipc_messages_logger.h"
 #include "../include/initialization_interface.h"
 

@@ -18,6 +18,8 @@
   - [ipc_messages_credential_manager](#ipc_messages_credential_manager)
     - [signMessage()](#int-signmessagechar-message-char-signature)
     - [checkSignature()](#int-checksignaturechar-message-uint8_t-authenticity)
+  - [ipc_messages_logger](#ipc_messages_logger)
+    - [logEntry()](#int-logentrychar-entry-char-entity-loglevel-level)
   - [ipc_messages_navigation_system()](#ipc_messages_navigation_system)
     - [getCoords()](#int-getcoordsint32_t-latitude-int32_t-longitude-int32_t-altitude)
     - [getGpsInfo()](#int-getgpsinfofloat-dop-int32_t-sats)
@@ -26,6 +28,7 @@
     - [setKillSwitch()](#int-setkillswitchuint8_t-enable)
     - [setCargoLock()](#int-setcargolockuint8_t-enable)
   - [ipc_messages_server_connector](#ipc_messages_server_connector)
+    - [getBoardId()](#int-getboardidchar-id)
     - [sendRequest()](#int-sendrequestchar-query-char-response)
 
 ## Структура полетного контроллера KOS
@@ -47,27 +50,28 @@
 
 ### `ipc_messages_initialization`
 
-Содержит универсальное сообщение, воспринимаемое модулями autopilot_connector, credential_manager, navigation_system, periphery_controller и server_connector.
+Содержит универсальное сообщение, воспринимаемое модулями AutopilotConnector, CredentialManager, Logger,
+NavigationSystem, PeripheryController и ServerConnector.
 
 #### `int waitForInit(const char* connection, const char* receiverEntity)`
 
-Статус инициализации модуля. Поскольку сообщение универсально, необходимо указать модуль и соединение, по которому будет отправлено сообщение.
+Ожидает инициализации указанного модуля. Требует указания имени модуля и имени соединения, по которому будет отправлено сообщение.
 
 ### `ipc_messages_autopilot_connector`
 
-Cодержит сообщения для модуля autopilot_connector, выполняющего взаимодействие с прошивкой автопилота через UART-порт.
+Cодержит сообщения для модуля AutopilotConnector, выполняющего взаимодействие с автопилотом через UART-порт.
 
 #### `int waitForArmRequest()`
 
-Переводит UART-порт в режим "слушания" и ожидает получение от автопилота запроса на arm.
+Переходит в режим ожидания arm-запроса от автопилота. Не завершится, пока не получит сообщение от автопилота.
 
 #### `int permitArm()`
 
-Передает в автопилот сообщение, разрешающее arm. Данная команда не заставляет автопилот произвести arm.
+Передает в автопилот сообщение разрешении на arm. Данная команда не заставляет автопилот произвести arm.
 
 #### `int forbidArm()`
 
-Передает в автопилот сообщение, запрещающее arm. Данная команда не гарантирует, что arm в автопилоте не будет произведен.
+Передает в автопилот сообщение запрет на arm. Данная команда не предотвращает дальнейшие попытки автопилота произвести arm.
 
 #### `int pauseFlight()`
 
@@ -79,60 +83,72 @@ Cодержит сообщения для модуля autopilot_connector, вы
 
 #### `int changeSpeed(int32_t speed)`
 
-Передает в автоплиот запрос на изменение скорости. Скорость указывается в м/с
+Передает в автоплиот запрос на изменение скорости. Скорость указывается в м/с.
 
 #### `int changeAltitude(int32_t altitude)`
 
-Передает в автоплиот запрос на изменение высоты для всех точек миссии. Высота указывается в см относительно высоты дома
+Передает в автоплиот запрос на изменение высоты для всех точек миссии. Высота указывается в см относительно высоты точки дома.
 
 #### `int changeWaypoint(int32_t latitude, int32_t longitude, int32_t altitude)`
 
-Передает в автопилот запрос на изменение текущей точки мисси на переданную. Высота указывается в см относительно высоты дома; щирота и долгота - в градусах \* 10^7
+Передает в автопилот запрос на изменение текущей точки миссии. Высота указывается в см относительно высоты дома; широта и долгота - в градусах \* 10^7.
 
 ### `ipc_messages_credential_manager`
 
-Содержит сообщения для модуля credential_manager, выполняющего проверку аутентичности подписей сообщений от ОРВД
+Содержит сообщения для модуля CredentialManager, отвечающего за RSA-шифрование сообщений для сервера.
 
 #### `int signMessage(char* message, char* signature)`
 
-Производит вычисление подписи для сообщения message и записывает ее в signature
+Производит вычисление RSA-подписи сообщения message, возвращая ее в signature.
 
 #### `int checkSignature(char* message, uint8_t &authenticity)`
 
-Производит проверку аутентичности сообщения. На выход подается сообщение в формате "сообщение#подпись" (без кавычек), записывает в authenticity **1** в случае подтверждения аутентичности и **0** в ином случае
+Производит проверку аутентичности сообщения, поданного в формате "сообщение#подпись". Результат проверки аутентичности возвращается в authenticity.
+
+### `ipc_messages_logger`
+
+Содержит сообщения для модуля Logger, отвечающего за сохранение логов на карту памяти и их вывод в консоль.
+
+#### `int logEntry(char* entry, char* entity, LogLevel level)`
+
+Выполняет запись сообщения в лог с указанием модуля, отправившего сообщение, и уровня логирования.
 
 ### `ipc_messages_navigation_system`
 
-Содержит сообщения для модуля navigation_system, работающего с GPS и баромтером, подключенным к RaspberryPi
+Содержит сообщения для модуля NavigationSystem, работающего с GPS и барометром модуля безопасности.
 
 #### `int getCoords(int32_t &latitude, int32_t &longitude, int32_t &altitude)`
 
-Записывает в переданные переменные текущие координаты дрона. Значения долготы и широты - в градусах \* 10^7, высоты - в см
+Возвращает текущие координаты дрона. Значения долготы и широты - в градусах \* 10^7, высоты - в см.
 
 #### `int getGpsInfo(float& dop, int32_t &sats)`
 
-Записывает в переданные переменные значение DOP (снижение точности) и число наблюдаемых спутников (sats), полученные от GPS
+Возвращает значение DOP (снижение точности) и число наблюдаемых спутников (sats).
 
 ### `ipc_messages_periphery_controller`
 
-Содержит сообщения для модуля periphery_controller, выполняющего взаимодействие с GPIO
+Содержит сообщения для модуля PeripheryController, выполняющего взаимодействие с периферией через GPIO.
 
 #### `int enableBuzzer()`
 
-Включает баззер. Звук будет автоматически отключен через 2 секунды
+Включает зуммер. Звук будет автоматически отключен через 2 секунды.
 
 #### `int setKillSwitch(uint8_t enable)`
 
-Регулирует подачу питания на двигатели. При enbale=1 использование моторов возможно, при 0 - нет.
+Регулирует подачу питания на двигатели. При 1 использование моторов возможно, при 0 - нет.
 
 #### `int setCargoLock(uint8_t enable)`
 
-Регулирует подачу питания на двигатель сброса груза. При enbale=1 сброс груза возможен, при 0 - нет.
+Регулирует подачу питания на мотор сброса груза. При 1 сброс груза возможен, при 0 - нет.
 
 ### `ipc_messages_server_connector`
 
-Содержит сообщения для модуля server_connector, выполняющего общение я сервером ОРВД.
+Содержит сообщения для модуля ServerConnector, выполняющего общение я сервером ОРВД.
+
+#### `int getBoardId(char* id)`
+
+Возвращает ID дрона, соответствующий MAC-адресу интерфейса "en0".
 
 #### `int sendRequest(char* query, char* response)`
 
-Отправляет на сервер запрос, переданный в request, и записывает ответ в response. В response возвращается только значимое содержание полученного ответа.
+Отправляет на сервер запрос, возвращая в response значимое содержание полученного ответа.

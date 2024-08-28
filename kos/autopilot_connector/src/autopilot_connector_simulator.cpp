@@ -1,9 +1,26 @@
+/**
+ * \file
+ * \~English
+ * \brief Implementation of methods for simulator autopilot communication.
+ * \details The file contains implementation of methods,
+ * that provide interaction between the security module and a
+ * compatible ArduPilot SITL firmware.
+ *
+ * \~Russian
+ * \brief Реализация методов для взаимодействия с симулятором автопилота.
+ * \details В файле реализованы методы, обеспечивающие
+ * взаимодействие между модулем безопасности и совместимой
+ * SITL-прошивкой ArduPilot.
+ */
+
 #include "../include/autopilot_connector.h"
 
 #include <kos_net.h>
 
+/** \cond */
 int autopilotSocket = NULL;
 uint16_t autopilotPort = 5765;
+/** \endcond */
 
 int initAutopilotConnector() {
     if (!wait_for_network()) {

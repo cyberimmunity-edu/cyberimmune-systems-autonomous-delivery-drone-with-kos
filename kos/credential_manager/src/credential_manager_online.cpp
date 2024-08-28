@@ -1,3 +1,16 @@
+/**
+ * \file
+ * \~English
+ * \brief Implementation of methods for RSA message signature check.
+ * \details The file contains implementation of methods, that check
+ * the authenticity of messages received from the ATM server.
+ *
+ * \~Russian
+ * \brief Реализация методов для проверки RSA-подписей сообщений от сервера ОРВД.
+ * \details В файле реализованы методы для проверки аутентичности сообщений,
+ * полученных от сервера ОРВД.
+ */
+
 #include "../include/credential_manager.h"
 
 #include <mbedtls_v3/rsa.h>
@@ -7,8 +20,22 @@
 #include <unistd.h>
 #include <string.h>
 
+/** \cond */
 mbedtls_rsa_context rsaServer;
+/** \endcond */
 
+/**
+ * \~English Converts a hexadecimal digit to a decimal number.
+ * \param[in] c Character corresponding to a hexadecimal digit.
+ * \return Returns a decimal number.
+ * \note Accepts capital and lowercase letters. If a given symbol does not
+ * correspond to a hexadecimal digit, returns 0.
+ * \~Russian Переводит 16-ричную цифру в 10-ричное число.
+ * \param[in] c Символ, соотвествующий 16-ричной цифре.
+ * \return Возвращает 10-ричное число.
+ * \note Воспринимает заглавные и строчные буквы. При передаче знака, не соответствующего
+ * 16-ричной цифре, возвращает 0.
+ */
 uint8_t hexCharToInt(char c) {
     if (c >= '0' && c <= '9')
         return c - '0';
@@ -24,6 +51,22 @@ uint8_t hexCharToInt(char c) {
     }
 }
 
+/**
+ * \~English Converts a hexadecimal string into a decimal array.
+ * \details The method is designed to convert an RSA signature received from the ATM server,
+ * and therefore it is designed to work with strings no longer than 256 characters.
+ * \param[in] source Pointer to a hexadecimal string.
+ * \param[in] sourceSize Length of the given hexadecimal string.
+ * If the length is less than 256 characters, the missing zeros are assumed to precede the string.
+ * \param[out] destination Pointer to an array to write decimal result.
+ * \~Russian Переводит 16-ричную строку в 10-ричный массив.
+ * \details Метод предназначен для перевода RSA-подписей, полученных от сервера ОРВД,
+ * поэтому рассчитан на работу со строками не длиннее 256 символов.
+ * \param[in] source Указатель на 16-ричную строку.
+ * \param[in] sourceSize Длина поданной 16-ричной строки. Если длина меньше 256 символов,
+ * считается, что перед строкой находятся недостающие нули.
+ * \param[out] destination Указатель на массив, куда будет записан 10-ричный результат.
+ */
 void stringToBytes(char* source, uint32_t sourceSize, uint8_t* destination) {
     int j = 127;
     for (int32_t i = sourceSize - 1; i >= 0; i -= 2) {
@@ -124,7 +167,7 @@ int setRsaKey(char* key) {
     return 1;
 }
 
-int checkSignature(char* message, uint8_t &correct) {
+int checkMessageSignature(char* message, uint8_t &correct) {
     correct = 0;
 
     char* signatureStart = strstr(message, "#");

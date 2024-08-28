@@ -1,3 +1,16 @@
+/**
+ * \file
+ * \~English
+ * \brief Implementation of methods for peripherals control.
+ * \details The file contains implementation of methods of general peripherals control logic,
+ * regardless of peripheral implementation.
+ *
+ * \~Russian
+ * \brief Реализация методов для управления периферией.
+ * \details В файле реализованы методы, реализующие общую логику управления периферийными
+ * устройствами, вне знависимости от реализации периферии.
+ */
+
 #include "../include/periphery_controller.h"
 #include "../../shared/include/ipc_messages_credential_manager.h"
 #include "../../shared/include/ipc_messages_server_connector.h"
@@ -7,10 +20,18 @@
 #include <stdio.h>
 #include <thread>
 
+/** \cond */
 std::thread buzzerThread;
 bool buzzerEnabled = false;
 int buzzTime = 2;
+/** \endcond */
 
+/**
+ * \~English The procedure turns on the buzzer, waits for 2 seconds, and then turns it off.
+ * It is assumed that this procedure is performed in a parallel thread.
+ * \~Russian Процедура включает зуммер, ожидает 2 секунды, после чего отключает его.
+ * Предполагается, что данная процедура выполняется в параллельной нити.
+ */
 void buzz() {
     buzzerEnabled = true;
     setBuzzer(true);
@@ -24,7 +45,7 @@ void buzz() {
     buzzerEnabled = false;
 }
 
-int enableBuzzer() {
+int startBuzzer() {
     if (buzzerEnabled)
         return 0;
     if (buzzerThread.joinable())
@@ -60,7 +81,7 @@ void checkKillSwitchPermission() {
             else if (!checkSignature(response, authenticity) || !authenticity)
                 logEntry("Failed to check signature of 'kill switch permission' response received through Server Connector. Trying again in 500ms", ENTITY_NAME, LogLevel::LOG_WARNING);
             else if (strstr(response, "$KillSwitch: 0#") != NULL) {
-                if (!enableBuzzer())
+                if (!startBuzzer())
                     logEntry("Failed to enable buzzer", ENTITY_NAME, LogLevel::LOG_WARNING);
                 while (!setKillSwitch(false)) {
                     logEntry("Failed to forbid motor usage. Trying again in 1s", ENTITY_NAME, LogLevel::LOG_WARNING);

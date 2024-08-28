@@ -1,3 +1,9 @@
+/**
+ * \file
+ * \~English \brief Implementation of AutopilotConnectorInterface IDL-interface methods.
+ * \~Russian \brief Реализация методов IDL-интерфейса AutopilotConnectorInterface.
+ */
+
 #include "../include/autopilot_connector.h"
 #include "../include/autopilot_connector_interface.h"
 

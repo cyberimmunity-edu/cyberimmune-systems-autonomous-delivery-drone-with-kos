@@ -1,3 +1,9 @@
+/**
+ * \file
+ * \~English \brief Implementation of wrapper methods that send IPC messages to CredentialManager component.
+ * \~Russian \brief Реализация методов-оберток для отправки IPC-сообщений компоненту CredentialManager.
+ */
+
 #include "../include/ipc_messages_credential_manager.h"
 #include "../include/initialization_interface.h"
 

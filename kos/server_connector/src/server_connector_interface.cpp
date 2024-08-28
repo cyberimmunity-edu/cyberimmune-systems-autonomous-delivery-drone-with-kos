@@ -1,3 +1,9 @@
+/**
+ * \file
+ * \~English \brief Implementation of ServerConnectorInterface IDL-interface methods.
+ * \~Russian \brief Реализация методов IDL-интерфейса ServerConnectorInterface.
+ */
+
 #include "../include/server_connector_interface.h"
 #include "../include/server_connector.h"
 
@@ -32,7 +38,7 @@ nk_err_t SendRequestImpl(struct ServerConnectorInterface *self,
         return NK_EBADMSG;
     strcpy(query, msg);
 
-    res->success = sendRequest(query, response);
+    res->success = requestServer(query, response);
 
     msg = nk_arena_alloc(nk_char_t, resArena, &(res->response), strlen(response) + 1);
     if (msg == NULL)
