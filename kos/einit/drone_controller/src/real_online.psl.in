@@ -1,0 +1,80 @@
+/* Solution security policy */
+use drone_controller._
+
+@INIT_EXTERNAL_ENTITIES@
+
+/* Request messages */
+request {
+    match src=Einit { grant () }
+    match src=kl.core.Core { grant () }
+    match src=kl.VfsNet { grant () }
+    match src=kl.drivers.BSP { grant () }
+    match src=kl.drivers.GPIO { grant () }
+    match src=kl.drivers.UART { grant () }
+    match src=kl.drivers.I2C { grant () }
+    match src=wpa.WpaSupplicant { grant () }
+    match dst=kl.core.Core {
+        match src=drone_controller.AutopilotConnector { grant () }
+        match src=drone_controller.CredentialManager { grant () }
+        match src=drone_controller.FlightController { grant () }
+        match src=drone_controller.NavigationSystem { grant () }
+        match src=drone_controller.PeripheryController { grant () }
+        match src=drone_controller.ServerConnector { grant () }
+        match src=drone_controller.Logger { grant () }
+    }
+    match dst=kl.VfsSdCardFs {
+        match src=drone_controller.CredentialManager { grant () }
+        match src=drone_controller.Logger { grant () }
+    }
+    match src=drone_controller.ServerConnector dst=kl.VfsNet { grant () }
+    match dst=wpa.WpaSupplicant src=drone_controller.ServerConnector { grant () }
+    match dst=kl.drivers.BSP {
+        match src=drone_controller.AutopilotConnector { grant () }
+        match src=drone_controller.NavigationSystem { grant () }
+        match src=drone_controller.PeripheryController { grant () }
+    }
+    match dst=kl.drivers.UART {
+        match src=drone_controller.AutopilotConnector { grant () }
+        match src=drone_controller.NavigationSystem { grant () }
+    }
+    match src=drone_controller.PeripheryController dst=kl.drivers.GPIO { grant () }
+    match src=drone_controller.NavigationSystem dst=kl.drivers.I2C { grant () }
+}
+
+/* Response messages */
+response {
+    match dst=Einit { grant () }
+    match dst=kl.core.Core { grant () }
+    match dst=kl.VfsNet { grant () }
+    match dst=kl.drivers.BSP { grant () }
+    match dst=kl.drivers.GPIO { grant () }
+    match dst=kl.drivers.UART { grant () }
+    match dst=kl.drivers.I2C { grant () }
+    match dst=wpa.WpaSupplicant { grant () }
+    match src=kl.core.Core {
+        match dst=drone_controller.AutopilotConnector { grant () }
+        match dst=drone_controller.CredentialManager { grant () }
+        match dst=drone_controller.FlightController { grant () }
+        match dst=drone_controller.NavigationSystem { grant () }
+        match dst=drone_controller.PeripheryController { grant () }
+        match dst=drone_controller.ServerConnector { grant () }
+        match dst=drone_controller.Logger { grant () }
+    }
+    match src=kl.VfsSdCardFs {
+        match dst=drone_controller.CredentialManager { grant () }
+        match dst=drone_controller.Logger { grant () }
+    }
+    match dst=drone_controller.ServerConnector src=kl.VfsNet { grant () }
+    match src=wpa.WpaSupplicant dst=drone_controller.ServerConnector { grant () }
+    match src=kl.drivers.BSP {
+        match dst=drone_controller.AutopilotConnector { grant () }
+        match dst=drone_controller.NavigationSystem { grant () }
+        match dst=drone_controller.PeripheryController { grant () }
+    }
+    match src=kl.drivers.UART {
+        match dst=drone_controller.AutopilotConnector { grant () }
+        match dst=drone_controller.NavigationSystem { grant () }
+    }
+    match dst=drone_controller.PeripheryController src=kl.drivers.GPIO { grant () }
+    match dst=drone_controller.NavigationSystem src=kl.drivers.I2C { grant () }
+}
