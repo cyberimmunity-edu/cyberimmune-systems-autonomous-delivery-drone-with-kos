@@ -10,9 +10,9 @@ gnome-terminal -- ./APM_Planner.AppImage
 cd ../kos
 if [[ $* == *"--no-server"* ]]
 	then
-		gnome-terminal -- ./cross-build-sim-offline.sh
+		gnome-terminal -- ./cross-build.sh --target sim --mode offline
 	else
-		gnome-terminal -- ./cross-build-sim-online.sh
+		gnome-terminal -- ./cross-build.sh --target sim --mode online
 fi
 cd ../ardupilot
 if [[ $* == *"--with-obstacles"* ]]

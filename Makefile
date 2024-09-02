@@ -104,3 +104,9 @@ e2e-tests: e2e-offline e2e-online
 unit-tests: docker-image
 	docker-compose -f tests/unit-tests-docker-compose.yml up --abort-on-container-exit --exit-code-from kos
 	docker-compose -f tests/unit-tests-docker-compose.yml down
+
+pal-tests: docker-image
+	docker-compose -f tests/pal-tests-docker-compose.yml up --abort-on-container-exit --exit-code-from kos
+	docker-compose -f tests/pal-tests-docker-compose.yml down
+
+all-tests: e2e-tests unit-tests pal-tests
