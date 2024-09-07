@@ -49,7 +49,7 @@ void hashToKey(uint8_t* source, uint32_t sourceSize, uint8_t* destination) {
     int j = 127;
     for (int i = sourceSize - 1; i >= 0; i--) {
         if (j < 0) {
-            char logBuffer[128];
+            char logBuffer[129] = {0};
             snprintf(logBuffer, 512, "Converted to key only 128 last bytes of source with size %d", sourceSize);
             logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
             return;
@@ -165,10 +165,10 @@ int shareRsaKey() {
         sleep(1);
     }
 
-    char rsaServerRequest[1024] = {0};
-    char rsaServerResponse[1024] = {0};
+    char rsaServerRequest[1025] = {0};
+    char rsaServerResponse[1025] = {0};
     snprintf(rsaServerRequest, 1024, "/api/key?id=%s&e=0x%s&n=0x%s", boardId, keyE, keyN);
-    while (!sendRequest(rsaServerRequest, rsaServerResponse)) {
+    while (!sendRequest(rsaServerRequest, rsaServerResponse, 1025)) {
         logEntry("Failed to share RSA key. Trying again in 1s", ENTITY_NAME, LogLevel::LOG_WARNING);
         sleep(1);
     }

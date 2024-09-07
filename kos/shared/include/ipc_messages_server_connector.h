@@ -5,6 +5,7 @@
  */
 
 #pragma once
+#include <stdint.h>
 
 /**
  * \~English Returns drone ID.
@@ -23,11 +24,12 @@ int getBoardId(char* id);
  * \~English Performs a request-response procedure with the ATM server.
  * \param[in] query Request to the ATM server. Requires only a meaningful signed part of the request.
  * \param[out] response Response from the ATM server. Only a meaningfuk part of the received response is returned.
+ * \param[in] responseSize Size of output response buffer.
  * \return Returns 1 on successful message exchange with the ATM server, 0 otherwise.
- * \return Возвращает 1, если обмен сообщениями с сервером был успешен, иначе -- 0.
  * \~Russian Выполняет процедуру отправки запроса -- получения ответа с сервером ОРВД.
  * \param[in] query Запрос к серверу ОРВД. Ожидается только значимая подписанная часть запроса.
  * \param[out] response Ответ от сервера ОРВД. Возвращается лишь значимая часть ответа, полученного от сервера ОРВД.
+ * \param[in] responseSize Размер буфера, куда записывается ответ от сервера.
  * \return Возвращает 1, если обмен сообщениями с сервером был успешен, иначе -- 0.
  */
-int sendRequest(char* query, char* response);
+int sendRequest(char* query, char* response, uint32_t responseSize);

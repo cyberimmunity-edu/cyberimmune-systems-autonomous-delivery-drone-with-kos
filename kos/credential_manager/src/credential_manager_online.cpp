@@ -44,7 +44,7 @@ uint8_t hexCharToInt(char c) {
     else if (c >= 'A' && c <= 'F')
         return c - 'A' + 10;
     else {
-        char logBuffer[256];
+        char logBuffer[257] = {0};
         snprintf(logBuffer, 256, "%c is not a viable hex value", c);
         logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
         return 0;
@@ -71,7 +71,7 @@ void stringToBytes(char* source, uint32_t sourceSize, uint8_t* destination) {
     int j = 127;
     for (int32_t i = sourceSize - 1; i >= 0; i -= 2) {
         if (j < 0) {
-            char logBuffer[512];
+            char logBuffer[513] = {0};
             snprintf(logBuffer, 512, "String '%s' contains more bytes than expected", source);
             logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
             return;
@@ -94,7 +94,7 @@ int getRsaKey() {
             logEntry("Failed to create file to store generated RSA key", ENTITY_NAME, LogLevel::LOG_ERROR);
             return 0;
         }
-        char key[1024] = {0};
+        char key[1025] = {0};
         sprintf(key, "%s\n%s\n%s\n", getKeyN(), getKeyE(), getKeyD());
         uint32_t len = strlen(key);
         if (write(file, key, len) != len) {

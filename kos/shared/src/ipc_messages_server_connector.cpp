@@ -32,14 +32,14 @@ int getBoardId(char* id) {
 
     nk_uint32_t len = 0;
     nk_char_t *msg = nk_arena_get(nk_char_t, &resArena, &(res.id), &len);
-    if (msg == NULL)
+    if ((msg == NULL) || (len > ServerConnectorInterface_GetBoardId_res_arena_size))
         return 0;
-    strcpy(id, msg);
+    strncpy(id, msg, len);
 
     return 1;
 }
 
-int sendRequest(char* query, char* response) {
+int sendRequest(char* query, char* response, uint32_t responseSize) {
     NkKosTransport transport;
     nk_iid_t riid;
     initSenderInterface("server_connector_connection", "drone_controller.ServerConnector.interface", transport, riid);
@@ -56,19 +56,20 @@ int sendRequest(char* query, char* response) {
     nk_arena_reset(&reqArena);
     nk_arena_reset(&resArena);
 
-    nk_char_t *msg = nk_arena_alloc(nk_char_t, &reqArena, &(req.query), strlen(query) + 1);
-    if (msg == NULL)
+    nk_uint32_t len = strlen(query);
+    nk_char_t *msg = nk_arena_alloc(nk_char_t, &reqArena, &(req.query), len + 1);
+    if ((msg == NULL) || (len > ServerConnectorInterface_SendRequest_req_arena_size))
         return 0;
-    strcpy(msg, query);
+    strncpy(msg, query, len);
 
     if ((ServerConnectorInterface_SendRequest(&proxy.base, &req, &reqArena, &res, &resArena) != rcOk) || !res.success)
         return 0;
 
-    nk_uint32_t len = 0;
+    len = 0;
     msg = nk_arena_get(nk_char_t, &resArena, &(res.response), &len);
-    if (msg == NULL)
+    if ((msg == NULL) || (len > responseSize))
         return 0;
-    strcpy(response, msg);
+    strncpy(response, msg, len);
 
     return 1;
 }

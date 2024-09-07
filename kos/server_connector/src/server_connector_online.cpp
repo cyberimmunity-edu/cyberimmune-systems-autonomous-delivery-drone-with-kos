@@ -71,7 +71,7 @@ int initServerConnector() {
         return setMacId();
 }
 
-int requestServer(char* query, char* response) {
+int requestServer(char* query, char* response, uint32_t responseSize) {
     char request[BUFFER_SIZE] = {0};
     snprintf(request, BUFFER_SIZE, "GET %s HTTP/1.1\r\nHost: %s\r\nConnection: close\r\n\r\n", query, SERVER_IP);
 
@@ -86,7 +86,7 @@ int requestServer(char* query, char* response) {
     serverAddress.sin_port = htons(serverPort);
     serverAddress.sin_addr.s_addr = inet_addr(SERVER_IP);
     if (connect(socketDesc, (struct sockaddr *)&serverAddress, sizeof(serverAddress)) < 0) {
-        char logBuffer[256];
+        char logBuffer[257] = {0};
         snprintf(logBuffer, 256, "Connection to %s:%d has failed", SERVER_IP, serverPort);
         logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
         close(socketDesc);
@@ -107,12 +107,17 @@ int requestServer(char* query, char* response) {
     close(socketDesc);
 
     char* msg = strstr(content, "$");
+    uint32_t len = strlen(msg);
     if (msg == NULL) {
         logEntry("Failed to parse response content", ENTITY_NAME, LogLevel::LOG_WARNING);
         return 0;
     }
+    else if (len > responseSize) {
+        logEntry("Size of response does not fit given buffer", ENTITY_NAME, LogLevel::LOG_WARNING);
+        return 0;
+    }
 
-    strcpy(response, msg);
+    strncpy(response, msg, len);
 
     return 1;
 }

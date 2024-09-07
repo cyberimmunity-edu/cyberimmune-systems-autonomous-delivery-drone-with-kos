@@ -52,7 +52,7 @@ int isStopSymbol(char character) {
  * \return Возвращает 1, если число было распознано, иначе -- 0.
  */
 int parseInt(char*& string, int32_t& value, uint32_t numAfterPoint) {
-    char stringValue[COMMAND_MAX_STRING_LEN];
+    char stringValue[COMMAND_MAX_STRING_LEN + 1] = {0};
     uint32_t strPtr = 0, valPtr = 0;
     while (string[strPtr] != '.') {
         if (valPtr >= COMMAND_MAX_STRING_LEN) {
@@ -192,7 +192,7 @@ int parseCommands(char* str) {
             break;
         }
         default: {
-            char logBuffer[256];
+            char logBuffer[257] = {0};
             snprintf(logBuffer, 256, "Cannot parse an unknown command %c", str[ptr]);
             logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
             free(commands);
@@ -228,7 +228,7 @@ void printMission() {
         logEntry("No available mission", ENTITY_NAME, LogLevel::LOG_INFO);
         return;
     }
-    char logBuffer[256];
+    char logBuffer[257] = {0};
     logEntry("Mission: ", ENTITY_NAME, LogLevel::LOG_INFO);
     for (int i = 0; i < commandNum; i++) {
         switch (commands[i].type) {
