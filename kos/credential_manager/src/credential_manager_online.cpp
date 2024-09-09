@@ -59,6 +59,7 @@ uint8_t hexCharToInt(char c) {
  * \param[in] sourceSize Length of the given hexadecimal string.
  * If the length is less than 256 characters, the missing zeros are assumed to precede the string.
  * \param[out] destination Pointer to an array to write decimal result.
+ * \param[in] destinationSize Size of an array to write the result. At least 128 bytes is expected.
  * \~Russian Переводит 16-ричную строку в 10-ричный массив.
  * \details Метод предназначен для перевода RSA-подписей, полученных от сервера ОРВД,
  * поэтому рассчитан на работу со строками не длиннее 256 символов.
@@ -66,17 +67,23 @@ uint8_t hexCharToInt(char c) {
  * \param[in] sourceSize Длина поданной 16-ричной строки. Если длина меньше 256 символов,
  * считается, что перед строкой находятся недостающие нули.
  * \param[out] destination Указатель на массив, куда будет записан 10-ричный результат.
+ * \param[in] destinationSize Размер массива для записи результата. Ожидается не меньше 128 байт.
  */
-void stringToBytes(char* source, uint32_t sourceSize, uint8_t* destination) {
-    int j = 127;
+void stringToBytes(char* source, uint32_t sourceSize, uint8_t* destination, uint32_t destinationSize) {
+    char logBuffer[513] = {0};
+    int j = destinationSize - 1;
     for (int32_t i = sourceSize - 1; i >= 0; i -= 2) {
         if (j < 0) {
-            char logBuffer[513] = {0};
             snprintf(logBuffer, 512, "String '%s' contains more bytes than expected", source);
             logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
             return;
         }
-        if (i > 0)
+        if (j < 0) {
+            snprintf(logBuffer, 512, "Array to convert string '%s is too short", source);
+            logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
+            return;
+        }
+        else if (i > 0)
             destination[j] = 16 * hexCharToInt(source[i - 1]) + hexCharToInt(source[i]);
         else
             destination[j] = hexCharToInt(source[i]);
@@ -119,6 +126,11 @@ int getRsaKey() {
                 }
                 if ((letter == '\n') || (letter == '\0'))
                     break;
+                if (j >= 256) {
+                    logEntry("Read RSA key is longer than 256 bytes", ENTITY_NAME, LogLevel::LOG_ERROR);
+                    close(file);
+                    return 0;
+                }
                 keys[i][j] = letter;
                 j++;
             }
@@ -130,8 +142,8 @@ int getRsaKey() {
         uint8_t N[128] = {0};
         uint8_t D[128] = {0};
 
-        stringToBytes(keys[0], lens[0], N);
-        stringToBytes(keys[2], lens[2], D);
+        stringToBytes(keys[0], lens[0], N, 128);
+        stringToBytes(keys[2], lens[2], D, 128);
 
         return loadRsaKey(N, D, keys[0], keys[1], lens[0], lens[1]);
     }
@@ -157,9 +169,9 @@ int setRsaKey(char* key) {
     uint8_t N[128] = {0};
     uint8_t E[128] = {0};
 
-    stringToBytes(nStart, eStart - nStart, N);
+    stringToBytes(nStart, eStart - nStart, N, 128);
     eStart++;
-    stringToBytes(eStart, strlen(eStart), E);
+    stringToBytes(eStart, strlen(eStart), E, 128);
 
     mbedtls_rsa_init(&rsaServer);
     mbedtls_rsa_import_raw(&rsaServer, N, 128, NULL, 0, NULL, 0, NULL, 0, E, 128);
@@ -200,7 +212,7 @@ int checkMessageSignature(char* message, uint8_t &correct) {
     uint8_t signature[128] = {0};
     uint8_t result[128] = {0};
     signatureStart++;
-    stringToBytes(signatureStart, strlen(signatureStart), signature);
+    stringToBytes(signatureStart, strlen(signatureStart), signature, 128);
     if (mbedtls_rsa_public(&rsaServer, signature, result) != 0) {
         logEntry("Failed to decode server signature", ENTITY_NAME, LogLevel::LOG_WARNING);
         return 0;

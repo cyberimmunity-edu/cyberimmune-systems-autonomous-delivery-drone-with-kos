@@ -54,7 +54,7 @@ int isStopSymbol(char character) {
 int parseInt(char*& string, int32_t& value, uint32_t numAfterPoint) {
     char stringValue[COMMAND_MAX_STRING_LEN + 1] = {0};
     uint32_t strPtr = 0, valPtr = 0;
-    while (string[strPtr] != '.') {
+    while (string[strPtr] != '.')
         if (valPtr >= COMMAND_MAX_STRING_LEN) {
             logEntry("Failed to parse int value: too long", ENTITY_NAME, LogLevel::LOG_WARNING);
             return 0;
@@ -72,10 +72,9 @@ int parseInt(char*& string, int32_t& value, uint32_t numAfterPoint) {
             logEntry("Failed to parse int value: contains non-digit symbols", ENTITY_NAME, LogLevel::LOG_WARNING);
             return 0;
         }
-    }
     strPtr++;
     int i = 0;
-    while (!isStopSymbol(string[strPtr])) {
+    while (!isStopSymbol(string[strPtr]))
         if (valPtr >= COMMAND_MAX_STRING_LEN) {
             logEntry("Failed to parse int value: too long", ENTITY_NAME, LogLevel::LOG_WARNING);
             return 0;
@@ -92,9 +91,8 @@ int parseInt(char*& string, int32_t& value, uint32_t numAfterPoint) {
         }
         else
             strPtr++;
-    }
     string += strPtr + 1;
-    for (int j = i; j < numAfterPoint; j++) {
+    for (int j = i; j < numAfterPoint; j++)
         if (valPtr >= COMMAND_MAX_STRING_LEN) {
             logEntry("Failed to parse int value: too many digits after point is required", ENTITY_NAME, LogLevel::LOG_WARNING);
             return 0;
@@ -103,7 +101,6 @@ int parseInt(char*& string, int32_t& value, uint32_t numAfterPoint) {
             stringValue[valPtr] = '0';
             valPtr++;
         }
-    }
     stringValue[valPtr] = '\0';
     value = atoi(stringValue);
     return 1;
@@ -119,12 +116,15 @@ int parseInt(char*& string, int32_t& value, uint32_t numAfterPoint) {
  */
 int parseCommands(char* str) {
     commandNum = 0;
-    for (uint32_t i = 0; ; i++) {
+    for (uint32_t i = 0; ; i++)
         if (str[i] == '#')
             break;
-        if (str[i] == 'H' || str[i] == 'T' || str[i] == 'W' || str[i] == 'L' || str[i] == 'S')
+        else if (str[i] == 'H' || str[i] == 'T' || str[i] == 'W' || str[i] == 'L' || str[i] == 'S')
             commandNum++;
-    }
+        else if (str[i] == '\0') {
+            logEntry("Cannot parse commands: no correct ending", ENTITY_NAME, LogLevel::LOG_WARNING);
+            return 0;
+        }
     if (commandNum == 0) {
         logEntry("Mission contains no commands", ENTITY_NAME, LogLevel::LOG_WARNING);
         return 0;
@@ -138,6 +138,10 @@ int parseCommands(char* str) {
             if (str[j] == '&' || str[j] == '#') {
                 end = j;
                 break;
+            }
+            else if (str[j] == '\0') {
+                logEntry("Failed to parse commands: unexpected string end", ENTITY_NAME, LogLevel::LOG_WARNING);
+                return 0;
             }
         char* stringPtr = str + ptr + 1;
         int32_t lat, lng, alt;

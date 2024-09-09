@@ -17,6 +17,7 @@
 
 /** \cond */
 #define BUFFER_SIZE 1024
+#define CONTENT_SIZE 2048
 
 uint16_t serverPort = 8080;
 /** \endcond */
@@ -99,11 +100,20 @@ int requestServer(char* query, char* response, uint32_t responseSize) {
         return 0;
     }
 
-    ssize_t contentLength;
+    uint32_t contentLength = 0;
+    ssize_t bufferLength = 0;
     char buffer[BUFFER_SIZE] = {0};
-    char content[BUFFER_SIZE] = {0};
-    while ((contentLength = recv(socketDesc, buffer, sizeof(buffer), 0)) > 0)
-        strncat(content, buffer, contentLength);
+    char content[CONTENT_SIZE] = {0};
+    while ((bufferLength = recv(socketDesc, buffer, sizeof(buffer), 0)) > 0)
+        if (contentLength + bufferLength < CONTENT_SIZE) {
+            strncat(content, buffer, bufferLength);
+            contentLength += bufferLength;
+        }
+        else {
+            logEntry("Failed to parse response content: the content is too big", ENTITY_NAME, LogLevel::LOG_WARNING);
+            close(socketDesc);
+            return 0;
+        }
     close(socketDesc);
 
     char* msg = strstr(content, "$");

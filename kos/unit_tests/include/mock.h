@@ -33,10 +33,8 @@ bool getMockBuzzer();
 void setMockBuzzer(bool enable);
 
 uint8_t hexCharToInt(char c);
-void stringToBytes(char* source, uint32_t sourceSize, uint8_t* destination);
-
-void hashToKey(uint8_t* source, uint32_t sourceSize, uint8_t* destination);
-void bytesToString(uint8_t* source, char* destination);
+void stringToBytes(char* source, uint32_t sourceSize, uint8_t* destination, uint32_t destinationSize);
+void bytesToString(uint8_t* source, uint32_t sourceSize, char* destination, uint32_t destinationSize);
 
 int isStopSymbol(char character);
 int parseInt(char*& string, int32_t& value, uint32_t numAfterPoint);
