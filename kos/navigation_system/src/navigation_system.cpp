@@ -45,8 +45,8 @@ void sendCoords() {
     }
 
     char signature[257] = {0};
-    char request[1024] = {0};
-    char response[1024] = {0};
+    char request[1025] = {0};
+    char response[1025] = {0};
 
     float dop;
     int32_t prevLat, prevLng, lat, lng, alt, azimuth, sats;
@@ -66,11 +66,11 @@ void sendCoords() {
                 prevLat = lat;
                 prevLng = lng;
                 snprintf(request, 1024, "/api/telemetry?id=%s&lat=%d&lon=%d&alt=%d&azimuth=%d&dop=%f&sats=%d", boardId, lat, lng, alt, azimuth, dop, sats);
-                if (!signMessage(request, signature))
+                if (!signMessage(request, signature, 257))
                     logEntry("Failed to sign 'coordinate' message at Credential Manager. Trying again in 500ms", ENTITY_NAME, LogLevel::LOG_WARNING);
                 else {
                     snprintf(request, 1024, "%s&sig=0x%s", request, signature);
-                    if (!sendRequest(request, response))
+                    if (!sendRequest(request, response, 1025))
                         logEntry("Failed to send 'coordinate' request through Server Connector. Trying again in 500ms", ENTITY_NAME, LogLevel::LOG_WARNING);
                 }
             }

@@ -11,14 +11,16 @@
 /**
  * \~English Computes an RSA signature of the message.
  * \param[in] message Message to sign.
- * \param[out] signature Computed signature. Has 256 bytes size.
+ * \param[out] signature Computed signature. Expected to be at least 256 bytes.
+ * \param[in] signatureSize Size of output signature buffer.
  * \return Returns 1 on succesful signature compute, 0 otherwise.
  * \~Russian Вычисляет RSA-подпись сообщения.
  * \param[in] message Сообщение, подпись для которого необходимо вычислить.
- * \param[out] signature Вычисленная подпись. Занимает 256 байт.
+ * \param[out] signature Вычисленная подпись. Ожидается буфер не меньше 256 байт.
+ * \param[in] signatureSize Размер буфера, куда записывается вычисленная подпись.
  * \return Возвращает 1, если подпись была успешно вычислена, иначе -- 0.
  */
-int signMessage(char* message, char* signature);
+int signMessage(char* message, char* signature, uint32_t signatureSize);
 /**
  * \~English Checks the authenticity of a message received from the ATM server.
  * \param[in] message Message to check authenticity. Requires "message#signature" format.

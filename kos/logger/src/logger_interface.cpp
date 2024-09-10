@@ -18,7 +18,9 @@ nk_err_t LogImpl(struct LoggerInterface *self,
     nk_char_t *msg = nk_arena_get(nk_char_t, reqArena, &(req->logEntry), &len);
     if (msg == NULL)
         return NK_EBADMSG;
-    strcpy(message, msg);
+    else if (len > LoggerInterface_MaxLogEntry)
+        return NK_ENOMEM;
+    strncpy(message, msg, len);
 
     res->success = addLogEntry(message, req->logLevel);
 

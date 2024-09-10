@@ -11,7 +11,7 @@
 #include <string.h>
 
 /** \cond */
-char mockLog[1024] = {0};
+char mockLog[1025] = {0};
 bool mockBuzzerEnabled = false;
 /** \endcond */
 
@@ -28,11 +28,11 @@ void setMockBuzzer(bool enable) {
 }
 
 int logEntry(char* entry, char* entity, LogLevel level) {
-    strcpy(mockLog, entry);
+    strncpy(mockLog, entry, 1024);
     return 1;
 }
 
-int signMessage(char* message, char* signature) {
+int signMessage(char* message, char* signature, uint32_t signatureSize) {
     return 1;
 }
 
@@ -54,12 +54,12 @@ int setKillSwitch(bool enable) {
     return 1;
 }
 
-int sendRequest(char* query, char* response) {
+int sendRequest(char* query, char* response, uint32_t responseSize) {
     return 1;
 }
 
 int getBoardId(char* id) {
-    strcpy(id, "00:00:00:00:00:00");
+    strncpy(id, "00:00:00:00:00:00", 18);
     return 1;
 }
 

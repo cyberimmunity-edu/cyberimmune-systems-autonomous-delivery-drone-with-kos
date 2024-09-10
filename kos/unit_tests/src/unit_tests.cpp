@@ -92,7 +92,7 @@ TEST(CredentialManager, StringToBytes) {
     bytesOddCor[126] = 18;
     bytesOddCor[125] = 10;
     logEntry("Empty log", "", LOG_INFO);
-    stringToBytes(bytesOdd, strlen(bytesOdd), sig);
+    stringToBytes(bytesOdd, strlen(bytesOdd), sig, 128);
     EXPECT_EQ(memcmp(sig, bytesOddCor, 128), 0);
     EXPECT_STREQ(getMockLog(), "Empty log");
 
@@ -102,7 +102,7 @@ TEST(CredentialManager, StringToBytes) {
     bytesEvenCor[125] = 33;
     bytesEvenCor[124] = 16;
     logEntry("Empty log", "", LOG_INFO);
-    stringToBytes(bytesEven, strlen(bytesEven), sig);
+    stringToBytes(bytesEven, strlen(bytesEven), sig, 128);
     EXPECT_EQ(memcmp(sig, bytesEvenCor, 128), 0);
     EXPECT_STREQ(getMockLog(), "Empty log");
 
@@ -110,34 +110,7 @@ TEST(CredentialManager, StringToBytes) {
     for (int i = 0; i < 299; i++)
         bytesLong[i] = '!';
     logEntry("Empty log", "", LOG_INFO);
-    stringToBytes(bytesLong, strlen(bytesLong), sig);
-    EXPECT_STRNE(getMockLog(), "Empty log");
-}
-
-TEST(CredentialManager, HashToKey) {
-    uint8_t key[128] = {0};
-
-    uint8_t hashShort[7] = {0};
-    for (int i = 0; i < 7; i++)
-        hashShort[i] = i + 1;
-    uint8_t keyShortCor[128] = {0};
-    keyShortCor[127] = 7;
-    keyShortCor[126] = 6;
-    keyShortCor[125] = 5;
-    keyShortCor[124] = 4;
-    keyShortCor[123] = 3;
-    keyShortCor[122] = 2;
-    keyShortCor[121] = 1;
-    logEntry("Empty log", "", LOG_INFO);
-    hashToKey(hashShort, 7, key);
-    EXPECT_EQ(memcmp(key, keyShortCor, 128), 0);
-    EXPECT_STREQ(getMockLog(), "Empty log");
-
-    uint8_t hashLong[130] = {0};
-    for (int i = 0; i < 130; i++)
-        hashLong[i] = i;
-    logEntry("Empty log", "", LOG_INFO);
-    hashToKey(hashLong, 130, key);
+    stringToBytes(bytesLong, strlen(bytesLong), sig, 128);
     EXPECT_STRNE(getMockLog(), "Empty log");
 }
 
@@ -158,7 +131,7 @@ TEST(CredentialManager, BytesToString) {
         strExp[i] = '0';
     strncpy(strExp, "fa09b03d00e40c7015", 18);
     logEntry("Empty log", "", LOG_INFO);
-    bytesToString(bytes, str);
+    bytesToString(bytes, 128, str, 257);
     EXPECT_STREQ(str, strExp);
     EXPECT_STREQ(getMockLog(), "Empty log");
 }
@@ -170,11 +143,11 @@ TEST(CredentialManager, RSA) {
     char sign[257] = {0};
     EXPECT_TRUE(getMessageSignature(message, sign));
 
-    char key[1024] = {0};
+    char key[1025] = {0};
     snprintf(key, 1024, "$Key: %s %s", getKeyN(), getKeyE());
     EXPECT_TRUE(setRsaKey(key));
 
-    char signedMessage[1024] = {0};
+    char signedMessage[1025] = {0};
     snprintf(signedMessage, 1024, "%s#%s", message, sign);
     uint8_t correct = 0;
     EXPECT_TRUE(checkMessageSignature(signedMessage, correct));
@@ -335,7 +308,7 @@ TEST(Logger, AddLogEntry) {
     int file = open("/logs/flight_controller.log", O_RDONLY);
     EXPECT_NE(file, -1);
     int i = 0;
-    char fileStr[256] = {0};
+    char fileStr[257] = {0};
     while (i < 256) {
         char letter;
         EXPECT_EQ(read(file, &letter, 1), 1);
@@ -352,7 +325,7 @@ TEST(Logger, AddLogEntry) {
     int console = open("console.txt", O_RDONLY);
     EXPECT_NE(console, -1);
     i = 0;
-    char consoleStr[256] = {0};
+    char consoleStr[257] = {0};
     while (i < 256) {
         char letter;
         EXPECT_EQ(read(console, &letter, 1), 1);

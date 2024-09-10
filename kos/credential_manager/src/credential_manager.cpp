@@ -33,48 +33,32 @@ char keyD[257] = {0};
 /** \endcond */
 
 /**
- * \~English Extends a smaller array to 128 bytes, placing significant bytes
- * at the end of the extended array with byte order maintained.
- * \param[in] source Pointer to a smaller array.
- * \param[in] sourceSize Length of the smaller array. The length is expected to be less than 128 bytes.
- * \param[out] destination Pointer to the array to store the result. This array is expected to be 128 bytes in size.
- * \~Russian Расширяет меньший массив до 128 байт, помещая значимые байты в конец расширенного массива
- * с сохранением порядка байтов.
- * \param[in] source Указатель на меньший массив.
- * \param[in] sourceSize Длина меньшего массива. Ожидается длина менее 128 байт.
- * \param[out] destination Указатель на массив, куда будет записан результат. Ожидается,
- * что целевой массив имеет размер в 128 байт.
- */
-void hashToKey(uint8_t* source, uint32_t sourceSize, uint8_t* destination) {
-    int j = 127;
-    for (int i = sourceSize - 1; i >= 0; i--) {
-        if (j < 0) {
-            char logBuffer[128];
-            snprintf(logBuffer, 512, "Converted to key only 128 last bytes of source with size %d", sourceSize);
-            logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
-            return;
-        }
-        destination[j] = source[i];
-        j--;
-    }
-}
-
-/**
  * \~English Converts a decimal array into a hexadecimal string.
  * \details The method is designed to convert a message sign, that will be sent to the ATM server,
  * and therefore it is designed to work with arrays no longer than 128 bytes.
  * If the length is less than 128 bytes, the missing zeros are assumed to precede the array.
  * \param[in] source Pointer to a decimal array.
+ * \param[in] sourceSize Size of the decimal array.
  * \param[out] destination Pointer to a string to write hexadecimal result.
+ * \param[in] destinationSize Size of a string to write the result.
  * \~Russian Переводит 10-ричный массив в 16-ричную строку.
  * \details Метод предназначен для перевода подписи сообщения, предназначенного для сервера ОРВД,
  * поэтому рассчитан на работу с массивами в 128 байт. Если длина меньше 128 байт,
  * считается, что перед массивом находятся недостающие нули.
  * \param[in] source Указатель на 10-ричный массив.
+ * \param[in] sourceSize Размер 10-ричного массива.
  * \param[out] destination Указатель на строку, куда будет записан 16-ричный результат.
+ * \param[in] destinationSize Размер строки для записи результата.
  */
-void bytesToString(uint8_t* source, char* destination) {
+void bytesToString(uint8_t* source, uint32_t sourceSize, char* destination, uint32_t destinationSize) {
     int start = 0;
+    int end = 128;
+    if (sourceSize < end)
+        end = sourceSize;
+    if (sourceSize * 2 + 1 > destinationSize) {
+        logEntry("Cannot convert decimal array into a hexadecimal string: destination string is too short", ENTITY_NAME, LogLevel::LOG_WARNING);
+        return;
+    }
     for (int i = 0; i < 128; i++) {
         if (!start && source[i])
             start = 1;
@@ -165,10 +149,10 @@ int shareRsaKey() {
         sleep(1);
     }
 
-    char rsaServerRequest[1024] = {0};
-    char rsaServerResponse[1024] = {0};
+    char rsaServerRequest[1025] = {0};
+    char rsaServerResponse[1025] = {0};
     snprintf(rsaServerRequest, 1024, "/api/key?id=%s&e=0x%s&n=0x%s", boardId, keyE, keyN);
-    while (!sendRequest(rsaServerRequest, rsaServerResponse)) {
+    while (!sendRequest(rsaServerRequest, rsaServerResponse, 1025)) {
         logEntry("Failed to share RSA key. Trying again in 1s", ENTITY_NAME, LogLevel::LOG_WARNING);
         sleep(1);
     }
@@ -197,7 +181,7 @@ int getMessageSignature(char* message, char* sign) {
     mbedtls_sha256_free(&sha256);
 
     uint8_t key[128] = {0};
-    hashToKey(hash, 32, key);
+    memcpy(key + 96, hash, 32);
 
     uint8_t result[128] = {0};
     if (mbedtls_rsa_public(&rsaSelf, key, result) != 0) {
@@ -205,7 +189,7 @@ int getMessageSignature(char* message, char* sign) {
         return 0;
     }
 
-    bytesToString(result, sign);
+    bytesToString(result, 128, sign, 257);
 
     return 1;
 }

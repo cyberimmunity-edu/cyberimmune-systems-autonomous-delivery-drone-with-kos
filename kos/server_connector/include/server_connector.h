@@ -44,11 +44,12 @@ char* getBoardName();
  * \~English Requests the ATM server and receives a response from it.
  * \param[in] query Request to the ATM server.
  * \param[out] response Response from the ATM server. Only a meaningfuk part of the response is returned.
+ * \param[in] responseSize Size of output response buffer.
  * \return Returns 1 on successful message exchange with the ATM server, 0 otherwise.
- * \return Возвращает 1, если обмен сообщениями с сервером был успешен, иначе -- 0.
  * \~Russian Отправляет запрос на сервер ОРВД и получает от него ответ.
  * \param[in] query Запрос к серверу ОРВД.
  * \param[out] response Ответ от сервера ОРВД. Возвращается лишь значимая часть ответа.
+ * \param[in] responseSize Размер буфера, куда записывается ответ от сервера.
  * \return Возвращает 1, если обмен сообщениями с сервером был успешен, иначе -- 0.
  */
-int requestServer(char* query, char* response);
+int requestServer(char* query, char* response, uint32_t responseSize);

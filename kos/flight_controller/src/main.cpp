@@ -48,21 +48,20 @@ char boardId[32] = {0};
  * \return Возвращает 1 при успешной отправке, иначе -- 0.
  */
 int sendSignedMessage(char* method, char* response, char* errorMessage, uint8_t delay) {
-    char message[512] = {0};
+    char message[513] = {0};
     char signature[257] = {0};
-    char request[1024] = {0};
+    char request[1025] = {0};
+    char logBuffer[257] = {0};
     snprintf(message, 512, "%s?id=%s", method, boardId);
 
-    while (!signMessage(message, signature)) {
-        char logBuffer[256];
+    while (!signMessage(message, signature, 257)) {
         snprintf(logBuffer, 256, "Failed to sign %s message at Credential Manager. Trying again in %ds", errorMessage, delay);
         logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
         sleep(delay);
     }
     snprintf(request, 1024, "%s&sig=0x%s", message, signature);
 
-    while (!sendRequest(request, response)) {
-        char logBuffer[256];
+    while (!sendRequest(request, response, 1025)) {
         snprintf(logBuffer, 256, "Failed to send %s request through Server Connector. Trying again in %ds", errorMessage, delay);
         logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
         sleep(delay);
@@ -70,7 +69,6 @@ int sendSignedMessage(char* method, char* response, char* errorMessage, uint8_t 
 
     uint8_t authenticity = 0;
     while (!checkSignature(response, authenticity) || !authenticity) {
-        char logBuffer[256];
         snprintf(logBuffer, 256, "Failed to check signature of %s response received through Server Connector. Trying again in %ds", errorMessage, delay);
         logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
         sleep(delay);
@@ -91,39 +89,34 @@ int sendSignedMessage(char* method, char* response, char* errorMessage, uint8_t 
  * \return Возвращает 1 при завершении без ошибок.
  */
 int main(void) {
+    char logBuffer[257] = {0};
     //Before do anything, we need to ensure, that other modules are ready to work
     while (!waitForInit("logger_connection", "Logger")) {
-        char logBuffer[256];
         snprintf(logBuffer, 256, "Failed to receive initialization notification from Logger. Trying again in %ds", RETRY_DELAY_SEC);
         logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
         sleep(RETRY_DELAY_SEC);
     }
     while (!waitForInit("periphery_controller_connection", "PeripheryController")) {
-        char logBuffer[256];
         snprintf(logBuffer, 256, "Failed to receive initialization notification from Periphery Controller. Trying again in %ds", RETRY_DELAY_SEC);
         logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
         sleep(RETRY_DELAY_SEC);
     }
     while (!waitForInit("autopilot_connector_connection", "AutopilotConnector")) {
-        char logBuffer[256];
         snprintf(logBuffer, 256, "Failed to receive initialization notification from Autopilot Connector. Trying again in %ds", RETRY_DELAY_SEC);
         logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
         sleep(RETRY_DELAY_SEC);
     }
     while (!waitForInit("navigation_system_connection", "NavigationSystem")) {
-        char logBuffer[256];
         snprintf(logBuffer, 256, "Failed to receive initialization notification from Navigation System. Trying again in %ds", RETRY_DELAY_SEC);
         logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
         sleep(RETRY_DELAY_SEC);
     }
     while (!waitForInit("server_connector_connection", "ServerConnector")) {
-        char logBuffer[256];
         snprintf(logBuffer, 256, "Failed to receive initialization notification from Server Connector. Trying again in %ds", RETRY_DELAY_SEC);
         logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
         sleep(RETRY_DELAY_SEC);
     }
     while (!waitForInit("credential_manager_connection", "CredentialManager")) {
-        char logBuffer[256];
         snprintf(logBuffer, 256, "Failed to receive initialization notification from Credential Manager. Trying again in %ds", RETRY_DELAY_SEC);
         logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
         sleep(RETRY_DELAY_SEC);
@@ -143,13 +136,13 @@ int main(void) {
         logEntry("Failed to enable buzzer at Periphery Controller", ENTITY_NAME, LogLevel::LOG_WARNING);
 
     //Copter need to be registered at ORVD
-    char authResponse[1024] = {0};
+    char authResponse[1025] = {0};
     sendSignedMessage("/api/auth", authResponse, "authentication", RETRY_DELAY_SEC);
     logEntry("Successfully authenticated on the server", ENTITY_NAME, LogLevel::LOG_INFO);
 
     //Constantly ask server, if mission for the drone is available. Parse it and ensure, that mission is correct
     while (true) {
-        char missionResponse[1024] = {0};
+        char missionResponse[1025] = {0};
         if (sendSignedMessage("/api/fmission_kos", missionResponse, "mission", RETRY_DELAY_SEC) && parseMission(missionResponse)) {
             logEntry("Successfully received mission from the server", ENTITY_NAME, LogLevel::LOG_INFO);
             printMission();
@@ -163,7 +156,6 @@ int main(void) {
     while (true) {
         //Wait, until autopilot wants to arm (and fails so, as motors are disabled by default)
         while (!waitForArmRequest()) {
-            char logBuffer[256];
             snprintf(logBuffer, 256, "Failed to receive an arm request from Autopilot Connector. Trying again in %ds", RETRY_DELAY_SEC);
             logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
             sleep(RETRY_DELAY_SEC);
@@ -171,14 +163,13 @@ int main(void) {
         logEntry("Received arm request. Notifying the server", ENTITY_NAME, LogLevel::LOG_INFO);
 
         //When autopilot asked for arm, we need to receive permission from ORVD
-        char armRespone[1024] = {0};
+        char armRespone[1025] = {0};
         sendSignedMessage("/api/arm", armRespone, "arm", RETRY_DELAY_SEC);
 
         if (strstr(armRespone, "$Arm: 0#") != NULL) {
             //If arm was permitted, we enable motors
             logEntry("Arm is permitted", ENTITY_NAME, LogLevel::LOG_INFO);
             while (!setKillSwitch(true)) {
-                char logBuffer[256];
                 snprintf(logBuffer, 256, "Failed to permit motor usage at Periphery Controller. Trying again in %ds", RETRY_DELAY_SEC);
                 logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
                 sleep(RETRY_DELAY_SEC);
