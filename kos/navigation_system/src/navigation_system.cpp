@@ -26,6 +26,7 @@ std::mutex sensorMutex;
 bool hasAlt = false;
 bool hasCoords = false;
 
+float sensorSpeed = 0.0f;
 float sensorDop = 0.0f;
 int32_t sensorSats = 0;
 int32_t sensorLatitude = 0;
@@ -48,7 +49,7 @@ void sendCoords() {
     char request[1025] = {0};
     char response[1025] = {0};
 
-    float dop;
+    float dop, speed;
     int32_t prevLat, prevLng, lat, lng, alt, azimuth, sats;
     while (!getPosition(prevLat, prevLng, alt)) {
         logEntry("Failed to get coords from Navigation System. Trying again in 1s", ENTITY_NAME, LogLevel::LOG_WARNING);
@@ -58,21 +59,21 @@ void sendCoords() {
     while (true) {
         if (!getPosition(lat, lng, alt))
             logEntry("Failed to get GPS coords. Trying again in 500ms", ENTITY_NAME, LogLevel::LOG_WARNING);
+        else if (!getInfo(dop, sats))
+            logEntry("Failed to get GPS's sats and dop. Trying again in 500ms", ENTITY_NAME, LogLevel::LOG_WARNING);
+        else if (!getSpeed(speed))
+            logEntry("Failed to get GPS's speed. Trying again in 500ms", ENTITY_NAME, LogLevel::LOG_WARNING);
         else {
-            if (!getInfo(dop, sats))
-                logEntry("Failed to get GPS's sats and dop. Trying again in 500ms", ENTITY_NAME, LogLevel::LOG_WARNING);
+            azimuth = round(atan2(lng - prevLng, lat - prevLat) * 1800000000 / M_PI);
+            prevLat = lat;
+            prevLng = lng;
+            snprintf(request, 1024, "/api/telemetry?id=%s&lat=%d&lon=%d&alt=%d&azimuth=%d&dop=%f&sats=%d&speed=%f", boardId, lat, lng, alt, azimuth, dop, sats, speed);
+            if (!signMessage(request, signature, 257))
+                logEntry("Failed to sign 'coordinate' message at Credential Manager. Trying again in 500ms", ENTITY_NAME, LogLevel::LOG_WARNING);
             else {
-                azimuth = round(atan2(lng - prevLng, lat - prevLat) * 1800000000 / M_PI);
-                prevLat = lat;
-                prevLng = lng;
-                snprintf(request, 1024, "/api/telemetry?id=%s&lat=%d&lon=%d&alt=%d&azimuth=%d&dop=%f&sats=%d", boardId, lat, lng, alt, azimuth, dop, sats);
-                if (!signMessage(request, signature, 257))
-                    logEntry("Failed to sign 'coordinate' message at Credential Manager. Trying again in 500ms", ENTITY_NAME, LogLevel::LOG_WARNING);
-                else {
-                    snprintf(request, 1024, "%s&sig=0x%s", request, signature);
-                    if (!sendRequest(request, response, 1025))
-                        logEntry("Failed to send 'coordinate' request through Server Connector. Trying again in 500ms", ENTITY_NAME, LogLevel::LOG_WARNING);
-                }
+                snprintf(request, 1024, "%s&sig=0x%s", request, signature);
+                if (!sendRequest(request, response, 1025))
+                    logEntry("Failed to send 'coordinate' request through Server Connector. Trying again in 500ms", ENTITY_NAME, LogLevel::LOG_WARNING);
             }
         }
         usleep(500000);
@@ -137,6 +138,25 @@ int getPosition(int32_t &latitude, int32_t &longitude, int32_t &altitude) {
         latitude = 0;
         longitude = 0;
         altitude = 0;
+        return 0;
+    }
+}
+
+void setSpeed(float speed) {
+    sensorMutex.lock();
+    sensorSpeed = speed;
+    sensorMutex.unlock();
+}
+
+int getSpeed(float &speed) {
+    if (hasPosition()) {
+        sensorMutex.lock();
+        speed = sensorSpeed;
+        sensorMutex.unlock();
+        return 1;
+    }
+    else {
+        speed = 0.0f;
         return 0;
     }
 }

@@ -32,3 +32,12 @@ int getCoords(int32_t &latitude, int32_t &longitude, int32_t &altitude);
  * \return Возвращает 1, если информация была успешно получена, иначе -- 0.
  */
 int getGpsInfo(float& dop, int32_t &sats);
+/**
+ * \~English Returns estimated speed of the drone.
+ * \param[out] speed Estimated speed in m/s.
+ * \return Returns 1 on successful speed receive, 0 otherwise.
+ * \~Russian Возвращает оцененную скорость дрона.
+ * \param[out] speed Оцененная скорость в м/с.
+ * \return Возвращает 1, если скорость была успешно получена, иначе -- 0.
+ */
+int getEstimatedSpeed(float& speed);

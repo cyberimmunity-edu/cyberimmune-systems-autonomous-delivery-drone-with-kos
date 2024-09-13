@@ -52,3 +52,22 @@ int getGpsInfo(float& dop, int32_t& sats) {
 
     return 1;
 }
+
+int getEstimatedSpeed(float& speed) {
+    NkKosTransport transport;
+    nk_iid_t riid;
+    initSenderInterface("navigation_system_connection", "drone_controller.NavigationSystem.interface", transport, riid);
+
+    struct NavigationSystemInterface_proxy proxy;
+    NavigationSystemInterface_proxy_init(&proxy, &transport.base, riid);
+
+    NavigationSystemInterface_GetSpeed_req req;
+    NavigationSystemInterface_GetSpeed_res res;
+
+    if ((NavigationSystemInterface_GetSpeed(&proxy.base, &req, NULL, &res, NULL) != rcOk) || !res.success)
+        return 0;
+
+    memcpy(&speed, &(res.speed), sizeof(float));
+
+    return 1;
+}
