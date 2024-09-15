@@ -516,7 +516,7 @@ def get_telemetry_csv():
           text/csv:
             schema:
               type: string
-              example: "lat,lon,alt,azimuth,dop,sats,speed\n100.1,50.2,10,1,1.5,12,2.5\n"
+              example: "record_time,lat,lon,alt,azimuth,dop,sats,speed\n2024-09-15 16:46:38.302348,100.1,50.2,10,1,1.5,12,2.5\n"
       400:
         description: Какие-то параметры неверные
         schema:
