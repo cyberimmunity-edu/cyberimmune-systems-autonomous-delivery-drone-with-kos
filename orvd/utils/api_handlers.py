@@ -264,7 +264,7 @@ def kill_switch_handler(id: str):
 
 
 def telemetry_handler(id: str, lat: float, lon: float, alt: float,
-                      azimuth: float, dop: float, sats: float):
+                      azimuth: float, dop: float, sats: float, speed: float):
     """
     Обрабатывает телеметрию БПЛА.
 
@@ -276,6 +276,7 @@ def telemetry_handler(id: str, lat: float, lon: float, alt: float,
         azimuth (float): Азимут.
         dop (float): Снижение точности.
         sats (float): Количество спутников.
+        speed (float): Скорость.
 
     Returns:
         str: Статус арма БПЛА.
@@ -294,10 +295,12 @@ def telemetry_handler(id: str, lat: float, lon: float, alt: float,
         if azimuth: azimuth /= 1e7
         dop = cast_wrapper(dop, float)
         sats = cast_wrapper(sats, int)
-        uav_telemetry_entity = get_entity_by_key(UavTelemetry, uav_entity.id)
+        speed = cast_wrapper(speed, float)
+        record_time = datetime.datetime.utcnow()
+        uav_telemetry_entity = get_entity_by_key(UavTelemetry, (uav_entity.id, record_time))
         if not uav_telemetry_entity:
             uav_telemetry_entity = UavTelemetry(uav_id=uav_entity.id, lat=lat, lon=lon, alt=alt,
-                                                azimuth=azimuth, dop=dop, sats=sats)
+                                                azimuth=azimuth, dop=dop, sats=sats, speed=speed, record_time=record_time)
             add_and_commit(uav_telemetry_entity)
         else:
             uav_telemetry_entity.lat = lat
@@ -306,6 +309,7 @@ def telemetry_handler(id: str, lat: float, lon: float, alt: float,
             uav_telemetry_entity.azimuth = azimuth
             uav_telemetry_entity.dop = dop
             uav_telemetry_entity.sats = sats
+            uav_telemetry_entity.speed = speed
             commit_changes()
         if not uav_entity.is_armed:
             return f'$Arm: {DISARMED}'
@@ -552,17 +556,41 @@ def get_telemetry_handler(id: str):
         id (str): Идентификатор БПЛА.
 
     Returns:
-        str: Строка с телеметрическими данными или NOT_FOUND.
+        json: JSON-объект с телеметрическими данными или NOT_FOUND.
     """
-    uav_telemetry_entity = get_entity_by_key(UavTelemetry, id)
+    uav_telemetry_entity = get_entities_by_field_with_order(UavTelemetry, UavTelemetry.uav_id, id, UavTelemetry.record_time.desc()).first()
     if not uav_telemetry_entity:
-        return NOT_FOUND
+        return jsonify({'error': 'NOT_FOUND'})
     else:
-        telemetry = (str(uav_telemetry_entity.lat), str(uav_telemetry_entity.lon),
-                     str(uav_telemetry_entity.alt), str(uav_telemetry_entity.azimuth),
-                     str(uav_telemetry_entity.dop), str(uav_telemetry_entity.sats))
-        return "&".join(telemetry)
-        
+        telemetry = {
+            'lat': uav_telemetry_entity.lat,
+            'lon': uav_telemetry_entity.lon,
+            'alt': uav_telemetry_entity.alt,
+            'azimuth': uav_telemetry_entity.azimuth,
+            'dop': uav_telemetry_entity.dop,
+            'sats': uav_telemetry_entity.sats,
+            'speed': uav_telemetry_entity.speed
+        }
+        return jsonify(telemetry)
+
+
+def get_telemetry_csv_handler(id: str):
+    """
+    Обрабатывает запрос на получение всей телеметрии БПЛА в формате CSV.
+
+    Args:
+        id (str): Идентификатор БПЛА.
+
+    Returns:
+        str: CSV-строка с телеметрическими данными или NOT_FOUND.
+    """
+    uav_telemetry_entities = get_entities_by_field_with_order(UavTelemetry, UavTelemetry.uav_id, id, UavTelemetry.record_time.asc())
+    if not uav_telemetry_entities:
+        return NOT_FOUND
+
+    csv_data = create_csv_from_telemetry(uav_telemetry_entities)
+    return csv_data
+
 
 def get_waiter_number_handler():
     """

@@ -3,6 +3,8 @@ import os, sys
 import time
 import json
 import ast
+import csv
+from io import StringIO
 from hashlib import sha256
 from Cryptodome import Random
 from Cryptodome.PublicKey import RSA
@@ -465,3 +467,24 @@ def is_point_in_polygon(point, polygon):
         p1x, p1y = p2x, p2y
 
     return inside
+
+
+def create_csv_from_telemetry(telemetry_data):
+    """
+    Создает CSV-строку из телеметрических данных.
+
+    Args:
+        telemetry_data (list): Список телеметрических данных.
+
+    Returns:
+        str: CSV-строка с телеметрическими данными.
+    """
+    output = StringIO()
+    writer = csv.writer(output)
+    writer.writerow(['record_time', 'lat', 'lon', 'alt', 'azimuth', 'dop', 'sats', 'speed'])
+
+    for telemetry in telemetry_data:
+        writer.writerow([telemetry.record_time, telemetry.lat, telemetry.lon, telemetry.alt, telemetry.azimuth, telemetry.dop, telemetry.sats, telemetry.speed])
+
+    output.seek(0)
+    return output.getvalue()

@@ -391,24 +391,29 @@ async function get_mission() {
 
 async function get_telemetry() {
   let telemetry_resp = await fetch("admin/get_telemetry?id=" + active_id + "&token=" + access_token);
-  let telemetry_text = await telemetry_resp.text();
-  if (telemetry_text != '$-1') {
-    let telemetry_list = telemetry_text.split('&');
-    let lat = parseFloat(telemetry_list[0]);
-    let lon = parseFloat(telemetry_list[1]);
-    let alt = parseFloat(telemetry_list[2]);
-    let azimuth = parseFloat(telemetry_list[3]);
-    let dop = parseFloat(telemetry_list[4]);
-    let sats = parseInt(telemetry_list[5]);
-    document.getElementById("dop").innerHTML="DOP: " + dop;
-    document.getElementById("sats").innerHTML="SATS: " + sats;
+  if (telemetry_resp.ok) {
+    let telemetry_data = await telemetry_resp.json();
+    if ('error' in telemetry_data) {
+      return;
+    }
+    let lat = parseFloat(telemetry_data.lat);
+    let lon = parseFloat(telemetry_data.lon);
+    let alt = parseFloat(telemetry_data.alt);
+    let azimuth = parseFloat(telemetry_data.azimuth);
+    let dop = parseFloat(telemetry_data.dop);
+    let sats = parseInt(telemetry_data.sats);
+    let speed = parseFloat(telemetry_data.speed);
+    document.getElementById("dop").innerHTML = "DOP: " + dop;
+    document.getElementById("sats").innerHTML = "SATS: " + sats;
     if (uav == null) {
       add_marker(lat, lon, alt, 'uav');
     } else {
       uav.getGeometry().setCoordinates([lon, lat]);
-      uav.set('description', 'Высота: ' + alt);
+      uav.set('description', `Высота: ${alt}\nСкорость: ${speed}`);
     }
     map.getView().setCenter([lon, lat]);
+  } else {
+    console.error("Failed to fetch telemetry data");
   }
 }
 
