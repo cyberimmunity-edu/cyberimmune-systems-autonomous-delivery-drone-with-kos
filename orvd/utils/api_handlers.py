@@ -331,7 +331,7 @@ def fmission_kos_handler(id: str):
     if uav_entity:
         mission = get_entity_by_key(Mission, id)
         if mission and mission.is_accepted == True:
-            mission_steps = get_entities_by_field(MissionStep, MissionStep.mission_id, id, order_by_field=MissionStep.step)
+            mission_steps = get_entities_by_field_with_order(MissionStep, MissionStep.mission_id, id, order_by_field=MissionStep.step)
             if mission_steps and mission_steps.count() != 0:
                 mission_steps = list(map(lambda e: e.operation, mission_steps))
                 return f'$FlightMission {"&".join(mission_steps)}'
@@ -541,7 +541,7 @@ def get_mission_handler(id: str):
     if uav_entity:
         mission = get_entity_by_key(Mission, id)
         if mission:
-            mission_steps = get_entities_by_field(MissionStep, MissionStep.mission_id, id, order_by_field=MissionStep.step)
+            mission_steps = get_entities_by_field_with_order(MissionStep, MissionStep.mission_id, id, order_by_field=MissionStep.step)
             if mission_steps and mission_steps.count() != 0:
                 mission_steps = list(map(lambda e: e.operation, mission_steps))
                 return "&".join(mission_steps)
