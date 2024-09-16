@@ -456,9 +456,32 @@ def get_telemetry():
     responses:
       200:
         description: Телеметрия БПЛА.
-        schema:
-          type: string
-          example: "100.1&50.2&10&1&1.5&12"
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                lat:
+                  type: number
+                  example: 100.1
+                lon:
+                  type: number
+                  example: 50.2
+                alt:
+                  type: number
+                  example: 10
+                azimuth:
+                  type: number
+                  example: 1
+                dop:
+                  type: number
+                  example: 1.5
+                sats:
+                  type: integer
+                  example: 12
+                speed:
+                  type: float
+                  examle: 2.5
       400:
         description: Какие-то параметры неверные
         schema:
@@ -469,6 +492,40 @@ def get_telemetry():
     token = request.args.get('token')
     if id:
         return authorized_request(handler_func=get_telemetry_handler, token=token, id=id)
+    else:
+        return bad_request('Wrong id')
+
+
+@bp.route('/logs/get_telemetry_csv')
+def get_telemetry_csv():
+    """
+    Получает всю телеметрию для указанного БПЛА в формате CSV.
+    ---
+    tags:
+      - logs
+    parameters:
+      - name: id
+        in: query
+        type: string
+        required: true
+        description: Идентификатор БПЛА.
+    responses:
+      200:
+        description: Телеметрия БПЛА в формате CSV.
+        content:
+          text/csv:
+            schema:
+              type: string
+              example: "record_time,lat,lon,alt,azimuth,dop,sats,speed\n2024-09-15 16:46:38.302348,100.1,50.2,10,1,1.5,12,2.5\n"
+      400:
+        description: Какие-то параметры неверные
+        schema:
+          type: string
+          example: "Wrong id"
+    """
+    id = cast_wrapper(request.args.get('id'), str)
+    if id:
+        return regular_request(handler_func=get_telemetry_csv_handler, id=id)
     else:
         return bad_request('Wrong id')
 
@@ -1106,6 +1163,11 @@ def telemetry():
         type: string
         required: true
         description: Количество спутников.
+      - name: speed
+        in: query
+        type: string
+        required: true
+        description: Скорость.
     responses:
       200:
         description: Состояние арма (0 - вкл, 1 - выкл) или $-1, если БПЛА не найден.
@@ -1128,10 +1190,11 @@ def telemetry():
     azimuth = request.args.get('azimuth')
     dop = request.args.get('dop')
     sats = request.args.get('sats')
+    speed = request.args.get('speed')
     if id:
         return signed_request(handler_func=telemetry_handler, verifier_func=verify, signer_func=sign,
-                          query_str=f'/api/telemetry?id={id}&lat={lat}&lon={lon}&alt={alt}&azimuth={azimuth}&dop={dop}&sats={sats}',
-                          key_group=f'kos{id}', sig=sig, id=id, lat=lat, lon=lon, alt=alt, azimuth=azimuth, dop=dop, sats=sats)
+                          query_str=f'/api/telemetry?id={id}&lat={lat}&lon={lon}&alt={alt}&azimuth={azimuth}&dop={dop}&sats={sats}&speed={speed}',
+                          key_group=f'kos{id}', sig=sig, id=id, lat=lat, lon=lon, alt=alt, azimuth=azimuth, dop=dop, sats=sats, speed=speed)
     else:
         return bad_request('Wrong id')
     
