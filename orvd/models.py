@@ -129,15 +129,24 @@ class UavTelemetry(db.Model):
         azimuth: азимут
         dop: снижение точности
         sats: количество спутников
+        speed: скорость
     """
     __tablename__ = 'uav_telemetry'
-    uav_id = db.Column(db.String(64), db.ForeignKey('uav.id'), primary_key=True)
+    uav_id = db.Column(db.String(64), db.ForeignKey('uav.id'))
+    record_time = db.Column(db.DateTime, default=datetime.datetime.utcnow)
     lat = db.Column(db.Float(precision=8))
     lon = db.Column(db.Float(precision=8))
     alt = db.Column(db.Float(precision=8))
     azimuth = db.Column(db.Float(precision=8))
     dop = db.Column(db.Float(precision=8))
     sats = db.Column(db.Integer)
+    speed = db.Column(db.Float(precision=8))
+    
+    __table_args__ = (
+        db.PrimaryKeyConstraint(
+            uav_id, record_time
+        ),
+    )
     
     def __repr__(self):
         return f'UAV id={self.uav_id}, lat={self.lat}, lon={self.lon}, alt={self.alt}, azimuth={self.azimuth}'

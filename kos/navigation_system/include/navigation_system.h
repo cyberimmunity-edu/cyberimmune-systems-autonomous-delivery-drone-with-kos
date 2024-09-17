@@ -121,3 +121,20 @@ void setCoords(int32_t latitude, int32_t longitude);
  * \return Возвращает 1, если координаты были успешно получены, иначе -- 0.
  */
 int getPosition(int32_t &latitude, int32_t &longitude, int32_t &altitude);
+
+/**
+ * \~English Updates current speed of the drone.
+ * \param[in] speed Current speed in m/s.
+ * \~Russian Обновляет значение текущей скорости дрона.
+ * \param[in] speed Текущая скорость в м/с.
+ */
+void setSpeed(float speed);
+/**
+ * \~English Returns current speed of the drone.
+ * \param[out] speed Current speed in m/s.
+ * \return Returns 1 on successful speed receive, 0 otherwise.
+ * \~Russian Возвращает текущую скорость дрона.
+ * \param[out] speed Текущая скорость в м/с.
+ * \return Возвращает 1, если скорость была успешно получена, иначе -- 0.
+ */
+int getSpeed(float &speed);

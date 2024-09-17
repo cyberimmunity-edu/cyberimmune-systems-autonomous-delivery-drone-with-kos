@@ -168,6 +168,8 @@ assert "NavigationSystem" {
         grant response src=ns dst=fc endpoint=interface method=GetCoords { success : 1, lat : 0, lng : 0, alt : 0 }
         grant fc ~> ns:interface.GetGpsInfo {}
         grant response src=ns dst=fc endpoint=interface method=GetGpsInfo { success : 1, dop : 0, sats : 0 }
+        grant fc ~> ns:interface.GetSpeed {}
+        grant response src=ns dst=fc endpoint=interface method=GetSpeed { success : 1, speed : 0 }
     }
 }
 

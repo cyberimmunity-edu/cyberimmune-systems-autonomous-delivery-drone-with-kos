@@ -33,3 +33,14 @@ nk_err_t GetGpsInfoImpl(struct NavigationSystemInterface *self,
 
     return NK_EOK;
 }
+
+nk_err_t GetSpeedImpl(struct NavigationSystemInterface *self,
+                    const NavigationSystemInterface_GetSpeed_req *req, const struct nk_arena *reqArena,
+                    NavigationSystemInterface_GetSpeed_res *res, struct nk_arena *resArena) {
+    float speed;
+
+    res->success = getSpeed(speed);
+    memcpy(&(res->speed), &speed, sizeof(float));
+
+    return NK_EOK;
+}

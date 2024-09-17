@@ -102,10 +102,26 @@ def get_entities_by_field(entity: db.Model, field, field_value, order_by_field=N
         list: Список найденных сущностей.
     """
     entities = entity.query.filter(field==field_value)
-    if not order_by_field:
+    if order_by_field == None:
         return entities
     else:
         return entities.order_by(order_by_field)
+    
+
+def get_entities_by_field_with_order(entity: db.Model, field, field_value, order_by_field) -> list:
+    """
+    Получает отсортированный список сущностей по значению поля.
+
+    Args:
+        entity (db.Model): Модель сущности.
+        field: Поле для фильтрации.
+        field_value: Значение поля для фильтрации.
+        order_by_field: Поле для сортировки.
+
+    Return:
+        list: Список найденных сущностей.
+    """
+    return entity.query.filter(field==field_value).order_by(order_by_field)
 
 
 def clean_db(models_to_clean):
