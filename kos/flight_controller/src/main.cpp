@@ -90,7 +90,7 @@ int sendSignedMessage(char* method, char* response, char* errorMessage, uint8_t 
  */
 int main(void) {
     char logBuffer[257] = {0};
-    //Before do anything, we need to ensure, that other modules are ready to work
+
     while (!waitForInit("logger_connection", "Logger")) {
         snprintf(logBuffer, 256, "Failed to receive initialization notification from Logger. Trying again in %ds", RETRY_DELAY_SEC);
         logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
@@ -121,79 +121,38 @@ int main(void) {
         logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
         sleep(RETRY_DELAY_SEC);
     }
+    logEntry("Board is initialized", ENTITY_NAME, LogLevel::LOG_INFO);
 
-    //Get ID from ServerConnector
-    while (!getBoardId(boardId)) {
-        logEntry("Failed to get board ID from ServerConnector. Trying again in 1s", ENTITY_NAME, LogLevel::LOG_WARNING);
-        sleep(1);
-    }
-    char initNotification[64] = {0};
-    snprintf(initNotification, 64, "Board '%s' is initialized", boardId);
-    logEntry(initNotification, ENTITY_NAME, LogLevel::LOG_INFO);
+    if (!setKillSwitch(true))
+        logEntry("Failed to open kill-switch", ENTITY_NAME, LogLevel::LOG_WARNING);
+    else
+        logEntry("Kill-switch is opened: arm can be done", ENTITY_NAME, LogLevel::LOG_INFO);
 
-    //Enable buzzer to indicate, that all modules has been initialized
+    if (!setCargoLock(true))
+        logEntry("Failed to open cargo lock", ENTITY_NAME, LogLevel::LOG_WARNING);
+    else
+        logEntry("Cargo lock is opened: cargo can be dropped", ENTITY_NAME, LogLevel::LOG_INFO);
+
     if (!enableBuzzer())
         logEntry("Failed to enable buzzer at Periphery Controller", ENTITY_NAME, LogLevel::LOG_WARNING);
+    else
+        logEntry("Buzzer is enabled", ENTITY_NAME, LogLevel::LOG_INFO);
 
-    //Copter need to be registered at ORVD
-    char authResponse[1025] = {0};
-    sendSignedMessage("/api/auth", authResponse, "authentication", RETRY_DELAY_SEC);
-    logEntry("Successfully authenticated on the server", ENTITY_NAME, LogLevel::LOG_INFO);
-
-    //Constantly ask server, if mission for the drone is available. Parse it and ensure, that mission is correct
+    int32_t lat, lng, alt;
+    float speed, pressure;
     while (true) {
-        char missionResponse[1025] = {0};
-        if (sendSignedMessage("/api/fmission_kos", missionResponse, "mission", RETRY_DELAY_SEC) && parseMission(missionResponse)) {
-            logEntry("Successfully received mission from the server", ENTITY_NAME, LogLevel::LOG_INFO);
-            printMission();
-            break;
-        }
-        sleep(RETRY_REQUEST_DELAY_SEC);
+        getCoords(lat, lng, alt);
+        snprintf(logBuffer, 256, "Coordinates: %d.%d°, %d.%d°",
+            lat / 10000000, abs(lat % 10000000), lng / 10000000, abs(lng % 10000000));
+        logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_INFO);
+        getEstimatedPressure(pressure);
+        snprintf(logBuffer, 256, "Pressure: %f Pa (%d.%d m)", pressure, alt / 100, abs(alt % 100));
+        logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_INFO);
+        getEstimatedSpeed(speed);
+        snprintf(logBuffer, 256, "Speed: %f m/s", speed);
+        logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_INFO);
+        sleep(1);
     }
-
-    //The drone is ready to arm
-    logEntry("Ready to arm", ENTITY_NAME, LogLevel::LOG_INFO);
-    while (true) {
-        //Wait, until autopilot wants to arm (and fails so, as motors are disabled by default)
-        while (!waitForArmRequest()) {
-            snprintf(logBuffer, 256, "Failed to receive an arm request from Autopilot Connector. Trying again in %ds", RETRY_DELAY_SEC);
-            logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
-            sleep(RETRY_DELAY_SEC);
-        }
-        logEntry("Received arm request. Notifying the server", ENTITY_NAME, LogLevel::LOG_INFO);
-
-        //When autopilot asked for arm, we need to receive permission from ORVD
-        char armRespone[1025] = {0};
-        sendSignedMessage("/api/arm", armRespone, "arm", RETRY_DELAY_SEC);
-
-        if (strstr(armRespone, "$Arm: 0#") != NULL) {
-            //If arm was permitted, we enable motors
-            logEntry("Arm is permitted", ENTITY_NAME, LogLevel::LOG_INFO);
-            while (!setKillSwitch(true)) {
-                snprintf(logBuffer, 256, "Failed to permit motor usage at Periphery Controller. Trying again in %ds", RETRY_DELAY_SEC);
-                logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
-                sleep(RETRY_DELAY_SEC);
-            }
-            if (!permitArm())
-                logEntry("Failed to permit arm through Autopilot Connector", ENTITY_NAME, LogLevel::LOG_WARNING);
-            break;
-        }
-        else if (strstr(armRespone, "$Arm: 1#") != NULL) {
-            logEntry("Arm is forbidden", ENTITY_NAME, LogLevel::LOG_INFO);
-            if (!forbidArm())
-                logEntry("Failed to forbid arm through Autopilot Connector", ENTITY_NAME, LogLevel::LOG_WARNING);
-        }
-        else
-            logEntry("Failed to parse server response", ENTITY_NAME, LogLevel::LOG_WARNING);
-        logEntry("Arm was not allowed. Waiting for another arm request from autopilot", ENTITY_NAME, LogLevel::LOG_WARNING);
-    };
-
-    //If we get here, the drone is able to arm and start the mission
-    //The flight is need to be controlled from now on
-    //Also we need to check on ORVD, whether the flight is still allowed or it is need to be paused
-
-    while (true)
-        sleep(1000);
 
     return EXIT_SUCCESS;
 }
