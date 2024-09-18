@@ -32,6 +32,7 @@ int32_t sensorSats = 0;
 int32_t sensorLatitude = 0;
 int32_t sensorLongitude = 0;
 int32_t sensorAltitude = 0;
+float sensorPressure = 0.0f;
 /** \endcond */
 
 bool hasPosition() {
@@ -159,4 +160,17 @@ int getSpeed(float &speed) {
         speed = 0.0f;
         return 0;
     }
+}
+
+void setAtmosphericalPressure(float pressure) {
+    sensorMutex.lock();
+    sensorPressure = pressure;
+    sensorMutex.unlock();
+}
+
+int getAtmosphericalPressure(float &pressure) {
+    sensorMutex.lock();
+    pressure = sensorPressure;
+    sensorMutex.unlock();
+    return 1;
 }

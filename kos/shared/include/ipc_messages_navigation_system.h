@@ -41,3 +41,12 @@ int getGpsInfo(float& dop, int32_t &sats);
  * \return Возвращает 1, если скорость была успешно получена, иначе -- 0.
  */
 int getEstimatedSpeed(float& speed);
+/**
+ * \~English Returns estimated atmospherical pressure.
+ * \param[out] speed Estimated atmospherical pressure in Pa.
+ * \return Returns 1 on successful speed receive, 0 otherwise.
+ * \~Russian Возвращает оцененное атмосферное давление.
+ * \param[out] speed Оцененное атмосферное давление в Па.
+ * \return Возвращает 1, если скорость была успешно получена, иначе -- 0.
+ */
+int getEstimatedPressure(float& pressure);

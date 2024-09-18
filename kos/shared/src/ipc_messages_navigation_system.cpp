@@ -71,3 +71,22 @@ int getEstimatedSpeed(float& speed) {
 
     return 1;
 }
+
+int getEstimatedPressure(float& pressure) {
+    NkKosTransport transport;
+    nk_iid_t riid;
+    initSenderInterface("navigation_system_connection", "drone_controller.NavigationSystem.interface", transport, riid);
+
+    struct NavigationSystemInterface_proxy proxy;
+    NavigationSystemInterface_proxy_init(&proxy, &transport.base, riid);
+
+    NavigationSystemInterface_GetPressure_req req;
+    NavigationSystemInterface_GetPressure_res res;
+
+    if ((NavigationSystemInterface_GetPressure(&proxy.base, &req, NULL, &res, NULL) != rcOk) || !res.success)
+        return 0;
+
+    memcpy(&pressure, &(res.pressure), sizeof(float));
+
+    return 1;
+}

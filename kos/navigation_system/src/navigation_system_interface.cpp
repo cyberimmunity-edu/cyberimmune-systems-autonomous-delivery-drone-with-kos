@@ -44,3 +44,14 @@ nk_err_t GetSpeedImpl(struct NavigationSystemInterface *self,
 
     return NK_EOK;
 }
+
+nk_err_t GetPressureImpl(struct NavigationSystemInterface *self,
+                    const NavigationSystemInterface_GetPressure_req *req, const struct nk_arena *reqArena,
+                    NavigationSystemInterface_GetPressure_res *res, struct nk_arena *resArena) {
+    float pressure;
+
+    res->success = getAtmosphericalPressure(pressure);
+    memcpy(&(res->pressure), &pressure, sizeof(float));
+
+    return NK_EOK;
+}

@@ -206,6 +206,7 @@ void getBarometer() {
         float temp, press;
         getTemperature(temp);
         getPressure(press);
+        setAtmosphericalPressure(press);
         float alt = 44330.0 * (1.0 - pow(press / 101325.0, 0.1903));
         int32_t altitude = 100 * alt;
         setAltitude(altitude);

@@ -138,3 +138,20 @@ void setSpeed(float speed);
  * \return Возвращает 1, если скорость была успешно получена, иначе -- 0.
  */
 int getSpeed(float &speed);
+
+/**
+ * \~English Updates current atmospherical pressure.
+ * \param[in] pressure Current atmospherical pressure in Pa.
+ * \~Russian Обновляет значение текущего атмосферного давления.
+ * \param[in] pressure Текущее атмосферное давление в Па.
+ */
+void setAtmosphericalPressure(float pressure);
+/**
+ * \~English Returns current atmospherical pressure.
+ * \param[out] speed Current atmospherical pressure in Pa.
+ * \return Returns 1 on successful speed receive, 0 otherwise.
+ * \~Russian Возвращает значение текущего атмосферного давления.
+ * \param[out] speed Текущее атмосферное давление в Па.
+ * \return Возвращает 1, если скорость была успешно получена, иначе -- 0.
+ */
+int getAtmosphericalPressure(float &pressure);

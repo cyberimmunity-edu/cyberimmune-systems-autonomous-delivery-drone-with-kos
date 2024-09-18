@@ -130,6 +130,7 @@ int initSensors() {
     }
 
     setInfo(1.2f, 10);
+    setAtmosphericalPressure(101325.0f);
 
     return 1;
 }

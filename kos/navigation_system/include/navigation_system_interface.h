@@ -52,6 +52,13 @@ nk_err_t GetGpsInfoImpl(struct NavigationSystemInterface *self,
 nk_err_t GetSpeedImpl(struct NavigationSystemInterface *self,
                     const NavigationSystemInterface_GetSpeed_req *req, const struct nk_arena *reqArena,
                     NavigationSystemInterface_GetSpeed_res *res, struct nk_arena *resArena);
+/**
+ * \~English IPC message handler. See \ref getGpsInfo.
+ * \~Russian Обработчик IPC-сообщения. См. \ref getGpsInfo.
+ */
+nk_err_t GetPressureImpl(struct NavigationSystemInterface *self,
+                    const NavigationSystemInterface_GetPressure_req *req, const struct nk_arena *reqArena,
+                    NavigationSystemInterface_GetPressure_res *res, struct nk_arena *resArena);
 
 /**
  * \~English Creates an NavigationSystemInterface C++ interface and maps its methods to IPC message handlers.
@@ -59,7 +66,7 @@ nk_err_t GetSpeedImpl(struct NavigationSystemInterface *self,
  */
 static struct NavigationSystemInterface *CreateNavigationSystemInterfaceImpl(void) {
     static const struct NavigationSystemInterface_ops Ops = {
-        .GetCoords = GetCoordsImpl, .GetGpsInfo = GetGpsInfoImpl, .GetSpeed = GetSpeedImpl
+        .GetCoords = GetCoordsImpl, .GetGpsInfo = GetGpsInfoImpl, .GetSpeed = GetSpeedImpl, .GetPressure = GetPressureImpl
     };
 
     static NavigationSystemInterface obj = {
