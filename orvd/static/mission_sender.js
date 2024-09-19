@@ -12,9 +12,9 @@ async function submit() {
             console.log(await key_resp.text());
             key = key_resp.text();
         }
-        let mission_resp = await fetch('mission_sender/fmission_ms?id='+id + "&sig=0xaa", {method:'POST',body:mission});
-        console.log(await mission_resp.text());
-        alert('Миссия отправлена');
+        const mission_resp = await fetch('mission_sender/fmission_ms?id='+id + "&sig=0xaa", {method:'POST',body:mission});
+        const mission_answer = await mission_resp.text();
+        alert(mission_answer.split('#')[0]);
     } else {
         alert('Одно из полей пусто.');
     }
