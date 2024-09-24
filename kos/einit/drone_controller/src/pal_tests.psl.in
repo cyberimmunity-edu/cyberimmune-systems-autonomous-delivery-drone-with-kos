@@ -1,0 +1,265 @@
+use drone_controller._
+
+/* PAL tests */
+assert "Logger" {
+    setup {
+        fc <- execute dst=drone_controller.FlightController
+        ac <- execute dst=drone_controller.AutopilotConnector
+        cm <- execute dst=drone_controller.CredentialManager
+        ns <- execute dst=drone_controller.NavigationSystem
+        pc <- execute dst=drone_controller.PeripheryController
+        sc <- execute dst=drone_controller.ServerConnector
+        l <- execute dst=drone_controller.Logger
+    }
+
+    sequence "WaitForInit" {
+        grant fc ~> l:waitForInit.WaitForInit {}
+        grant response src=l dst=fc endpoint=waitForInit method=WaitForInit { success : 1 }
+        grant ac ~> l:waitForInit.WaitForInit {}
+        grant response src=l dst=ac endpoint=waitForInit method=WaitForInit { success : 1 }
+        grant cm ~> l:waitForInit.WaitForInit {}
+        grant response src=l dst=cm endpoint=waitForInit method=WaitForInit { success : 1 }
+        grant ns ~> l:waitForInit.WaitForInit {}
+        grant response src=l dst=ns endpoint=waitForInit method=WaitForInit { success : 1 }
+        grant pc ~> l:waitForInit.WaitForInit {}
+        grant response src=l dst=pc endpoint=waitForInit method=WaitForInit { success : 1 }
+        grant sc ~> l:waitForInit.WaitForInit {}
+        grant response src=l dst=sc endpoint=waitForInit method=WaitForInit { success : 1 }
+    }
+
+    sequence "Log" {
+        grant fc ~> l:interface.Log { logEntry : "entry", logLevel : 0 }
+        grant response src=l dst=fc endpoint=interface method=Log { success : 1 }
+        grant ac ~> l:interface.Log { logEntry : "entry", logLevel : 0 }
+        grant response src=l dst=ac endpoint=interface method=Log { success : 1 }
+        grant cm ~> l:interface.Log { logEntry : "entry", logLevel : 0 }
+        grant response src=l dst=cm endpoint=interface method=Log { success : 1 }
+        grant ns ~> l:interface.Log { logEntry : "entry", logLevel : 0 }
+        grant response src=l dst=ns endpoint=interface method=Log { success : 1 }
+        grant pc ~> l:interface.Log { logEntry : "entry", logLevel : 0 }
+        grant response src=l dst=pc endpoint=interface method=Log { success : 1 }
+        grant sc ~> l:interface.Log { logEntry : "entry", logLevel : 0 }
+        grant response src=l dst=sc endpoint=interface method=Log { success : 1 }
+    }
+}
+
+assert "AutopilotConnector" {
+    setup {
+        fc <- execute dst=drone_controller.FlightController
+        ac <- execute dst=drone_controller.AutopilotConnector
+        cm <- execute dst=drone_controller.CredentialManager
+        ns <- execute dst=drone_controller.NavigationSystem
+        pc <- execute dst=drone_controller.PeripheryController
+        sc <- execute dst=drone_controller.ServerConnector
+        l <- execute dst=drone_controller.Logger
+    }
+
+    sequence "WaitForInit" {
+        grant fc ~> ac:waitForInit.WaitForInit {}
+        grant response src=ac dst=fc endpoint=waitForInit method=WaitForInit { success : 1 }
+        grant cm ~> ac:waitForInit.WaitForInit {}
+        grant response src=ac dst=cm endpoint=waitForInit method=WaitForInit { success : 1 }
+        grant ns ~> ac:waitForInit.WaitForInit {}
+        grant response src=ac dst=ns endpoint=waitForInit method=WaitForInit { success : 1 }
+        grant pc ~> ac:waitForInit.WaitForInit {}
+        grant response src=ac dst=pc endpoint=waitForInit method=WaitForInit { success : 1 }
+        grant sc ~> ac:waitForInit.WaitForInit {}
+        grant response src=ac dst=sc endpoint=waitForInit method=WaitForInit { success : 1 }
+        grant l ~> ac:waitForInit.WaitForInit {}
+        grant response src=ac dst=l endpoint=waitForInit method=WaitForInit { success : 1 }
+    }
+
+    sequence "FlightController" {
+        grant fc ~> ac:interface.WaitForArmRequest {}
+        grant response src=ac dst=fc endpoint=interface method=WaitForArmRequest { success : 1 }
+        grant fc ~> ac:interface.PermitArm {}
+        grant response src=ac dst=fc endpoint=interface method=PermitArm { success : 1 }
+        grant fc ~> ac:interface.ForbidArm {}
+        grant response src=ac dst=fc endpoint=interface method=ForbidArm { success : 1 }
+        grant fc ~> ac:interface.PauseFlight {}
+        grant response src=ac dst=fc endpoint=interface method=PauseFlight { success : 1 }
+        grant fc ~> ac:interface.ResumeFlight {}
+        grant response src=ac dst=fc endpoint=interface method=ResumeFlight { success : 1 }
+        grant fc ~> ac:interface.ChangeSpeed { speed : 0 }
+        grant response src=ac dst=fc endpoint=interface method=ChangeSpeed { success : 1 }
+        grant fc ~> ac:interface.ChangeAltitude { altitude : 0 }
+        grant response src=ac dst=fc endpoint=interface method=ChangeAltitude { success : 1 }
+        grant fc ~> ac:interface.ChangeWaypoint { latitude : 0, longitude : 0, altitude : 0 }
+        grant response src=ac dst=fc endpoint=interface method=ChangeWaypoint { success : 1 }
+    }
+}
+
+assert "CredentialManager" {
+    setup {
+        fc <- execute dst=drone_controller.FlightController
+        ac <- execute dst=drone_controller.AutopilotConnector
+        cm <- execute dst=drone_controller.CredentialManager
+        ns <- execute dst=drone_controller.NavigationSystem
+        pc <- execute dst=drone_controller.PeripheryController
+        sc <- execute dst=drone_controller.ServerConnector
+        l <- execute dst=drone_controller.Logger
+    }
+
+    sequence "WaitForInit" {
+        grant fc ~> cm:waitForInit.WaitForInit {}
+        grant response src=cm dst=fc endpoint=waitForInit method=WaitForInit { success : 1 }
+        grant ac ~> cm:waitForInit.WaitForInit {}
+        grant response src=cm dst=ac endpoint=waitForInit method=WaitForInit { success : 1 }
+        grant ns ~> cm:waitForInit.WaitForInit {}
+        grant response src=cm dst=ns endpoint=waitForInit method=WaitForInit { success : 1 }
+        grant pc ~> cm:waitForInit.WaitForInit {}
+        grant response src=cm dst=pc endpoint=waitForInit method=WaitForInit { success : 1 }
+        grant sc ~> cm:waitForInit.WaitForInit {}
+        grant response src=cm dst=sc endpoint=waitForInit method=WaitForInit { success : 1 }
+        grant l ~> cm:waitForInit.WaitForInit {}
+        grant response src=cm dst=l endpoint=waitForInit method=WaitForInit { success : 1 }
+    }
+
+    sequence "FlightController" {
+        grant fc ~> cm:interface.SignMessage { message : "message" }
+        grant response src=cm dst=fc endpoint=interface method=SignMessage { success : 1, signature : "signature" }
+        grant fc ~> cm:interface.CheckSignature { message : "message" }
+        grant response src=cm dst=fc endpoint=interface method=CheckSignature { success : 1, correct : 1 }
+    }
+
+    sequence "NavigationSystem" {
+        grant ns ~> cm:interface.SignMessage { message : "message" }
+        grant response src=cm dst=ns endpoint=interface method=SignMessage { success : 1, signature : "signature" }
+        grant ns ~> cm:interface.CheckSignature { message : "message" }
+        grant response src=cm dst=ns endpoint=interface method=CheckSignature { success : 1, correct : 1 }
+    }
+
+    sequence "PeripheryController" {
+        grant pc ~> cm:interface.SignMessage { message : "message" }
+        grant response src=cm dst=pc endpoint=interface method=SignMessage { success : 1, signature : "signature" }
+        grant pc ~> cm:interface.CheckSignature { message : "message" }
+        grant response src=cm dst=pc endpoint=interface method=CheckSignature { success : 1, correct : 1 }
+    }
+}
+
+assert "NavigationSystem" {
+    setup {
+        fc <- execute dst=drone_controller.FlightController
+        ac <- execute dst=drone_controller.AutopilotConnector
+        cm <- execute dst=drone_controller.CredentialManager
+        ns <- execute dst=drone_controller.NavigationSystem
+        pc <- execute dst=drone_controller.PeripheryController
+        sc <- execute dst=drone_controller.ServerConnector
+        l <- execute dst=drone_controller.Logger
+    }
+
+    sequence "WaitForInit" {
+        grant fc ~> ns:waitForInit.WaitForInit {}
+        grant response src=ns dst=fc endpoint=waitForInit method=WaitForInit { success : 1 }
+        grant ac ~> ns:waitForInit.WaitForInit {}
+        grant response src=ns dst=ac endpoint=waitForInit method=WaitForInit { success : 1 }
+        grant cm ~> ns:waitForInit.WaitForInit {}
+        grant response src=ns dst=cm endpoint=waitForInit method=WaitForInit { success : 1 }
+        grant pc ~> ns:waitForInit.WaitForInit {}
+        grant response src=ns dst=pc endpoint=waitForInit method=WaitForInit { success : 1 }
+        grant sc ~> ns:waitForInit.WaitForInit {}
+        grant response src=ns dst=sc endpoint=waitForInit method=WaitForInit { success : 1 }
+        grant l ~> ns:waitForInit.WaitForInit {}
+        grant response src=ns dst=l endpoint=waitForInit method=WaitForInit { success : 1 }
+    }
+
+    sequence "FlightController" {
+        grant fc ~> ns:interface.GetCoords {}
+        grant response src=ns dst=fc endpoint=interface method=GetCoords { success : 1, lat : 0, lng : 0, alt : 0 }
+        grant fc ~> ns:interface.GetGpsInfo {}
+        grant response src=ns dst=fc endpoint=interface method=GetGpsInfo { success : 1, dop : 0, sats : 0 }
+        grant fc ~> ns:interface.GetSpeed {}
+        grant response src=ns dst=fc endpoint=interface method=GetSpeed { success : 1, speed : 0 }
+    }
+}
+
+assert "PeripheryController" {
+    setup {
+        fc <- execute dst=drone_controller.FlightController
+        ac <- execute dst=drone_controller.AutopilotConnector
+        cm <- execute dst=drone_controller.CredentialManager
+        ns <- execute dst=drone_controller.NavigationSystem
+        pc <- execute dst=drone_controller.PeripheryController
+        sc <- execute dst=drone_controller.ServerConnector
+        l <- execute dst=drone_controller.Logger
+    }
+
+    sequence "WaitForInit" {
+        grant fc ~> pc:waitForInit.WaitForInit {}
+        grant response src=pc dst=fc endpoint=waitForInit method=WaitForInit { success : 1 }
+        grant ac ~> pc:waitForInit.WaitForInit {}
+        grant response src=pc dst=ac endpoint=waitForInit method=WaitForInit { success : 1 }
+        grant cm ~> pc:waitForInit.WaitForInit {}
+        grant response src=pc dst=cm endpoint=waitForInit method=WaitForInit { success : 1 }
+        grant ns ~> pc:waitForInit.WaitForInit {}
+        grant response src=pc dst=ns endpoint=waitForInit method=WaitForInit { success : 1 }
+        grant sc ~> pc:waitForInit.WaitForInit {}
+        grant response src=pc dst=sc endpoint=waitForInit method=WaitForInit { success : 1 }
+        grant l ~> pc:waitForInit.WaitForInit {}
+        grant response src=pc dst=l endpoint=waitForInit method=WaitForInit { success : 1 }
+    }
+
+    sequence "FlightController" {
+        grant fc ~> pc:interface.EnableBuzzer {}
+        grant response src=pc dst=fc endpoint=interface method=EnableBuzzer { success : 1 }
+        grant fc ~> pc:interface.SetKillSwitch { enable : 0 }
+        grant response src=pc dst=fc endpoint=interface method=SetKillSwitch { success : 1 }
+        grant fc ~> pc:interface.SetCargoLock { enable : 0 }
+        grant response src=pc dst=fc endpoint=interface method=SetCargoLock { success : 1 }
+    }
+}
+
+assert "ServerConnector" {
+    setup {
+        fc <- execute dst=drone_controller.FlightController
+        ac <- execute dst=drone_controller.AutopilotConnector
+        cm <- execute dst=drone_controller.CredentialManager
+        ns <- execute dst=drone_controller.NavigationSystem
+        pc <- execute dst=drone_controller.PeripheryController
+        sc <- execute dst=drone_controller.ServerConnector
+        l <- execute dst=drone_controller.Logger
+    }
+
+    sequence "WaitForInit" {
+        grant fc ~> sc:waitForInit.WaitForInit {}
+        grant response src=sc dst=fc endpoint=waitForInit method=WaitForInit { success : 1 }
+        grant ac ~> sc:waitForInit.WaitForInit {}
+        grant response src=sc dst=ac endpoint=waitForInit method=WaitForInit { success : 1 }
+        grant cm ~> sc:waitForInit.WaitForInit {}
+        grant response src=sc dst=cm endpoint=waitForInit method=WaitForInit { success : 1 }
+        grant ns ~> sc:waitForInit.WaitForInit {}
+        grant response src=sc dst=ns endpoint=waitForInit method=WaitForInit { success : 1 }
+        grant pc ~> sc:waitForInit.WaitForInit {}
+        grant response src=sc dst=pc endpoint=waitForInit method=WaitForInit { success : 1 }
+        grant l ~> sc:waitForInit.WaitForInit {}
+        grant response src=sc dst=l endpoint=waitForInit method=WaitForInit { success : 1 }
+    }
+
+    sequence "FlightController" {
+        grant fc ~> sc:interface.GetBoardId {}
+        grant response src=sc dst=fc endpoint=interface method=GetBoardId { success : 1, id : "id" }
+        grant fc ~> sc:interface.SendRequest { query : "query" }
+        grant response src=sc dst=fc endpoint=interface method=SendRequest { success : 1, response : "response" }
+    }
+
+    sequence "CredentialManager" {
+        grant cm ~> sc:interface.GetBoardId {}
+        grant response src=sc dst=cm endpoint=interface method=GetBoardId { success : 1, id : "id" }
+        grant cm ~> sc:interface.SendRequest { query : "query" }
+        grant response src=sc dst=cm endpoint=interface method=SendRequest { success : 1, response : "response" }
+    }
+
+    sequence "NavigationSystem" {
+        grant ns ~> sc:interface.GetBoardId {}
+        grant response src=sc dst=ns endpoint=interface method=GetBoardId { success : 1, id : "id" }
+        grant ns ~> sc:interface.SendRequest { query : "query" }
+        grant response src=sc dst=ns endpoint=interface method=SendRequest { success : 1, response : "response" }
+    }
+
+    sequence "PeripheryController" {
+        grant pc ~> sc:interface.GetBoardId {}
+        grant response src=sc dst=pc endpoint=interface method=GetBoardId { success : 1, id : "id" }
+        grant pc ~> sc:interface.SendRequest { query : "query" }
+        grant response src=sc dst=pc endpoint=interface method=SendRequest { success : 1, response : "response" }
+    }
+}

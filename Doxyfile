@@ -1,0 +1,27 @@
+DOXYFILE_ENCODING = UTF-8
+PROJECT_NAME = "cyberimmune-systems-autonomous-delivery-drone-with-kos"
+OUTPUT_DIRECTORY = doxygen
+GENERATE_LATEX = NO
+OUTPUT_LANGUAGE = Russian
+
+# The necessary stuff!
+GENERATE_XML = YES
+XML_OUTPUT = xml
+INPUT = kos orvd
+RECURSIVE = YES
+FILE_PATTERNS = *.h *.hpp *.cpp *.md *.py
+EXAMPLE_PATH = src-other
+EXAMPLE_PATTERNS = *.cpp
+
+# Html related stuff, optional
+SHOW_NAMESPACES = YES
+EXTRACT_ALL = YES
+GENERATE_HTML = YES
+
+# This is here just so we don't have to mess
+# with dot executable on continous integration.
+CALL_GRAPH = NO
+HAVE_DOT = NO
+
+IMAGE_PATH = images
+

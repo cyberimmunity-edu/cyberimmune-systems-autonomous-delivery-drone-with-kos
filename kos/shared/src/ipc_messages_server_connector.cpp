@@ -1,3 +1,9 @@
+/**
+ * \file
+ * \~English \brief Implementation of wrapper methods that send IPC messages to ServerConnector component.
+ * \~Russian \brief Реализация методов-оберток для отправки IPC-сообщений компоненту ServerConnector.
+ */
+
 #include "../include/ipc_messages_server_connector.h"
 #include "../include/initialization_interface.h"
 
@@ -7,7 +13,33 @@
 #define NK_USE_UNQUALIFIED_NAMES
 #include <drone_controller/ServerConnectorInterface.idl.h>
 
-int sendRequest(char* query, char* response) {
+int getBoardId(char* id) {
+    NkKosTransport transport;
+    nk_iid_t riid;
+    initSenderInterface("server_connector_connection", "drone_controller.ServerConnector.interface", transport, riid);
+
+    struct ServerConnectorInterface_proxy proxy;
+    ServerConnectorInterface_proxy_init(&proxy, &transport.base, riid);
+
+    ServerConnectorInterface_GetBoardId_req req;
+    ServerConnectorInterface_GetBoardId_res res;
+    char resBuffer[ServerConnectorInterface_GetBoardId_res_arena_size];
+    struct nk_arena resArena = NK_ARENA_INITIALIZER(resBuffer, resBuffer + sizeof(resBuffer));
+    nk_arena_reset(&resArena);
+
+    if ((ServerConnectorInterface_GetBoardId(&proxy.base, &req, NULL, &res, &resArena) != rcOk) || !res.success)
+        return 0;
+
+    nk_uint32_t len = 0;
+    nk_char_t *msg = nk_arena_get(nk_char_t, &resArena, &(res.id), &len);
+    if ((msg == NULL) || (len > ServerConnectorInterface_GetBoardId_res_arena_size))
+        return 0;
+    strncpy(id, msg, len);
+
+    return 1;
+}
+
+int sendRequest(char* query, char* response, uint32_t responseSize) {
     NkKosTransport transport;
     nk_iid_t riid;
     initSenderInterface("server_connector_connection", "drone_controller.ServerConnector.interface", transport, riid);
@@ -24,19 +56,20 @@ int sendRequest(char* query, char* response) {
     nk_arena_reset(&reqArena);
     nk_arena_reset(&resArena);
 
-    nk_char_t *msg = nk_arena_alloc(nk_char_t, &reqArena, &(req.query), strlen(query) + 1);
-    if (msg == NULL)
+    nk_uint32_t len = strlen(query);
+    nk_char_t *msg = nk_arena_alloc(nk_char_t, &reqArena, &(req.query), len + 1);
+    if ((msg == NULL) || (len > ServerConnectorInterface_SendRequest_req_arena_size))
         return 0;
-    strcpy(msg, query);
+    strncpy(msg, query, len);
 
     if ((ServerConnectorInterface_SendRequest(&proxy.base, &req, &reqArena, &res, &resArena) != rcOk) || !res.success)
         return 0;
 
-    nk_uint32_t len = 0;
+    len = 0;
     msg = nk_arena_get(nk_char_t, &resArena, &(res.response), &len);
-    if (msg == NULL)
+    if ((msg == NULL) || (len > responseSize))
         return 0;
-    strcpy(response, msg);
+    strncpy(response, msg, len);
 
     return 1;
 }

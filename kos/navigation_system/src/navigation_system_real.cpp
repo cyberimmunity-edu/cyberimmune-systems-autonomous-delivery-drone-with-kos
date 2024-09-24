@@ -1,3 +1,16 @@
+/**
+ * \file
+ * \~English
+ * \brief Implementation of methods for obtaining drone position.
+ * \details The file contains implementation of methods, that obtain current drone position
+ * from a GNSS module via UART interface and from a barometer via I2C interface.
+ *
+ * \~Russian
+ * \brief Реализация методов для получения данных о местоположении дрона.
+ * \details В файле реализованы методы, для получения информации о текущем местоположении
+ * дрона от модуля GNSS через интерфейс UART и через интерфейс I2C -- от барометра.
+ */
+
 #include "../include/navigation_system.h"
 #include "../../shared/include/ipc_messages_initialization.h"
 
@@ -12,6 +25,7 @@
 #include <unistd.h>
 #include <math.h>
 
+/** \cond */
 #define NAME_MAX_LENGTH 64
 
 std::thread barometerThread;
@@ -28,7 +42,18 @@ int32_t tempCoefs[3];
 int32_t pressCoefs[9];
 
 float temperatureFine;
+/** \endcond */
 
+/**
+ * \~English Writes a byte of information to I2C interface register.
+ * \param[in] reg Register to write to.
+ * \param[in] val Value to write.
+ * \return Returns 1 on successful write, 0 otherwise.
+ * \~Russian Выполняет запись байта информации в регистр интерфейса I2C.
+ * \param[in] reg Регистр, куда выполняется запись.
+ * \param[in] val Записываемое значение.
+ * \return Возвращает 1 при успешной записи, иначе -- 0.
+ */
 int writeRegister(uint8_t reg, uint8_t val) {
     I2cMsg messages[1];
     uint8_t buf[2] = { reg, val };
@@ -45,6 +70,16 @@ int writeRegister(uint8_t reg, uint8_t val) {
     return 1;
 }
 
+/**
+ * \~English Reads 2 bytes of information from I2C interface register.
+ * \param[in] reg Register to read from.
+ * \param[out] val Read values.
+ * \return Returns 1 on successful read, 0 otherwise.
+ * \~Russian Выполняет чтение 2 байт информации из регистра интерфейса I2C.
+ * \param[in] reg Регистр, откуда выполняется чтение.
+ * \param[out] val Прочитанные значение.
+ * \return Возвращает 1 при успешном чтении, иначе -- 0.
+ */
 int readRegister16(uint8_t reg, uint8_t* val) {
     I2cMsg messages[2];
     uint8_t writeBuffer[1] = { reg };
@@ -70,6 +105,20 @@ int readRegister16(uint8_t reg, uint8_t* val) {
     return 1;
 }
 
+/**
+ * \~English Reads 3 bytes of information from I2C interface register.
+ * \param[in] reg Register to read from.
+ * \param[out] val Read value.
+ * \return Returns 1 on successful read, 0 otherwise.
+ * \note Due to the specifics of read bytes combining into a 4-byte value, the method is designed
+ * to read temperature and pressure values.
+ * \~Russian Выполняет чтение 3 байт информации из регистра интерфейса I2C.
+ * \param[in] reg Регистр, откуда выполняется чтение.
+ * \param[out] val Прочитанное значение.
+ * \return Возвращает 1 при успешном чтении, иначе -- 0.
+ * \note Из-за специфики объединения прочитанных байтов информации в 4-байтное значение,
+ * метод рассчитан на чтение значений температуры и давления.
+ */
 int readRegister24(uint8_t reg, int32_t &val) {
     I2cMsg messages[2];
     uint8_t writeBuffer[1] = { reg };
@@ -93,6 +142,14 @@ int readRegister24(uint8_t reg, int32_t &val) {
     return 1;
 }
 
+/**
+ * \~English Reads current temperature from the barometer via I2C interface.
+ * \param[out] temperature Current temperature.
+ * \return Returns 1 on successful read, 0 otherwise.
+ * \~Russian Выполняет чтение значения текущей температуры из барометра через интерфейс I2C.
+ * \param[out] temperature Текущая температура.
+ * \return Возвращает 1 при успешном чтении, иначе -- 0.
+ */
 int getTemperature(float &temperature) {
     int32_t temp;
     if (!readRegister24(0xFA, temp))
@@ -107,6 +164,14 @@ int getTemperature(float &temperature) {
     return 1;
 }
 
+/**
+ * \~English Reads current pressure from the barometer via I2C interface.
+ * \param[out] pressure Current pressure.
+ * \return Returns 1 on successful read, 0 otherwise.
+ * \~Russian Выполняет чтение значения текущего давления из барометра через интерфейс I2C.
+ * \param[out] pressure Текущее давление.
+ * \return Возвращает 1 при успешном чтении, иначе -- 0.
+ */
 int getPressure(float &pressure) {
     int32_t press;
     if (!readRegister24(0xF7, press))
@@ -129,6 +194,13 @@ int getPressure(float &pressure) {
     return 1;
 }
 
+/**
+ * \~English Procedure that receives drone altitude from a barometer and updates the current location
+ * with the received altitude using \ref setAltitude. It is assumed that this procedure is looped
+ * and is performed in a parallel thread.
+ * \~Russian Процедура, выполняющая получение данных о высоте дрона от барометра, и обновление текущего местоположения
+ * полученной высотой при помощи \ref setAltitude. Предполагается, что данная процедура выполняется циклически в параллельной нити.
+ */
 void getBarometer() {
     while (true) {
         float temp, press;
@@ -142,15 +214,15 @@ void getBarometer() {
 }
 
 void getSensors() {
-    bool read, update;
+    bool read;
     uint8_t value;
-    int mode, idx, latSign, lngSign;
+    int mode, messageType, idx, latSign, lngSign;
     int32_t latitude, longitude;
-    char head[8], satsStr[8], dopStr[8], latStr[16], lngStr[16];
+    char head[8], satsStr[8], dopStr[8], latStr[16], lngStr[16], speedStr[16];
 
     while (true) {
-        update = true;
         read = true;
+        messageType = 0;
         mode = 0;
         idx = 0;
 
@@ -166,12 +238,18 @@ void getSensors() {
             case 1: //Header
                 if (idx >= 8) {
                     read = false;
-                    update = false;
+                    messageType = 0;
                 }
                 else if (value == ',') {
                     head[idx] = '\0';
-                    if ((head[2] == 'G') && (head[3] == 'G') && (head[4] == 'A'))
+                    if ((head[2] == 'G') && (head[3] == 'G') && (head[4] == 'A')) {
                         mode = 2;
+                        messageType = 1;
+                    }
+                    else if ((head[2] == 'V') && (head[3] == 'T') && (head[4] == 'G')) {
+                        mode = 10;
+                        messageType = 2;
+                    }
                     else
                         mode = 0;
                     idx = 0;
@@ -183,13 +261,19 @@ void getSensors() {
                 break;
             case 2: //UTC time
             case 7: //Quality
+            case 10: //True heading
+            case 11: //True heading consistency
+            case 12: //Magnetic heading
+            case 13: //Magnetic heading consistency
+            case 14: //Speed 1
+            case 15: //Speed 1 units (knots)
                 if (value == ',')
                     mode++;
                 break;
             case 3: //Lat
                 if (idx >= 16) {
                     read = false;
-                    update = false;
+                    messageType = 0;;
                 }
                 else if (value == ',') {
                     latStr[idx] = '\0';
@@ -210,13 +294,13 @@ void getSensors() {
                     mode = 5;
                 else {
                     read = false;
-                    update = false;
+                    messageType = 0;;
                 }
                 break;
             case 5: //Lng
                 if (idx >= 16) {
                     read = false;
-                    update = false;
+                    messageType = 0;;
                 }
                 else if (value == ',') {
                     lngStr[idx] = '\0';
@@ -237,13 +321,13 @@ void getSensors() {
                     mode = 7;
                 else {
                     read = false;
-                    update = false;
+                    messageType = 0;;
                 }
                 break;
             case 8: //Sats
                 if (idx >= 8) {
                     read = false;
-                    update = false;
+                    messageType = 0;;
                 }
                 else if (value == ',') {
                     satsStr[idx] = '\0';
@@ -258,7 +342,7 @@ void getSensors() {
             case 9: //Hdop
                 if (idx >= 8) {
                     read = false;
-                    update = false;
+                    messageType = 0;;
                 }
                 else if (value == ',') {
                     dopStr[idx] = '\0';
@@ -270,10 +354,25 @@ void getSensors() {
                     idx++;
                 }
                 break;
+            case 16: //Speed 2 (km/h)
+                if (idx >= 16) {
+                    read = false;
+                    messageType = 0;
+                }
+                else if (value == ',') {
+                    speedStr[idx] = '\0';
+                    idx = 0;
+                    read = false;
+                }
+                else {
+                    speedStr[idx] = value;
+                    idx++;
+                }
+                break;
             }
         }
 
-        if (update) {
+        if (messageType == 1) {
             longitude = round(10000000 * atof(lngStr + 3) / 60.0f);
             latitude = round(10000000 * atof(latStr + 2) / 60.0f);
             lngStr[3] = '\0';
@@ -282,8 +381,10 @@ void getSensors() {
             latitude += 10000000 * atoi(latStr);
 
             setCoords(latitude, longitude);
-            setGpsInfo(atof(dopStr), atoi(satsStr));
+            setInfo(atof(dopStr), atoi(satsStr));
         }
+        else if (messageType = 2)
+            setSpeed(atof(speedStr) / 3.6f);
         else
             logEntry("Failed to parse NMEA string from GPS", ENTITY_NAME, LogLevel::LOG_WARNING);
     }
@@ -312,30 +413,27 @@ int initNavigationSystem() {
         return 0;
     }
 
+    char logBuffer[257] = {0};
     Retcode rc = BspInit(NULL);
     if (rc != rcOk) {
-        char logBuffer[256];
         snprintf(logBuffer, 256, "Failed to initialize BSP ("RETCODE_HR_FMT")", RETCODE_HR_PARAMS(rc));
         logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_ERROR);
         return 0;
     }
     rc = BspEnableModule(gpsUart);
     if (rc != rcOk) {
-        char logBuffer[256];
         snprintf(logBuffer, 256, "Failed to enable UART %s ("RETCODE_HR_FMT")", RETCODE_HR_PARAMS(rc));
         logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_ERROR);
         return 0;
     }
     rc = BspSetConfig(gpsUart, gpsConfig);
     if (rc != rcOk) {
-        char logBuffer[256];
         snprintf(logBuffer, 256, "Failed to set BSP config for UART %s ("RETCODE_HR_FMT")", gpsUart, RETCODE_HR_PARAMS(rc));
         logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_ERROR);
         return 0;
     }
     rc = UartInit();
     if (rc != rcOk) {
-        char logBuffer[256];
         snprintf(logBuffer, 256, "Failed to initialize UART ("RETCODE_HR_FMT")", RETCODE_HR_PARAMS(rc));
         logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_ERROR);
         return 0;
@@ -343,21 +441,18 @@ int initNavigationSystem() {
 
     rc = BspEnableModule(barometerI2C);
     if (rc != rcOk) {
-        char logBuffer[256];
         snprintf(logBuffer, 256, "Failed to enable I2C %s ("RETCODE_HR_FMT")", barometerI2C, RETCODE_HR_PARAMS(rc));
         logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_ERROR);
         return 0;
     }
     rc = BspSetConfig(barometerI2C, barometerConfig);
     if (rc != rcOk) {
-        char logBuffer[256];
         snprintf(logBuffer, 256, "Failed to set BSP config for I2C %s ("RETCODE_HR_FMT")", barometerI2C, RETCODE_HR_PARAMS(rc));
         logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_ERROR);
         return 0;
     }
     rc = I2cInit();
     if (rc != rcOk) {
-        char logBuffer[256];
         snprintf(logBuffer, 256, "Failed to initialize I2C ("RETCODE_HR_FMT")", RETCODE_HR_PARAMS(rc));
         logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_ERROR);
         return 0;
@@ -367,9 +462,9 @@ int initNavigationSystem() {
 }
 
 int initSensors() {
+    char logBuffer[257] = {0};
     Retcode rc = UartOpenPort(gpsUart, &gpsUartHandler);
     if (rc != rcOk) {
-        char logBuffer[256];
         snprintf(logBuffer, 256, "Failed to open UART %s ("RETCODE_HR_FMT")", gpsUart, RETCODE_HR_PARAMS(rc));
         logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
         return 0;
@@ -382,13 +477,11 @@ int initSensors() {
     ssize_t expectedSize = sizeof(gnssNmea);
     rc = UartWrite(gpsUartHandler, gnssNmea, expectedSize, NULL, &writtenBytes);
     if (rc != rcOk) {
-        char logBuffer[256];
         snprintf(logBuffer, 256, "Failed to write configuration message to GPS ("RETCODE_HR_FMT")", RETCODE_HR_PARAMS(rc));
         logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
         return 0;
     }
     else if (writtenBytes != expectedSize) {
-        char logBuffer[256];
         snprintf(logBuffer, 256, "Failed to write configuration message to GPS: %ld bytes were expected, %ld bytes were sent", expectedSize, writtenBytes);
         logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
         return 0;
@@ -402,13 +495,11 @@ int initSensors() {
     expectedSize = sizeof(gnssSystems);
     rc = UartWrite(gpsUartHandler, gnssSystems, expectedSize, NULL, &writtenBytes);
     if (rc != rcOk) {
-        char logBuffer[256];
         snprintf(logBuffer, 256, "Failed to write configuration message to GPS ("RETCODE_HR_FMT")", RETCODE_HR_PARAMS(rc));
         logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
         return 0;
     }
     else if (writtenBytes != expectedSize) {
-        char logBuffer[256];
         snprintf(logBuffer, 256, "Failed to write configuration message to GPS: %ld bytes were expected, %ld bytes were sent", expectedSize, writtenBytes);
         logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
         return 0;
@@ -416,7 +507,6 @@ int initSensors() {
 
     rc = I2cOpenChannel(barometerI2C, &barometerHandler);
     if (rc != rcOk) {
-        char logBuffer[256];
         snprintf(logBuffer, 256, "Failed to open I2C %s ("RETCODE_HR_FMT")", barometerI2C, RETCODE_HR_PARAMS(rc));
         logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
         return 0;

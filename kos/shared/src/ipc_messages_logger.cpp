@@ -1,3 +1,9 @@
+/**
+ * \file
+ * \~English \brief Implementation of wrapper methods that send IPC messages to Logger component.
+ * \~Russian \brief Реализация методов-оберток для отправки IPC-сообщений компоненту Logger.
+ */
+
 #include "../include/ipc_messages_logger.h"
 #include "../include/initialization_interface.h"
 
@@ -20,12 +26,14 @@ int logEntry(char* entry, char* entity, LogLevel level) {
     struct nk_arena reqArena = NK_ARENA_INITIALIZER(reqBuffer, reqBuffer + sizeof(reqBuffer));
     nk_arena_reset(&reqArena);
 
-    char message[MAX_LOG_BUFFER];
+    char message[MAX_LOG_BUFFER + 1] = {0};
     snprintf(message, MAX_LOG_BUFFER, "[%s] %s", entity, entry);
-    nk_char_t *msg = nk_arena_alloc(nk_char_t, &reqArena, &(req.logEntry), strlen(message) + 1);
-    if (msg == NULL)
+
+    nk_uint32_t len = strlen(message);
+    nk_char_t *msg = nk_arena_alloc(nk_char_t, &reqArena, &(req.logEntry), len + 1);
+    if ((msg == NULL) || (len > LoggerInterface_Log_req_arena_size))
         return 0;
-    strcpy(msg, message);
+    strncpy(msg, message, len);
 
     req.logLevel = (uint8_t)level;
 

@@ -1,3 +1,18 @@
+/**
+ * \file
+ * \~English
+ * \brief Implementation of methods for hardware autopilot communication.
+ * \details The file contains implementation of methods,
+ * that provide interaction between the security module and a
+ * hardware flight controller with a compatible ArduPilot firmware.
+ *
+ * \~Russian
+ * \brief Реализация методов для взаимодействия с аппаратным автопилотом.
+ * \details В файле реализованы методы, обеспечивающие
+ * взаимодействие между модулем безопасности и аппаратным полетным
+ * контроллером с совместимой прошивкой ArduPilot.
+ */
+
 #include "../include/autopilot_connector.h"
 #include "../../shared/include/ipc_messages_initialization.h"
 
@@ -9,24 +24,33 @@
 #include <stdio.h>
 #include <unistd.h>
 
+/** \cond */
 #define NAME_MAX_LENGTH 64
 
 char autopilotUart[] = "uart2";
 char autopilotConfigSuffix[] = "default";
 UartHandle autopilotUartHandler = NULL;
+/** \endcond */
 
+/**
+ * \~English Sends the given value to the autopilot via UART interface.
+ * \param[in] value Value sent to autopilot.
+ * \return Returns 1 on successful value pass, 0 otherwise.
+ * \~Russian Передает в автопилот поданное значение через UART-интерфейс.
+ * \param[in] value Отправляемое в автопилот значение.
+ * \return Возвращает 1 при успешной передаче значения, 0 -- иначе.
+ */
 int writeIntValue(int32_t value) {
     rtl_size_t writtenBytes;
     ssize_t expectedSize = sizeof(int32_t);
+    char logBuffer[257] = {0};
     Retcode rc = UartWrite(autopilotUartHandler, (uint8_t*)(&value), expectedSize, NULL, &writtenBytes);
     if (rc != rcOk) {
-        char logBuffer[256];
         snprintf(logBuffer, 256, "Failed to write to UART %s ("RETCODE_HR_FMT")", autopilotUart, RETCODE_HR_PARAMS(rc));
         logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
         return 0;
     }
     else if (writtenBytes != expectedSize) {
-        char logBuffer[256];
         snprintf(logBuffer, 256, "Failed to write message to autopilot: %ld bytes were expected, %ld bytes were sent", expectedSize, writtenBytes);
         logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
         return 0;
@@ -41,42 +65,39 @@ int initAutopilotConnector() {
         sleep(1);
     }
 
-    char boardName[NAME_MAX_LENGTH] = {0};
+    char boardName[NAME_MAX_LENGTH + 1] = {0};
     if (KnHalGetEnv("board", boardName, sizeof(boardName)) != rcOk) {
         logEntry("Failed to get board name", ENTITY_NAME, LogLevel::LOG_ERROR);
         return 0;
     }
 
-    char autopilotConfig[NAME_MAX_LENGTH];
+    char autopilotConfig[NAME_MAX_LENGTH + 1] = {0};
     if (snprintf(autopilotConfig, NAME_MAX_LENGTH, "%s.%s", boardName, autopilotConfigSuffix) < 0) {
         logEntry("Failed to generate UART config name", ENTITY_NAME, LogLevel::LOG_ERROR);
         return 0;
     }
 
+    char logBuffer[257] = {0};
     Retcode rc = BspInit(NULL);
     if (rc != rcOk) {
-        char logBuffer[256];
         snprintf(logBuffer, 256, "Failed to initialize BSP ("RETCODE_HR_FMT")", RETCODE_HR_PARAMS(rc));
         logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_ERROR);
         return 0;
     }
     rc = BspEnableModule(autopilotUart);
     if (rc != rcOk) {
-        char logBuffer[256];
         snprintf(logBuffer, 256, "Failed to enable UART %s ("RETCODE_HR_FMT")", autopilotUart, RETCODE_HR_PARAMS(rc));
         logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_ERROR);
         return 0;
     }
     rc = BspSetConfig(autopilotUart, autopilotConfig);
     if (rc != rcOk) {
-        char logBuffer[256];
         snprintf(logBuffer, 256, "Failed to set BSP config for UART %s ("RETCODE_HR_FMT")", autopilotUart, RETCODE_HR_PARAMS(rc));
         logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_ERROR);
         return 0;
     }
     rc = UartInit();
     if (rc != rcOk) {
-        char logBuffer[256];
         snprintf(logBuffer, 256, "Failed to initialize UART ("RETCODE_HR_FMT")", RETCODE_HR_PARAMS(rc));
         logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_ERROR);
         return 0;
@@ -88,7 +109,7 @@ int initAutopilotConnector() {
 int initConnection() {
     Retcode rc = UartOpenPort(autopilotUart, &autopilotUartHandler);
     if (rc != rcOk) {
-        char logBuffer[256];
+        char logBuffer[257] = {0};
         snprintf(logBuffer, 256, "Failed to open UART %s ("RETCODE_HR_FMT")", autopilotUart, RETCODE_HR_PARAMS(rc));
         logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
         return 0;
@@ -99,10 +120,10 @@ int initConnection() {
 
 int getAutopilotCommand(uint8_t& command) {
     uint8_t message[sizeof(AutopilotCommandMessage)];
+    char logBuffer[257] = {0};
     for (int i = 0; i < AUTOPILOT_COMMAND_MESSAGE_HEAD_SIZE; i++) {
         Retcode rc = UartReadByte(autopilotUartHandler, message + i);
         if (rc != rcOk) {
-            char logBuffer[256];
             snprintf(logBuffer, 256, "Failed to read from UART %s ("RETCODE_HR_FMT")", autopilotUart, RETCODE_HR_PARAMS(rc));
             logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
             return 0;
@@ -119,13 +140,11 @@ int getAutopilotCommand(uint8_t& command) {
     Retcode rc = UartRead(autopilotUartHandler, (rtl_uint8_t*)(message + AUTOPILOT_COMMAND_MESSAGE_HEAD_SIZE),
         expectedSize, NULL, &readBytes);
     if (rc != rcOk) {
-        char logBuffer[256];
         snprintf(logBuffer, 256, "Failed to read from UART %s ("RETCODE_HR_FMT")", autopilotUart, RETCODE_HR_PARAMS(rc));
         logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
         return 0;
     }
     else if (readBytes != expectedSize) {
-        char logBuffer[256];
         snprintf(logBuffer, 256, "Failed to read message from autopilot: %ld bytes were expected, %ld bytes were received", expectedSize, readBytes);
         logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
         return 0;
@@ -140,15 +159,14 @@ int sendAutopilotCommand(AutopilotCommand command) {
 
     rtl_size_t writtenBytes;
     ssize_t expectedSize = sizeof(AutopilotCommandMessage);
+    char logBuffer[257] = {0};
     Retcode rc = UartWrite(autopilotUartHandler, (uint8_t*)(&message), expectedSize, NULL, &writtenBytes);
     if (rc != rcOk) {
-        char logBuffer[256];
         snprintf(logBuffer, 256, "Failed to write to UART %s ("RETCODE_HR_FMT")", autopilotUart, RETCODE_HR_PARAMS(rc));
         logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
         return 0;
     }
     else if (writtenBytes != expectedSize) {
-        char logBuffer[256];
         snprintf(logBuffer, 256, "Failed to write message to autopilot: %ld bytes were expected, %ld bytes were sent", expectedSize, writtenBytes);
         logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
         return 0;

@@ -1,0 +1,103 @@
+project (einit)
+
+include (platform/image)
+include (${KL_SDK_ROOT_PATH}/common/build-sd-image.cmake)
+
+project_header_default ("STANDARD_GNU_11:YES" "STRICT_WARNINGS:YES")
+
+set (ENTITIES AutopilotConnector CredentialManager FlightController NavigationSystem PeripheryController
+    ServerConnector Logger ${precompiled_vfsVfsSdCardFs})
+set (FILES)
+
+set_target_properties (${precompiled_vfsVfsSdCardFs} PROPERTIES
+    EXTRA_ARGS "\
+    - -l
+    - devfs /dev devfs 0")
+
+if (SIMULATION OR SERVER)
+    set_target_properties (${precompiled_vfsVfsNet} PROPERTIES
+        EXTRA_ARGS "\
+        - -l
+        - devfs /dev devfs rw
+        - -l
+        - ramfs /tmp ramfs rw
+        - -l
+        - romfs /etc romfs ro")
+    set_target_properties (${rump_DHCPCD_ENTITY} PROPERTIES
+        DEPENDS_ON_ENTITY ""
+        EXTRA_CONNECTIONS "\
+      - target: kl.VfsNet
+        id: kl.VfsNet"
+        EXTRA_ENV "\
+        VFS_FILESYSTEM_BACKEND: client:kl.VfsNet
+        VFS_NETWORK_BACKEND: client:kl.VfsNet"
+        EXTRA_ARGS "\
+        - '-4'
+        - -f
+        - /etc/dhcpcd.conf")
+    list(APPEND ENTITIES ${precompiled_vfsVfsNet} ${rump_DHCPCD_ENTITY})
+    list(APPEND FILES ${CMAKE_SOURCE_DIR}/resources/hdd/etc/dhcpcd.conf)
+endif ()
+
+if ((NOT SIMULATION) AND SERVER)
+    set_target_properties (${wpa_SUPPLICANT_ENTITY} PROPERTIES
+        DEPENDS_ON_ENTITY ""
+        EXTRA_CONNECTIONS "\
+      - target: kl.VfsNet
+        id: kl.VfsNet"
+        EXTRA_ENV "\
+        VFS_FILESYSTEM_BACKEND: client:kl.VfsNet
+        VFS_NETWORK_BACKEND: client:kl.VfsNet"
+        EXTRA_ARGS "\
+        - '-ien1'
+        - '-c/etc/wpa_supplicant.conf'")
+    list(APPEND ENTITIES ${wpa_SUPPLICANT_ENTITY})
+    list(APPEND FILES ${CMAKE_SOURCE_DIR}/resources/hdd/etc/wpa_supplicant.conf)
+endif ()
+
+if (SIMULATION)
+    set (FS_IMAGE mmc0.img)
+    if(EXISTS "${CMAKE_BINARY_DIR}/einit/drone_controller/${FS_IMAGE}")
+      add_custom_target (${FS_IMAGE})
+    else()
+      add_custom_target (${FS_IMAGE} COMMAND ${KL_SDK_ROOT_PATH}/common/prepare_hdd_img.sh -s 128 -f fat32 -img ${FS_IMAGE})
+    endif()
+    list(APPEND ENTITIES ${FS_IMAGE})
+endif ()
+
+if (SIMULATION)
+    if (SERVER)
+        set (CONNECITONS_FILE "src/sim_online.yaml.in")
+        set (SECURITY_FILE "src/sim_online.psl.in")
+    else ()
+        set (CONNECITONS_FILE "src/sim_offline.yaml.in")
+        set (SECURITY_FILE "src/sim_offline.psl.in")
+    endif ()
+else ()
+    if (SERVER)
+        set (CONNECITONS_FILE "src/real_online.yaml.in")
+        set (SECURITY_FILE "src/real_online.psl.in")
+    else ()
+        set (CONNECITONS_FILE "src/real_offline.yaml.in")
+        set (SECURITY_FILE "src/real_offline.psl.in")
+    endif ()
+endif()
+
+if (SIMULATION)
+    set (QEMU_FLAGS "--nographic -monitor none -netdev user,id=net0,dhcpstart=10.0.2.15 -drive file=${FS_IMAGE},if=sd,format=raw")
+    set (QEMU_ENV "QEMU_AUDIO_DRV=none")
+    build_kos_qemu_image (kos-qemu-image
+                        EINIT_ENTITY EinitQemu
+                        QEMU_FLAGS ${QEMU_FLAGS}
+                        QEMU_ENV ${QEMU_ENV}
+                        QEMU_DEPENDENCIES ${FS_IMAGE}
+                        CONNECTIONS_CFG ${CONNECITONS_FILE}
+                        SECURITY_PSL ${SECURITY_FILE}
+                        IMAGE_FILES ${ENTITIES} ${FILES})
+else ()
+    build_kos_hw_image (kos-image
+                        EINIT_ENTITY EinitHw
+                        CONNECTIONS_CFG ${CONNECITONS_FILE}
+                        SECURITY_PSL ${SECURITY_FILE}
+                        IMAGE_FILES ${ENTITIES} ${FILES})
+endif()

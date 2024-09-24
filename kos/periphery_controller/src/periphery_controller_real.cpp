@@ -1,3 +1,16 @@
+/**
+ * \file
+ * \~English
+ * \brief Implementation of methods for hardware peripherals control.
+ * \details The file contains implementation of methods,
+ * that control peripheral drone devices via GPIO interface.
+ *
+ * \~Russian
+ * \brief Реализация методов для работы с аппаратной периферией.
+ * \details В файле реализованы методы, управляющие периферийными устройствами
+ * дрона через интерфейс GPIO.
+ */
+
 #include "../include/periphery_controller.h"
 
 #include <coresrv/hal/hal_api.h>
@@ -12,6 +25,7 @@
 #define NK_USE_UNQUALIFIED_NAMES
 #include <drone_controller/PeripheryController.edl.h>
 
+/** \cond */
 #define NAME_MAX_LENGTH 64
 
 char gpio[] = "gpio0";
@@ -24,11 +38,22 @@ uint8_t pinKillSwitchFirst = 22;
 uint8_t pinKillSwitchSecond = 27;
 
 bool killSwitchEnabled;
+/** \endcond */
 
+/**
+ * \~English Sets the mode of specified pin power supply.
+ * \param[in] pin Pin to set mode.
+ * \param[in] mode Mode. 1 is high, 0 is low.
+ * \return Returns 1 on successful mode set, 0 otherwise.
+ * \~Russian Устанавливает режим подачи энергии на заданный пин.
+ * \param[in] pin Пин, для которого устанавливается режим.
+ * \param[in] mode Режим. 1 -- высокий, 0 -- низкий.
+ * \return Возвращает 1, если режим был успешно установлен, иначе -- 0.
+ */
 int setPin(uint8_t pin, bool mode) {
     Retcode rc = GpioOut(gpioHandler, pin, mode);
     if (rcOk != rc) {
-        char logBuffer[256];
+        char logBuffer[257] = {0};
         snprintf(logBuffer, 256, "Failed to set GPIO pin %d to %d ("RETCODE_HR_FMT")", pin, mode, RETCODE_HR_PARAMS(rc));
         logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
         return 0;
@@ -50,23 +75,21 @@ int initPeripheryController() {
         return 0;
     }
 
+    char logBuffer[257] = {0};
     Retcode rc = BspInit(NULL);
     if (rc != rcOk) {
-        char logBuffer[256];
         snprintf(logBuffer, 256, "Failed to initialize BSP ("RETCODE_HR_FMT")", RETCODE_HR_PARAMS(rc));
         logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_ERROR);
         return 0;
     }
     rc = BspSetConfig(gpio, gpioConfig);
     if (rc != rcOk) {
-        char logBuffer[256];
         snprintf(logBuffer, 256, "Failed to set BSP config for GPIO %s ("RETCODE_HR_FMT")", gpio, RETCODE_HR_PARAMS(rc));
         logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_ERROR);
         return 0;
     }
     rc = GpioInit();
     if (rc != rcOk) {
-        char logBuffer[256];
         snprintf(logBuffer, 256, "Failed to initialize GPIO ("RETCODE_HR_FMT")", RC_GET_CODE(rc));
         logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_ERROR);
         return 0;
@@ -76,9 +99,9 @@ int initPeripheryController() {
 }
 
 int initGpioPins() {
+    char logBuffer[257] = {0};
     Retcode rc = GpioOpenPort(gpio, &gpioHandler);
     if (rcOk != rc) {
-        char logBuffer[256];
         snprintf(logBuffer, 256, "Failed top open GPIO %s ("RETCODE_HR_FMT")", gpio, RETCODE_HR_PARAMS(rc));
         logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
         return 0;
@@ -88,7 +111,6 @@ int initGpioPins() {
     for (uint8_t pin : pins) {
         rc = GpioSetMode(gpioHandler, pin, GPIO_DIR_OUT);
         if (rcOk != rc) {
-            char logBuffer[256];
             snprintf(logBuffer, 256, "Failed to set GPIO pin %u mode ("RETCODE_HR_FMT")", pin, RETCODE_HR_PARAMS(rc));
             logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
             return 0;

@@ -1,0 +1,52 @@
+/* Solution security policy */
+use drone_controller._
+
+@INIT_EXTERNAL_ENTITIES@
+
+/* Request messages */
+request {
+    match src=Einit { grant () }
+    match src=kl.core.Core { grant () }
+    match dst=kl.core.Core {
+        match src=drone_controller.AutopilotConnector { grant () }
+        match src=drone_controller.CredentialManager { grant () }
+        match src=drone_controller.FlightController { grant () }
+        match src=drone_controller.NavigationSystem { grant () }
+        match src=drone_controller.PeripheryController { grant () }
+        match src=drone_controller.ServerConnector { grant () }
+        match src=drone_controller.Logger { grant () }
+    }
+    match dst=kl.VfsNet {
+        match src=drone_controller.AutopilotConnector { grant () }
+        match src=drone_controller.NavigationSystem { grant () }
+        match src=drone_controller.PeripheryController { grant () }
+    }
+    match dst=kl.VfsSdCardFs {
+        match src=drone_controller.CredentialManager { grant () }
+        match src=drone_controller.Logger { grant () }
+    }
+}
+
+/* Response messages */
+response {
+    match dst=Einit { grant () }
+    match dst=kl.core.Core { grant () }
+    match src=kl.core.Core {
+        match dst=drone_controller.AutopilotConnector { grant () }
+        match dst=drone_controller.CredentialManager { grant () }
+        match dst=drone_controller.FlightController { grant () }
+        match dst=drone_controller.NavigationSystem { grant () }
+        match dst=drone_controller.PeripheryController { grant () }
+        match dst=drone_controller.ServerConnector { grant () }
+        match dst=drone_controller.Logger { grant () }
+    }
+    match src=kl.VfsNet {
+        match dst=drone_controller.AutopilotConnector { grant () }
+        match dst=drone_controller.NavigationSystem { grant () }
+        match dst=drone_controller.PeripheryController { grant () }
+    }
+    match src=kl.VfsSdCardFs {
+        match dst=drone_controller.CredentialManager { grant () }
+        match dst=drone_controller.Logger { grant () }
+    }
+}

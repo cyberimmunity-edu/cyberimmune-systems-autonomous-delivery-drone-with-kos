@@ -1,3 +1,9 @@
+/**
+ * \file
+ * \~English \brief Implementation of wrapper methods that send IPC messages to PeripheryController component.
+ * \~Russian \brief Реализация методов-оберток для отправки IPC-сообщений компоненту PeripheryController.
+ */
+
 #include "../include/ipc_messages_periphery_controller.h"
 #include "../include/initialization_interface.h"
 

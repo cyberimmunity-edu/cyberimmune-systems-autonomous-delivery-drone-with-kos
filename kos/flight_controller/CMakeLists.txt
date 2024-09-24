@@ -12,4 +12,3 @@ add_executable (FlightController "src/main.cpp" "src/flight_controller.cpp" "../
 add_dependencies (FlightController flight_controller_edl_files)
 
 target_compile_definitions (FlightController PRIVATE ENTITY_NAME="Flight Controller")
-target_compile_definitions (FlightController PRIVATE BOARD_ID="id=${BOARD_ID}")

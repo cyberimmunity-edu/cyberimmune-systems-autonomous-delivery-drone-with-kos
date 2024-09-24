@@ -1,11 +1,19 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Logs</title>
-      <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
-      </head>
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Logs</title>
+    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <script src="{{ url_for('static', filename='external/chart.js') }}"></script>
+    <script src="{{ url_for('static', filename='external/chartjs-adapter-date-fns.js') }}"></script>
+    <style>
+        #speed-chart-container {
+            width: 800px;
+            height: 300px;
+        }
+    </style>
+</head>
 <body>
 <script type="module" src="{{ url_for('static',filename='logs.js') }}"> </script>
 
@@ -13,7 +21,12 @@
 
 <label for="id">ID:</label>
 <input id="id" type="text" name="id" /><br><br>
-<input id="submit" type="submit" value="Получить">
+<input id="submit" type="submit" value="Получить логи">
+<input id="submit-speed" type="submit" value="Получить график скорости">
 <div id="logs-container"></div>
+<div id="speed-chart-container">
+    <canvas id="speed-chart"></canvas>
+</div>
+
 </body>
 </html>

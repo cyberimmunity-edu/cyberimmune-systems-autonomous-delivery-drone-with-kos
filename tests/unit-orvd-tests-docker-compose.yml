@@ -1,0 +1,11 @@
+
+services:
+#################################################
+  orvd:
+    image: orvd
+    build:
+      context: .
+      dockerfile: ./orvd.Dockerfile
+    container_name: orvd
+    command: /var/www/orvd/run_tests.sh
+    working_dir: /var/www/orvd

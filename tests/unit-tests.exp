@@ -1,0 +1,6 @@
+#!/usr/bin/expect
+spawn ./cross-build.sh --target unit-tests
+set timeout 200
+expect_after eof {exit 0}
+expect_after timeout {exit 1}
+expect "All unit tests are passed" { exit }

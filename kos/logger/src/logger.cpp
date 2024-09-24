@@ -1,3 +1,14 @@
+/**
+ * \file
+ * \~English
+ * \brief Implementation of methods for work with a log.
+ * \details The file contains implementation of methods, that are required to log messages.
+ *
+ * \~Russian
+ * \brief Реализация методов для работы с логом.
+ * \details В файле реализованы методы, необходимые для логирования сообщений.
+ */
+
 #include "../include/logger.h"
 
 #include <spdlog/sinks/stdout_color_sinks.h>
@@ -5,7 +16,9 @@
 #include <spdlog/pattern_formatter.h>
 #include <spdlog/spdlog.h>
 
+/** \cond */
 std::shared_ptr<spdlog::logger> logger;
+/** \endcond */
 
 int createLog() {
     auto consoleSink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
@@ -21,7 +34,7 @@ int createLog() {
     logger = std::make_shared<spdlog::logger>("Flight Controller", sinks);
     spdlog::register_logger(logger);
     spdlog::set_default_logger(logger);
-    spdlog::flush_every (std::chrono::seconds(5));
+    spdlog::flush_on(spdlog::level::trace);
 
     return 1;
 }

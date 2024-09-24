@@ -1,14 +1,13 @@
 
 services:
 #################################################
-# cross-build-sim-offline.sh SIMULATOR_IP SERVER_IP
   kos:
     image: simulator
     build:
       context: .
       dockerfile: ./Dockerfile
     container_name: kos
-    command: /home/user/kos/cross-build-sim-offline.sh 172.28.0.2
+    command: /home/user/kos/cross-build.sh --target sim --mode offline --simulator-ip 172.28.0.2
     working_dir: /home/user/kos
     user: user
     depends_on:
@@ -53,7 +52,7 @@ services:
       context: .
       dockerfile: ./Dockerfile
     container_name: kos1
-    command: /home/user/kos/cross-build-sim-offline.sh 172.28.0.12
+    command: /home/user/kos/cross-build.sh --target sim --mode offline --simulator-ip 172.28.0.12
     working_dir: /home/user/kos
     user: user
     depends_on:
@@ -98,7 +97,7 @@ services:
       context: .
       dockerfile: ./Dockerfile
     container_name: kos2
-    command: /home/user/kos/cross-build-sim-offline.sh 172.28.0.22
+    command: /home/user/kos/cross-build.sh --target sim --mode offline --simulator-ip 172.28.0.22
     working_dir: /home/user/kos
     user: user
     depends_on:

@@ -9,6 +9,5 @@ add_executable (Logger "src/main.cpp" "src/logger.cpp" "src/logger_interface.cpp
 add_dependencies (Logger logger_edl_files)
 
 target_compile_definitions (Logger PRIVATE ENTITY_NAME="Logger")
-target_compile_definitions (Logger PRIVATE BOARD_ID="id=${BOARD_ID}")
 target_compile_features (Logger PRIVATE cxx_std_17)
 target_link_libraries (Logger ${vfs_CLIENT_LIB} ${logger_LIB})

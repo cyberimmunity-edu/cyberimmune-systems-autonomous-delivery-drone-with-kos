@@ -1,0 +1,100 @@
+/* Solution security policy */
+use nk.base._
+
+/* Including EDL files */
+use EDL Einit
+use EDL kl.core.Core
+use EDL drone_controller.AutopilotConnector
+use EDL drone_controller.CredentialManager
+use EDL drone_controller.FlightController
+use EDL drone_controller.NavigationSystem
+use EDL drone_controller.PeripheryController
+use EDL drone_controller.ServerConnector
+use EDL drone_controller.Logger
+
+/* Execution of entities */
+execute {
+    match src=Einit { grant () }
+    match src=kl.core.Core { grant () }
+    match src=drone_controller.AutopilotConnector { grant () }
+    match src=drone_controller.CredentialManager { grant () }
+    match src=drone_controller.FlightController { grant () }
+    match src=drone_controller.NavigationSystem { grant () }
+    match src=drone_controller.PeripheryController { grant () }
+    match src=drone_controller.ServerConnector { grant () }
+    match src=drone_controller.Logger { grant () }
+}
+
+/* Request messages */
+request {
+    match interface=drone_controller.Initialization method=WaitForInit { grant () }
+
+    match dst=drone_controller.AutopilotConnector interface=drone_controller.AutopilotConnectorInterface {
+        match src=drone_controller.FlightController { grant () }
+    }
+
+    match dst=drone_controller.CredentialManager interface=drone_controller.CredentialManagerInterface {
+        match src=drone_controller.FlightController { grant () }
+        match src=drone_controller.NavigationSystem { grant () }
+        match src=drone_controller.PeripheryController { grant () }
+    }
+
+    match dst=drone_controller.NavigationSystem interface=drone_controller.NavigationSystemInterface {
+        match src=drone_controller.FlightController { grant () }
+    }
+
+    match dst=drone_controller.PeripheryController interface=drone_controller.PeripheryControllerInterface {
+        match src=drone_controller.FlightController { grant () }
+    }
+
+    match dst=drone_controller.ServerConnector interface=drone_controller.ServerConnectorInterface {
+        match src=drone_controller.FlightController { grant () }
+        match src=drone_controller.CredentialManager { grant () }
+        match src=drone_controller.NavigationSystem { grant () }
+        match src=drone_controller.PeripheryController { grant () }
+    }
+
+    match dst=drone_controller.Logger interface=drone_controller.LoggerInterface method=Log { grant () }
+}
+
+/* Response messages */
+response {
+    match interface=drone_controller.Initialization method=WaitForInit { grant () }
+
+    match src=drone_controller.AutopilotConnector interface=drone_controller.AutopilotConnectorInterface {
+        match dst=drone_controller.FlightController { grant () }
+    }
+
+    match src=drone_controller.CredentialManager interface=drone_controller.CredentialManagerInterface {
+        match dst=drone_controller.FlightController { grant () }
+        match dst=drone_controller.NavigationSystem { grant () }
+        match dst=drone_controller.PeripheryController { grant () }
+    }
+
+    match src=drone_controller.NavigationSystem interface=drone_controller.NavigationSystemInterface {
+        match dst=drone_controller.FlightController { grant () }
+    }
+
+    match src=drone_controller.PeripheryController interface=drone_controller.PeripheryControllerInterface {
+        match dst=drone_controller.FlightController { grant () }
+    }
+
+    match src=drone_controller.ServerConnector interface=drone_controller.ServerConnectorInterface {
+        match dst=drone_controller.FlightController { grant () }
+        match dst=drone_controller.CredentialManager { grant () }
+        match dst=drone_controller.NavigationSystem { grant () }
+        match dst=drone_controller.PeripheryController { grant () }
+    }
+
+    match src=drone_controller.Logger interface=drone_controller.LoggerInterface method=Log { grant () }
+}
+
+/* Error calls */
+error {
+    grant ()
+}
+
+/* Security calls */
+security {
+    grant ()
+}

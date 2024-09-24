@@ -1,25 +1,29 @@
 #! /usr/bin/bash
-rm -f mavproxy/mav.parm
-rm -f mavproxy/mav.tlog
-rm -f mavproxy/mav.tlog.raw
+rm -f mavproxy/MAVProxy/mav.parm
+rm -f mavproxy/MAVProxy/mav.tlog
+rm -f mavproxy/MAVProxy/mav.tlog.raw
 rm -f ardupilot/eeprom.bin
 rm -rf ardupilot/logs
 rm -rf ardupilot/terrain
-cd planner
-gnome-terminal -- ./APM_Planner.AppImage
-cd ../kos
+tmux kill-session -t flight_controller
+tmux new-session -d -s flight_controller
+tmux send-keys -t flight_controller "cd planner; ./APM_Planner.AppImage" Enter
+tmux split-window -h -t flight_controller
 if [[ $* == *"--no-server"* ]]
 	then
-		gnome-terminal -- ./cross-build-sim-offline.sh
+		tmux send-keys -t flight_controller "cd kos; ./cross-build.sh --target sim --mode offline" Enter
 	else
-		gnome-terminal -- ./cross-build-sim-online.sh
+		tmux send-keys -t flight_controller "cd kos; ./cross-build.sh --target sim --mode online" Enter
 fi
-cd ../ardupilot
+tmux split-window -v -p 50 -t flight_controller
 if [[ $* == *"--with-obstacles"* ]]
 	then
-		gnome-terminal -- ./run_in_terminal_window.sh ArduCopter sitl_obstacles/bin/arducopter -S --model + --speedup 1 --slave 0 --serial5=tcp:5765:wait --serial6=tcp:5766:wait --serial7=tcp:5767:wait --defaults copter.parm --sim-address=127.0.0.1 --home=46.6143745,142.8119421,69.45,0 -I0
+		tmux send-keys -t flight_controller "cd ardupilot; ./run_in_terminal_window.sh ArduCopter sitl_obstacles/bin/arducopter -S --model + --speedup 1 --slave 0 --serial5=tcp:5765:wait --serial6=tcp:5766:wait --serial7=tcp:5767:wait --defaults copter.parm --sim-address=127.0.0.1 --home=53.1019446,107.3774394,846.22,0 -I0" Enter
 	else
-		gnome-terminal -- ./run_in_terminal_window.sh ArduCopter sitl/bin/arducopter -S --model + --speedup 1 --slave 0 --serial5=tcp:5765:wait --serial6=tcp:5766:wait --serial7=tcp:5767:wait --defaults copter.parm --sim-address=127.0.0.1 --home=46.6143745,142.8119421,69.45,0 -I0
+		tmux send-keys -t flight_controller "cd ardupilot; ./run_in_terminal_window.sh ArduCopter sitl/bin/arducopter -S --model + --speedup 1 --slave 0 --serial5=tcp:5765:wait --serial6=tcp:5766:wait --serial7=tcp:5767:wait --defaults copter.parm --sim-address=127.0.0.1 --home=53.1019446,107.3774394,846.22,0 -I0" Enter
 fi
-cd ../mavproxy
-python3 MAVProxy/mavproxy.py --out 127.0.0.1:14550 --out 127.0.0.1:14551 --master tcp:127.0.0.1:5760 --sitl 127.0.0.1:5501
+tmux select-pane -t flight_controller:0.0
+tmux split-window -v -p 50 -t flight_controller
+tmux send-keys -t flight_controller "cd mavproxy/MAVProxy; mavproxy.py --out='127.0.0.1:14550' --out='127.0.0.1:14551' --master='tcp:127.0.0.1:5760' --sitl='127.0.0.1:5501'" Enter
+tmux select-pane -t flight_controller:0.0
+tmux attach -t flight_controller

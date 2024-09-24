@@ -1,0 +1,11 @@
+entities:
+
+- name: drone_controller.UnitTests
+  env:
+    VFS_FILESYSTEM_BACKEND: client:kl.VfsSdCardFs
+  connections:
+  - target: kl.VfsSdCardFs
+    id: kl.VfsSdCardFs
+@INIT_UnitTests_ENTITY_CONNECTIONS@
+
+@INIT_EXTERNAL_ENTITIES@

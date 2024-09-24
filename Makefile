@@ -1,4 +1,7 @@
-.PHONY: docker-compose-stop
+.PHONY: docker-compose-stop docs
+
+docs:
+	doxygen Doxyfile
 
 docker: docker-image
 
@@ -100,3 +103,17 @@ e2e-online-obstacles: docker-image
 	docker-compose -f tests/e2e-online-obstacles-docker-compose.yml down
 
 e2e-tests: e2e-offline e2e-online
+
+unit-tests: docker-image-simulator
+	docker-compose -f tests/unit-tests-docker-compose.yml up --abort-on-container-exit --exit-code-from kos
+	docker-compose -f tests/unit-tests-docker-compose.yml down
+
+unit-orvd-tests: docker-image-orvd
+	docker-compose -f tests/unit-orvd-tests-docker-compose.yml up --abort-on-container-exit --exit-code-from orvd
+	docker-compose -f tests/unit-orvd-tests-docker-compose.yml down
+
+pal-tests: docker-image
+	docker-compose -f tests/pal-tests-docker-compose.yml up --abort-on-container-exit --exit-code-from kos
+	docker-compose -f tests/pal-tests-docker-compose.yml down
+
+all-tests: e2e-tests unit-tests unit-orvd-tests pal-tests

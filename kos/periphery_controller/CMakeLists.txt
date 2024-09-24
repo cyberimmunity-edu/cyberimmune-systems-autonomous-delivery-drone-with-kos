@@ -10,14 +10,13 @@ else()
     set (PERIPHERY_CONTROLLER_SRC "src/periphery_controller_real.cpp")
 endif()
 
-add_executable (PeripheryController "src/main.cpp" "src/periphery_controller_shared.cpp" ${PERIPHERY_CONTROLLER_SRC}
+add_executable (PeripheryController "src/main.cpp" "src/periphery_controller.cpp" ${PERIPHERY_CONTROLLER_SRC}
     "src/periphery_controller_interface.cpp" "../shared/src/initialization_interface.cpp"
     "../shared/src/ipc_messages_credential_manager.cpp" "../shared/src/ipc_messages_server_connector.cpp"
     "../shared/src/ipc_messages_initialization.cpp" "../shared/src/ipc_messages_logger.cpp")
 add_dependencies (PeripheryController periphery_controller_edl_files)
 
 target_compile_definitions (PeripheryController PRIVATE ENTITY_NAME="Periphery Controller")
-target_compile_definitions (PeripheryController PRIVATE BOARD_ID="id=${BOARD_ID}")
 
 if (SIMULATION)
     target_compile_definitions (PeripheryController PRIVATE SIMULATOR_IP="${SIMULATOR_IP}")
@@ -25,5 +24,4 @@ if (SIMULATION)
 else ()
     target_link_libraries (PeripheryController ${bsp_CLIENT_LIB} ${gpio_CLIENT_LIB})
 endif()
-
 target_link_libraries (PeripheryController ${CMAKE_THREAD_LIBS_INIT})

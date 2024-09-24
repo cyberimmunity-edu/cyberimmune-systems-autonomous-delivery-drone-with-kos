@@ -3,4 +3,5 @@ package drone_controller.NavigationSystemInterface
 interface {
     GetCoords(out UInt8 success, out SInt32 lat, out SInt32 lng, out SInt32 alt);
     GetGpsInfo(out UInt8 success, out SInt32 dop, out SInt32 sats);
+    GetSpeed(out UInt8 success, out SInt32 speed);
 }

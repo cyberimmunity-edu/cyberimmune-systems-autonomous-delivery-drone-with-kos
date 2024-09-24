@@ -1,3 +1,9 @@
+/**
+ * \file
+ * \~English \brief Implementation of wrapper methods that send IPC messages to AutopilotConnector component.
+ * \~Russian \brief Реализация методов-оберток для отправки IPC-сообщений компоненту AutopilotConnector.
+ */
+
 #include "../include/ipc_messages_autopilot_connector.h"
 #include "../include/initialization_interface.h"
 
