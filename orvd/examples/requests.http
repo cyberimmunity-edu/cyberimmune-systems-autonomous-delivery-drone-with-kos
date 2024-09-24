@@ -62,13 +62,16 @@ POST {{baseUrl}}/admin/set_forbidden_zone
 Content-Type: application/json
 
 {
-  "geometry": "[[100, 50], [100, 0]]",
+  "geometry": [[100, 50], [100, 0]],
   "name": "zone_name",
   "token": "ADMIN_TOKEN"
 }
 
 ### Удаление запрещенной зоны
-GET {{baseUrl}}/admin/delete_forbidden_zone?name=zone_name&token=ADMIN_TOKEN
+DELETE {{baseUrl}}/admin/delete_forbidden_zone?name=zone_name&token=ADMIN_TOKEN
+
+### Страница управления запрещенными зонами
+GET {{baseUrl}}/admin/forbidden_zones?token=ADMIN_TOKEN
 
 ### Страница логов
 GET {{baseUrl}}/logs
@@ -114,3 +117,9 @@ GET {{baseUrl}}/api/fmission_kos?id=1&sig=signature
 
 ### Получение всех запрещенных зон для БПЛА
 GET {{baseUrl}}/api/get_all_forbidden_zones?id=1&sig=signature
+
+### Получение дельты изменений в запрещенных зонах
+GET {{baseUrl}}/api/get_forbidden_zones_delta?id=1&sig=signature
+
+### Получение хэша запрещенных зон
+GET {{baseUrl}}/api/forbidden_zones_hash?id=1&sig=signature

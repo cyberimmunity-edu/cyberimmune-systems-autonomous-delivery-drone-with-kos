@@ -1,73 +1,72 @@
 html, body {
-    margin: 0;
-    height: 100%;
-  }
-  
-  #map {
-    position: absolute;
-    top: 0px;
-    bottom: 0px;
-    right: 0px;
-    width: 80%;
-  }
+  margin: 0;
+  height: 100%;
+}
 
-  .button {
-    background-color: #04AA6D; /* Green */
-    border: none;
-    color: white;
-    padding: 15px 32px;
-    text-align: center;
-    transition-duration: 0.4s;
-    text-decoration: none;
-    display: inline-block;
-    font-size: 16px;
-    display: block;
-    border: 1px solid green;
-    border-radius: 6px;
-    margin-top: 3px; 
-    width: 250px;
-  }
+#map {
+  position: absolute;
+  top: 0px;
+  bottom: 0px;
+  right: 0px;
+  width: 80%;
+}
 
-  .button:hover {
-    background-color: white;
-    color: black;
-    border: 2px solid #04AA6D;
-  }
+.button {
+  background-color: #04AA6D; /* Green */
+  border: none;
+  color: white;
+  padding: 15px 32px;
+  text-align: center;
+  transition-duration: 0.4s;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  display: block;
+  border: 1px solid green;
+  border-radius: 6px;
+  margin-top: 3px; 
+  width: 250px;
+}
 
-  .button:disabled {
-    background-color: grey; 
-    color: black;
-    border: 1px solid white;
-  }
+.button:hover {
+  background-color: white;
+  color: black;
+  border: 2px solid #04AA6D;
+}
 
-  .container {
-    position: absolute;
-    top: 0px;
-    bottom: 0px;
-    left: 0px;
-    color: red;
-    width: 20%;
-  }
+.button:disabled {
+  background-color: grey; 
+  color: black;
+  border: 1px solid white;
+}
 
-  .horizontal-center {
-    margin: 0;
-    position: absolute;
-    left: 50%;
-    -ms-transform: translate(-50%, 0%);
-    transform: translate(-50%, 0%);
-    direction: ltr;
-  }
+.container {
+  position: absolute;
+  top: 0px;
+  bottom: 0px;
+  left: 0px;
+  width: 20%;
+}
 
-  .disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
+.horizontal-center {
+  margin: 0;
+  position: absolute;
+  left: 50%;
+  -ms-transform: translate(-50%, 0%);
+  transform: translate(-50%, 0%);
+  direction: ltr;
+}
 
-  .marginb {
-    margin-bottom: 1em;
-  }
+.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
 
-  /* Стиль Выпадающей Кнопки */
+.marginb {
+  margin-bottom: 1em;
+}
+
+/* Стиль Выпадающей Кнопки */
 .dropbtn {
   background-color: #04AA6D;
   color: white;
@@ -145,4 +144,39 @@ label {
   transform: translateX(3%);
   visibility: hidden;
   pointer-events: none;
+}
+
+.form-button {
+  display: block;
+  width: 75%;
+  margin: 10px auto;
+  padding: 10px 20px;
+  background-color: #04AA6D;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  text-align: center;
+}
+
+.form-button:hover {
+  background-color: #3e8e41;
+}
+
+
+.zone-name-input {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 75%;
+  margin: 0 auto;
+}
+
+#zone-name {
+  flex-grow: 1;
+  margin-left: 10px;
+}
+
+.center-title {
+  text-align: center;
 }
