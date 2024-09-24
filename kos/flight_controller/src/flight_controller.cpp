@@ -221,10 +221,22 @@ int parseAreas(char* str) {
     areas = (NoFlightArea*)malloc(areaNum * sizeof(NoFlightArea));
 
     for (int i = 0; i < areaNum; i++) {
+        char* nameEnd = strstr(str, "&");
+        if (nameEnd == NULL) {
+            char logBuffer[256];
+            snprintf(logBuffer, 256, "Failed to parse a name of no-flight area %d", i + 1);
+            logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
+            return 0;
+        }
+        int nameLen = nameEnd - str;
+        if (nameLen > AREA_NAME_MAX_LEN)
+            nameLen = AREA_NAME_MAX_LEN;
+        strncpy(areas[i].name, str, nameLen);
+        str = nameEnd + 1;
         int32_t pointNum;
         if (!parseInt(str, pointNum, 0)) {
             char logBuffer[256];
-            snprintf(logBuffer, 256, "Failed to parse a number of no-flight area %d points", i);
+            snprintf(logBuffer, 256, "Failed to parse a number of no-flight area %d points", i + 1);
             logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
             return 0;
         }
@@ -234,7 +246,7 @@ int parseAreas(char* str) {
         for (int j = 0; j < pointNum; j++)
             if (!parseInt(str, areas[i].points[j].latitude, 7) || !parseInt(str, areas[i].points[j].longitude, 7)) {
                 char logBuffer[256];
-                snprintf(logBuffer, 256, "Failed to parse point %d of no-flight area %d", j, i);
+                snprintf(logBuffer, 256, "Failed to parse point %d of no-flight area %d", j + 1, i + 1);
                 logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
                 return 0;
             }
@@ -308,7 +320,7 @@ int parseNoFlightAreas(char* response) {
     char header[] = "$ForbiddenZones ";
     char* start = strstr(response, header);
     if (start == NULL) {
-        logEntry("Response from the server does not contain mno flight areas", ENTITY_NAME, LogLevel::LOG_WARNING);
+        logEntry("Response from the server does not contain no-flight areas", ENTITY_NAME, LogLevel::LOG_WARNING);
         return 0;
     }
     start += strlen(header);
@@ -325,7 +337,7 @@ void printNoFlightAreas() {
     snprintf(logBuffer, 256, "Number of no-flight areas: %d", areaNum);
     logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_INFO);
     for (int i = 0; i < areaNum; i++) {
-        snprintf(logBuffer, 256, "Area %d contains %d points", i + 1, areas[i].pointNum);
+        snprintf(logBuffer, 256, "Area '%s' contains %d points", areas[i].name, areas[i].pointNum);
         logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_INFO);
         for (int j = 0; j < areas[i].pointNum; j++) {
             snprintf(logBuffer, 256, "Point %d: %d, %d", j + 1, areas[i].points[j].latitude, areas[i].points[j].longitude);

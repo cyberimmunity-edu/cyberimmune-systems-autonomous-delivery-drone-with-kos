@@ -157,6 +157,7 @@ int main(void) {
         if (sendSignedMessage("/api/get_all_forbidden_zones", areasResponse, "no-flight areas", RETRY_DELAY_SEC)
             && parseNoFlightAreas(areasResponse)) {
             logEntry("Successfully received no-flight areas from the server", ENTITY_NAME, LogLevel::LOG_INFO);
+            printNoFlightAreas();
             break;
         }
         sleep(RETRY_REQUEST_DELAY_SEC);

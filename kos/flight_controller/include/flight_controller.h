@@ -7,6 +7,10 @@
 #pragma once
 #include <stdint.h>
 
+/** \cond */
+#define AREA_NAME_MAX_LEN 32
+/** \endcond */
+
 /**
  * \~English Mission command type recognized by the security module.
  * \~Russian Тип распознаваемой модулем безопасности команды миссии.
@@ -187,6 +191,7 @@ struct Point2D {
 };
 
 struct NoFlightArea {
+    char name[AREA_NAME_MAX_LEN + 1];
     int pointNum;
     Point2D* points;
 };
