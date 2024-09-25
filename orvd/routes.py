@@ -898,8 +898,8 @@ def fmission():
         description: Строка с полетным заданием.
     responses:
       200:
-        description: Миссия успешно обработана.
-        example: "$OK"
+        description: Статус верификации миссии.
+        example: "Mission accepted."
       400:
         description: Неверный идентификатор.
         example: "Wrong id"
