@@ -413,7 +413,7 @@ int initNavigationSystem() {
         return 0;
     }
 
-    char logBuffer[257] = {0};
+    char logBuffer[256] = {0};
     Retcode rc = BspInit(NULL);
     if (rc != rcOk) {
         snprintf(logBuffer, 256, "Failed to initialize BSP ("RETCODE_HR_FMT")", RETCODE_HR_PARAMS(rc));
@@ -462,7 +462,7 @@ int initNavigationSystem() {
 }
 
 int initSensors() {
-    char logBuffer[257] = {0};
+    char logBuffer[256] = {0};
     Retcode rc = UartOpenPort(gpsUart, &gpsUartHandler);
     if (rc != rcOk) {
         snprintf(logBuffer, 256, "Failed to open UART %s ("RETCODE_HR_FMT")", gpsUart, RETCODE_HR_PARAMS(rc));

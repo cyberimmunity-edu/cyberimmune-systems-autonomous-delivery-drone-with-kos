@@ -87,7 +87,7 @@ int requestServer(char* query, char* response, uint32_t responseSize) {
     serverAddress.sin_port = htons(serverPort);
     serverAddress.sin_addr.s_addr = inet_addr(SERVER_IP);
     if (connect(socketDesc, (struct sockaddr *)&serverAddress, sizeof(serverAddress)) < 0) {
-        char logBuffer[257] = {0};
+        char logBuffer[256] = {0};
         snprintf(logBuffer, 256, "Connection to %s:%d has failed", SERVER_IP, serverPort);
         logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
         close(socketDesc);

@@ -201,7 +201,7 @@ int parseCommands(char* str) {
             break;
         }
         default: {
-            char logBuffer[257] = {0};
+            char logBuffer[256] = {0};
             snprintf(logBuffer, 256, "Cannot parse an unknown command %c", str[ptr]);
             logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
             free(commands);
@@ -280,7 +280,7 @@ void printMission() {
         logEntry("No available mission", ENTITY_NAME, LogLevel::LOG_INFO);
         return;
     }
-    char logBuffer[257] = {0};
+    char logBuffer[256] = {0};
     logEntry("Mission: ", ENTITY_NAME, LogLevel::LOG_INFO);
     for (int i = 0; i < commandNum; i++) {
         switch (commands[i].type) {
@@ -370,7 +370,7 @@ void coordToString(char* string, uint8_t len, int32_t coord) {
 
 char* getNoFlightAreasHash() {
     if (!strlen(areasHash)) {
-        char areasString[513] = {0};
+        char areasString[512] = {0};
         char lat[13] = {0};
         char lng[13] = {0};
         snprintf(areasString, 512, "$ForbiddenZones %d", areaNum);

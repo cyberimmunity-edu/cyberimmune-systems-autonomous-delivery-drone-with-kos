@@ -143,12 +143,12 @@ TEST(CredentialManager, RSA) {
     char sign[257] = {0};
     EXPECT_TRUE(getMessageSignature(message, sign));
 
-    char key[1025] = {0};
+    char key[1024] = {0};
     snprintf(key, 1024, "$Key: %s %s", getKeyN(), getKeyE());
     EXPECT_TRUE(setRsaKey(key));
 
-    char signedMessage[1025] = {0};
-    snprintf(signedMessage, 1024, "%s#%s", message, sign);
+    char signedMessage[512] = {0};
+    snprintf(signedMessage, 512, "%s#%s", message, sign);
     uint8_t correct = 0;
     EXPECT_TRUE(checkMessageSignature(signedMessage, correct));
     EXPECT_TRUE(correct);
