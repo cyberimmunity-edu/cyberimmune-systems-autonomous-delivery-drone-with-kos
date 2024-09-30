@@ -19,6 +19,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <thread>
 
 /** \cond */
 #define RETRY_DELAY_SEC 1
@@ -26,6 +27,7 @@
 #define FLY_ACCEPT_PERIOD_US 500000
 
 char boardId[32] = {0};
+std::thread noFlightAreasThread;
 /** \endcond */
 
 /**
@@ -75,6 +77,28 @@ int sendSignedMessage(char* method, char* response, char* errorMessage, uint8_t 
     }
 
     return 1;
+}
+
+void updateNoFlightAreas() {
+    char* hash;
+    char hashHeader[] = "$ForbiddenZonesHash ";
+    char response[1025] = {0};
+    while (true) {
+        hash = getNoFlightAreasHash();
+        sendSignedMessage("/api/forbidden_zones_hash", response, "no-flight areas", RETRY_DELAY_SEC);
+        char* receivedHash = strstr(response, hashHeader);
+        if (receivedHash)
+            receivedHash += strlen(hashHeader);
+        if (char* end = strstr(receivedHash, "#"))
+            *end = '\0';
+        if (strcmp(receivedHash, hash)) {
+            logEntry("No-flight areas on the server were updated", ENTITY_NAME, LogLevel::LOG_INFO);
+            sendSignedMessage("/api/get_all_forbidden_zones", response, "no-flight areas", RETRY_DELAY_SEC);
+            parseNoFlightAreas(response);
+            printNoFlightAreas();
+        }
+        sleep(1);
+    }
 }
 
 /**
@@ -158,6 +182,7 @@ int main(void) {
             && parseNoFlightAreas(areasResponse)) {
             logEntry("Successfully received no-flight areas from the server", ENTITY_NAME, LogLevel::LOG_INFO);
             printNoFlightAreas();
+            noFlightAreasThread = std::thread(updateNoFlightAreas);
             break;
         }
         sleep(RETRY_REQUEST_DELAY_SEC);

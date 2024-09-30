@@ -12,6 +12,8 @@
 #include <string.h>
 #include <ctype.h>
 
+#include <mbedtls_v3/sha256.h>
+
 /** \cond */
 #define COMMAND_MAX_STRING_LEN 32
 
@@ -20,6 +22,7 @@ MissionCommand *commands = NULL;
 
 uint32_t areaNum = 0;
 NoFlightArea *areas = NULL;
+char areasHash[65] = {0};
 /** \endcond */
 
 
@@ -324,6 +327,7 @@ int parseNoFlightAreas(char* response) {
         return 0;
     }
     start += strlen(header);
+    *areasHash = '\0';
 
     return parseAreas(start);
 }
@@ -349,4 +353,62 @@ void printNoFlightAreas() {
 NoFlightArea* getNoFlightAreas(int &num) {
     num = areaNum;
     return areas;
+}
+
+void coordToString(char* string, uint8_t len, int32_t coord) {
+    snprintf(string, len, "%d.%d", coord / 10000000, coord % 10000000);
+    for (int k = strlen(string) - 1; k >= 0; k--)
+        if (string[k] == '0')
+            string[k] = '\0';
+        else if (string[k] == '.') {
+            string[k] = '\0';
+            break;
+        }
+        else
+            break;
+}
+
+char* getNoFlightAreasHash() {
+    if (!strlen(areasHash)) {
+        char areasString[513] = {0};
+        char lat[13] = {0};
+        char lng[13] = {0};
+        snprintf(areasString, 512, "$ForbiddenZones %d", areaNum);
+        for (int i = 0; i < areaNum; i++) {
+            snprintf(areasString, 512, "%s&%s&%d", areasString, areas[i].name, areas[i].pointNum);
+            for (int j = 0; j < areas[i].pointNum; j++) {
+                coordToString(lat, 13, areas[i].points[j].latitude);
+                coordToString(lng, 13, areas[i].points[j].longitude);
+                snprintf(areasString, 512, "%s&%s_%s", areasString, lat, lng);
+            }
+        }
+
+        uint8_t hash[32] = {0};
+        mbedtls_sha256_context sha256;
+        mbedtls_sha256_init(&sha256);
+        if (mbedtls_sha256_starts(&sha256, 0) != 0) {
+            logEntry("Failed to calculate no-flight areas hash", ENTITY_NAME, LogLevel::LOG_WARNING);
+            mbedtls_sha256_free(&sha256);
+            return areasHash;
+        }
+        if (mbedtls_sha256_update(&sha256, (unsigned char*)areasString, strlen(areasString)) != 0) {
+            logEntry("Failed to calculate no-flight areas hash", ENTITY_NAME, LogLevel::LOG_WARNING);
+            mbedtls_sha256_free(&sha256);
+            return areasHash;
+        }
+        if (mbedtls_sha256_finish(&sha256, hash) != 0) {
+            logEntry("Failed to calculate no-flight areas hash", ENTITY_NAME, LogLevel::LOG_WARNING);
+            mbedtls_sha256_free(&sha256);
+            return areasHash;
+        }
+        mbedtls_sha256_free(&sha256);
+
+        char hex[3] = {0};
+        for (int i = 0; i < 32; i++) {
+            snprintf(hex, 2, "%x", hash[i]);
+            strncat(areasHash, hex, 64);
+        }
+    }
+
+    return areasHash;
 }

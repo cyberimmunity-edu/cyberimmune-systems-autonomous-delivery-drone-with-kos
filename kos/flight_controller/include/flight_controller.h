@@ -215,3 +215,5 @@ MissionCommand* getMissionCommands(int &num);
 int parseNoFlightAreas(char* response);
 void printNoFlightAreas();
 NoFlightArea* getNoFlightAreas(int &num);
+
+char* getNoFlightAreasHash();
