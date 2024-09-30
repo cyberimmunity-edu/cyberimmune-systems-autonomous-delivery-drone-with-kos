@@ -89,8 +89,13 @@ void updateNoFlightAreas() {
         char* receivedHash = strstr(response, hashHeader);
         if (receivedHash)
             receivedHash += strlen(hashHeader);
-        if (char* end = strstr(receivedHash, "#"))
+        if (char* end = strstr(receivedHash, "#")) {
             *end = '\0';
+            if (end - receivedHash == 63) {
+                receivedHash--;
+                *receivedHash = '0';
+            }
+        }
         if (strcmp(receivedHash, hash)) {
             logEntry("No-flight areas on the server were updated", ENTITY_NAME, LogLevel::LOG_INFO);
             sendSignedMessage("/api/get_all_forbidden_zones", response, "no-flight areas", RETRY_DELAY_SEC);

@@ -403,11 +403,8 @@ char* getNoFlightAreasHash() {
         }
         mbedtls_sha256_free(&sha256);
 
-        char hex[3] = {0};
-        for (int i = 0; i < 32; i++) {
-            snprintf(hex, 2, "%x", hash[i]);
-            strncat(areasHash, hex, 64);
-        }
+        for (int i = 0; i < 32; i++)
+            snprintf(areasHash, 65, "%s%02x", areasHash, hash[i]);
     }
 
     return areasHash;
