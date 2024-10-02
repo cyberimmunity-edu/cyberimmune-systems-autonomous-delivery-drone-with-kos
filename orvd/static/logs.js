@@ -1,11 +1,14 @@
 document.getElementById('submit').onclick = submit;
 document.getElementById('submit-speed').onclick = submitSpeed;
+document.getElementById('submit-events').onclick = submitEvents;
+
 
 let chartInstance = null;
 
 async function submit() {
     let id = document.getElementById('id').value;
-    if (id != null) {
+    if (id != null && id !== '') {
+        document.getElementById('events-container').innerHTML = "";
         let chartContainer = document.getElementById('speed-chart').getContext('2d');
         chartContainer.clearRect(0, 0, chartContainer.canvas.width, chartContainer.canvas.height);
         if (chartInstance) {
@@ -24,14 +27,16 @@ async function submit() {
             logs_text.textContent = logs[idx];
             logs_container.appendChild(logs_text);
         }
+    } else {
+        alert('Введите серийный номер.')
     }
 }
 
 async function submitSpeed() {
     let id = document.getElementById('id').value;
-    if (id != null) {
-        let logs_container = document.getElementById('logs-container');
-        logs_container.innerHTML = "";
+    if (id != null && id !== '') {
+        document.getElementById('logs-container').innerHTML = "";
+        document.getElementById('events-container').innerHTML = "";
 
         let response = await fetch('logs/get_telemetry_csv?id=' + id);
         let csv = await response.text();
@@ -46,6 +51,24 @@ async function submitSpeed() {
             }
         });
         drawChart(times, speeds);
+    } else {
+        alert('Введите серийный номер.')
+    }
+}
+
+async function submitEvents() {
+    document.getElementById('logs-container').innerHTML = "";
+    let chartContainer = document.getElementById('speed-chart').getContext('2d');
+    chartContainer.clearRect(0, 0, chartContainer.canvas.width, chartContainer.canvas.height);
+    if (chartInstance) {
+        chartInstance.destroy();
+        chartInstance = null;
+    }
+
+    if (id != null && id !== '') {
+        // заглушка
+    } else {
+        alert('Введите серийный номер.')
     }
 }
 
