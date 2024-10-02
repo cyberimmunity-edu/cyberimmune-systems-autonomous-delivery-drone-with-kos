@@ -78,27 +78,28 @@ int sendSignedMessage(char* method, char* response, char* errorMessage, uint8_t 
     return 1;
 }
 
-void updateNoFlightAreas() {
-    char* hash;
-    char hashHeader[] = "$ForbiddenZonesHash ";
+void checkNoFlightAreas() {
     char response[1024] = {0};
     while (true) {
-        hash = getNoFlightAreasHash();
         sendSignedMessage("/api/forbidden_zones_hash", response, "no-flight areas", RETRY_DELAY_SEC);
-        char* receivedHash = strstr(response, hashHeader);
-        if (receivedHash)
-            receivedHash += strlen(hashHeader);
-        if (char* end = strstr(receivedHash, "#")) {
-            *end = '\0';
-            if (end - receivedHash == 63) {
-                receivedHash--;
-                *receivedHash = '0';
-            }
-        }
-        if (strcmp(receivedHash, hash)) {
+        char* receivedHash = getServerAreasHash(response);
+        char* calculatedHash = getNoFlightAreasHash();
+        if (strcmp(receivedHash, calculatedHash)) {
             logEntry("No-flight areas on the server were updated", ENTITY_NAME, LogLevel::LOG_INFO);
-            sendSignedMessage("/api/get_all_forbidden_zones", response, "no-flight areas", RETRY_DELAY_SEC);
-            parseNoFlightAreas(response);
+            char hash[65] = {0};
+            strcpy(hash, receivedHash);
+            sendSignedMessage("/api/get_forbidden_zones_delta", response, "no-flight areas", RETRY_DELAY_SEC);
+            int successful = updateNoFlightAreas(response);
+            if (successful) {
+                calculatedHash = getNoFlightAreasHash();
+                successful = !strcmp(hash, calculatedHash);
+            }
+            if (!successful) {
+                logEntry("Completely redownloading no-flight areas", ENTITY_NAME, LogLevel::LOG_INFO);
+                deleteNoFlightAreas();
+                sendSignedMessage("/api/get_all_forbidden_zones", response, "no-flight areas", RETRY_DELAY_SEC);
+                parseNoFlightAreas(response);
+            }
             printNoFlightAreas();
         }
         sleep(1);
@@ -183,7 +184,7 @@ int main(void) {
             && parseNoFlightAreas(responseBuffer)) {
             logEntry("Successfully received no-flight areas from the server", ENTITY_NAME, LogLevel::LOG_INFO);
             printNoFlightAreas();
-            noFlightAreasThread = std::thread(updateNoFlightAreas);
+            noFlightAreasThread = std::thread(checkNoFlightAreas);
             break;
         }
         sleep(RETRY_REQUEST_DELAY_SEC);

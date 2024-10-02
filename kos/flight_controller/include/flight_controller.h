@@ -217,3 +217,6 @@ void printNoFlightAreas();
 NoFlightArea* getNoFlightAreas(int &num);
 
 char* getNoFlightAreasHash();
+char* getServerAreasHash(char* response);
+int updateNoFlightAreas(char* response);
+void deleteNoFlightAreas();

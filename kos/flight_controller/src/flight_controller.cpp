@@ -334,7 +334,7 @@ int parseNoFlightAreas(char* response) {
 
 void printNoFlightAreas() {
     if (!areaNum) {
-        logEntry("No available no-flight areas", ENTITY_NAME, LogLevel::LOG_INFO);
+        logEntry("No-flight areas list is empty", ENTITY_NAME, LogLevel::LOG_INFO);
         return;
     }
     char logBuffer[256];
@@ -408,4 +408,148 @@ char* getNoFlightAreasHash() {
     }
 
     return areasHash;
+}
+
+char* getServerAreasHash(char* response) {
+    char header[] = "$ForbiddenZonesHash ";
+    char* hash = strstr(response, header);
+    if (hash)
+        hash += strlen(header);
+    if (char* end = strstr(hash, "#")) {
+        *end = '\0';
+        if (end - hash == 63) {
+            hash--;
+            *hash = '0';
+        }
+    }
+    return hash;
+}
+
+int updateAreas(char* str) {
+    int32_t num;
+    if (!parseInt(str, num, 0)) {
+        logEntry("Failed to parse a number of no-flight areas", ENTITY_NAME, LogLevel::LOG_WARNING);
+        return 0;
+    }
+
+    char* end = NULL;
+    char areaName[AREA_NAME_MAX_LEN + 1] = {0};
+    char modeType[AREA_NAME_MAX_LEN + 1] = {0};
+    for (int i = 0; i < num; i++) {
+        end = strstr(str, "&");
+        if (end == NULL) {
+            char logBuffer[256];
+            snprintf(logBuffer, 256, "Failed to parse a name of no-flight area %d", i + 1);
+            logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
+            return 0;
+        }
+        int len = end - str;
+        if (len > AREA_NAME_MAX_LEN)
+            len = AREA_NAME_MAX_LEN;
+        strncpy(areaName, str, len);
+        str = end + 1;
+        end = strstr(str, "&");
+        if (end == NULL) {
+            char logBuffer[256];
+            snprintf(logBuffer, 256, "Failed to parse delta type of no-flight area %d", i + 1);
+            logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
+            return 0;
+        }
+        strncpy(modeType, str, end - str);
+        str = end + 1;
+        if (!strcmp(modeType, "modified")) {
+            for (int j = 0; j < areaNum; j++)
+                if (!strcmp(areas[j].name, areaName)) {
+                    if (!parseInt(str, areas[j].pointNum, 0)) {
+                        char logBuffer[256];
+                        snprintf(logBuffer, 256, "Failed to parse a number of no-flight area %d points", j + 1);
+                        logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
+                        return 0;
+                    }
+                    free(areas[j].points);
+                    areas[j].points = (Point2D*)malloc(areas[j].pointNum * sizeof(Point2D));
+                    for (int k = 0; k < areas[j].pointNum; k++) {
+                        if (!parseInt(str, areas[j].points[k].latitude, 7) || !parseInt(str, areas[j].points[k].longitude, 7)) {
+                            char logBuffer[256];
+                            snprintf(logBuffer, 256, "Failed to parse point %d of no-flight area %d", k + 1, j + 1);
+                            logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
+                            return 0;
+                        }
+                    }
+                    break;
+                }
+        }
+        else if (!strcmp(modeType, "added")) {
+            areas = (NoFlightArea*)realloc(areas, (areaNum + 1) * sizeof(NoFlightArea));
+            strncpy(areas[areaNum].name, areaName, len);
+            if (!parseInt(str, areas[areaNum].pointNum, 0)) {
+                char logBuffer[256];
+                snprintf(logBuffer, 256, "Failed to parse a number of no-flight area %d points", areaNum + 1);
+                logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
+                return 0;
+            }
+            areas[areaNum].points = (Point2D*)malloc(areas[areaNum].pointNum * sizeof(Point2D));
+            for (int k = 0; k < areas[areaNum].pointNum; k++)
+                if (!parseInt(str, areas[areaNum].points[k].latitude, 7) || !parseInt(str, areas[areaNum].points[k].longitude, 7)) {
+                    char logBuffer[256];
+                    snprintf(logBuffer, 256, "Failed to parse point %d of no-flight area %d", k + 1, areaNum + 1);
+                    logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
+                    return 0;
+                }
+            areaNum++;
+        }
+        else if (!strcmp(modeType, "deleted")) {
+            for (int j = 0; j < areaNum; j++)
+                if (!strcmp(areas[j].name, areaName)) {
+                    free(areas[j].points);
+                    for (int k = j + 1; k < areaNum; k++) {
+                        strncpy(areas[k - 1].name, areas[k].name, strlen(areas[k].name));
+                        areas[k - 1].pointNum = areas[k].pointNum;
+                        areas[k - 1].points = areas[k].points;
+                    }
+                    areaNum--;
+                    areas = (NoFlightArea*)realloc(areas, areaNum * sizeof(NoFlightArea));
+                    int32_t pointNum, coord;
+                    if (!parseInt(str, pointNum, 0)) {
+                        logEntry("Failed to parse a number of no-flight area to delete", ENTITY_NAME, LogLevel::LOG_WARNING);
+                        return 0;
+                    }
+                    for (int k = 0; k < pointNum; k++)
+                        if (!parseInt(str, coord, 7) || !parseInt(str, coord, 7)) {
+                            char logBuffer[256];
+                            snprintf(logBuffer, 256, "Failed to parse point %d of no-flight area to delete", k + 1);
+                            logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
+                            return 0;
+                        }
+                    break;
+                }
+        }
+        else {
+            char logBuffer[256];
+            snprintf(logBuffer, 256, "Unknown delta type '%s'", modeType);
+            logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
+            return 0;
+        }
+    }
+
+    return 1;
+}
+
+int updateNoFlightAreas(char* response) {
+    char header[] = "$ForbiddenZonesDelta ";
+    char* start = strstr(response, header);
+    if (start == NULL) {
+        logEntry("Response from the server does not contain no-flight areas delta", ENTITY_NAME, LogLevel::LOG_WARNING);
+        return 0;
+    }
+    start += strlen(header);
+    *areasHash = '\0';
+
+    return updateAreas(start);
+}
+
+void deleteNoFlightAreas() {
+    for (int i = 0; i < areaNum; i++)
+        free(areas[i].points);
+    free(areas);
 }
