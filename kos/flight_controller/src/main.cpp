@@ -82,7 +82,7 @@ void checkNoFlightAreas() {
     char response[1024] = {0};
     while (true) {
         sendSignedMessage("/api/forbidden_zones_hash", response, "no-flight areas", RETRY_DELAY_SEC);
-        char* receivedHash = getServerAreasHash(response);
+        char* receivedHash = extractNoFlightAreasHash(response);
         char* calculatedHash = getNoFlightAreasHash();
         if (strcmp(receivedHash, calculatedHash)) {
             logEntry("No-flight areas on the server were updated", ENTITY_NAME, LogLevel::LOG_INFO);
@@ -98,7 +98,7 @@ void checkNoFlightAreas() {
                 logEntry("Completely redownloading no-flight areas", ENTITY_NAME, LogLevel::LOG_INFO);
                 deleteNoFlightAreas();
                 sendSignedMessage("/api/get_all_forbidden_zones", response, "no-flight areas", RETRY_DELAY_SEC);
-                parseNoFlightAreas(response);
+                loadNoFlightAreas(response);
             }
             printNoFlightAreas();
         }
@@ -170,7 +170,7 @@ int main(void) {
 
     //Constantly ask server, if mission for the drone is available. Parse it and ensure, that mission is correct
     while (true) {
-        if (sendSignedMessage("/api/fmission_kos", responseBuffer, "mission", RETRY_DELAY_SEC) && parseMission(responseBuffer)) {
+        if (sendSignedMessage("/api/fmission_kos", responseBuffer, "mission", RETRY_DELAY_SEC) && loadMission(responseBuffer)) {
             logEntry("Successfully received mission from the server", ENTITY_NAME, LogLevel::LOG_INFO);
             printMission();
             break;
@@ -178,12 +178,13 @@ int main(void) {
         sleep(RETRY_REQUEST_DELAY_SEC);
     }
 
-    //Constantly ask server, if no flight areas are available.
+    //Constantly ask server, if no-flight areas are available.
     while (true) {
         if (sendSignedMessage("/api/get_all_forbidden_zones", responseBuffer, "no-flight areas", RETRY_DELAY_SEC)
-            && parseNoFlightAreas(responseBuffer)) {
+            && loadNoFlightAreas(responseBuffer)) {
             logEntry("Successfully received no-flight areas from the server", ENTITY_NAME, LogLevel::LOG_INFO);
             printNoFlightAreas();
+            //Start thread to ask server for no-flight areas updates.
             noFlightAreasThread = std::thread(checkNoFlightAreas);
             break;
         }

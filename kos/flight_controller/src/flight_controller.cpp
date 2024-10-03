@@ -214,6 +214,14 @@ int parseCommands(char* str) {
     return 1;
 }
 
+/**
+ * \~English Parses no-flight areas.
+ * \param[in] str Pointer to no-flight areas string. Parses areas until "#" character.
+ * \return Returns 1 on successful parse, 0 otherwise.
+ * \~Russian Распознает бесполетные зоны.
+ * \param[in] str Указатель на строку с бесполетными зонами. Распознает зоны до символа "#".
+ * \return Возвращает 1, если зоны были распознаны, иначе -- 0.
+ */
 int parseAreas(char* str) {
     int32_t num;
     if (!parseInt(str, num, 0)) {
@@ -258,174 +266,15 @@ int parseAreas(char* str) {
     return 1;
 }
 
-int parseMission(char* response) {
-    if (strstr(response, "$-1#") != NULL) {
-        logEntry("No mission is available on the server", ENTITY_NAME, LogLevel::LOG_WARNING);
-        return 0;
-    }
-
-    char header[] = "$FlightMission ";
-    char* start = strstr(response, header);
-    if (start == NULL) {
-        logEntry("Response from the server does not contain mission", ENTITY_NAME, LogLevel::LOG_WARNING);
-        return 0;
-    }
-    start += strlen(header);
-
-    return parseCommands(start);
-}
-
-void printMission() {
-    if (!commandNum) {
-        logEntry("No available mission", ENTITY_NAME, LogLevel::LOG_INFO);
-        return;
-    }
-    char logBuffer[256] = {0};
-    logEntry("Mission: ", ENTITY_NAME, LogLevel::LOG_INFO);
-    for (int i = 0; i < commandNum; i++) {
-        switch (commands[i].type) {
-        case CommandType::HOME:
-            snprintf(logBuffer, 256, "Home: %d, %d, %d", commands[i].content.waypoint.latitude,
-                commands[i].content.waypoint.longitude, commands[i].content.waypoint.altitude);
-            logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_INFO);
-            break;
-        case CommandType::TAKEOFF:
-            snprintf(logBuffer, 256, "Takeoff: %d", commands[i].content.takeoff.altitude);
-            logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_INFO);
-            break;
-        case CommandType::WAYPOINT:
-            snprintf(logBuffer, 256, "Waypoint: %d, %d, %d", commands[i].content.waypoint.latitude,
-                commands[i].content.waypoint.longitude, commands[i].content.waypoint.altitude);
-            logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_INFO);
-            break;
-        case CommandType::LAND:
-            snprintf(logBuffer, 256, "Land: %d, %d, %d", commands[i].content.waypoint.latitude,
-                commands[i].content.waypoint.longitude, commands[i].content.waypoint.altitude);
-            logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_INFO);
-            break;
-        case CommandType::SET_SERVO:
-            snprintf(logBuffer, 256, "Set servo: %d, %d", commands[i].content.servo.number, commands[i].content.servo.pwm);
-            logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_INFO);
-            break;
-        default:
-            logEntry("An unknown command", ENTITY_NAME, LogLevel::LOG_WARNING);
-            break;
-        }
-    }
-}
-
-MissionCommand* getMissionCommands(int &num) {
-    num = commandNum;
-    return commands;
-}
-
-int parseNoFlightAreas(char* response) {
-    char header[] = "$ForbiddenZones ";
-    char* start = strstr(response, header);
-    if (start == NULL) {
-        logEntry("Response from the server does not contain no-flight areas", ENTITY_NAME, LogLevel::LOG_WARNING);
-        return 0;
-    }
-    start += strlen(header);
-    *areasHash = '\0';
-
-    return parseAreas(start);
-}
-
-void printNoFlightAreas() {
-    if (!areaNum) {
-        logEntry("No-flight areas list is empty", ENTITY_NAME, LogLevel::LOG_INFO);
-        return;
-    }
-    char logBuffer[256];
-    snprintf(logBuffer, 256, "Number of no-flight areas: %d", areaNum);
-    logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_INFO);
-    for (int i = 0; i < areaNum; i++) {
-        snprintf(logBuffer, 256, "Area '%s' contains %d points", areas[i].name, areas[i].pointNum);
-        logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_INFO);
-        for (int j = 0; j < areas[i].pointNum; j++) {
-            snprintf(logBuffer, 256, "Point %d: %d, %d", j + 1, areas[i].points[j].latitude, areas[i].points[j].longitude);
-            logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_INFO);
-        }
-    }
-}
-
-NoFlightArea* getNoFlightAreas(int &num) {
-    num = areaNum;
-    return areas;
-}
-
-void coordToString(char* string, uint8_t len, int32_t coord) {
-    snprintf(string, len, "%d.%d", coord / 10000000, coord % 10000000);
-    for (int k = strlen(string) - 1; k >= 0; k--)
-        if (string[k] == '0')
-            string[k] = '\0';
-        else if (string[k] == '.') {
-            string[k] = '\0';
-            break;
-        }
-        else
-            break;
-}
-
-char* getNoFlightAreasHash() {
-    if (!strlen(areasHash)) {
-        char areasString[512] = {0};
-        char lat[13] = {0};
-        char lng[13] = {0};
-        snprintf(areasString, 512, "$ForbiddenZones %d", areaNum);
-        for (int i = 0; i < areaNum; i++) {
-            snprintf(areasString, 512, "%s&%s&%d", areasString, areas[i].name, areas[i].pointNum);
-            for (int j = 0; j < areas[i].pointNum; j++) {
-                coordToString(lat, 13, areas[i].points[j].latitude);
-                coordToString(lng, 13, areas[i].points[j].longitude);
-                snprintf(areasString, 512, "%s&%s_%s", areasString, lat, lng);
-            }
-        }
-
-        uint8_t hash[32] = {0};
-        mbedtls_sha256_context sha256;
-        mbedtls_sha256_init(&sha256);
-        if (mbedtls_sha256_starts(&sha256, 0) != 0) {
-            logEntry("Failed to calculate no-flight areas hash", ENTITY_NAME, LogLevel::LOG_WARNING);
-            mbedtls_sha256_free(&sha256);
-            return areasHash;
-        }
-        if (mbedtls_sha256_update(&sha256, (unsigned char*)areasString, strlen(areasString)) != 0) {
-            logEntry("Failed to calculate no-flight areas hash", ENTITY_NAME, LogLevel::LOG_WARNING);
-            mbedtls_sha256_free(&sha256);
-            return areasHash;
-        }
-        if (mbedtls_sha256_finish(&sha256, hash) != 0) {
-            logEntry("Failed to calculate no-flight areas hash", ENTITY_NAME, LogLevel::LOG_WARNING);
-            mbedtls_sha256_free(&sha256);
-            return areasHash;
-        }
-        mbedtls_sha256_free(&sha256);
-
-        for (int i = 0; i < 32; i++)
-            snprintf(areasHash, 65, "%s%02x", areasHash, hash[i]);
-    }
-
-    return areasHash;
-}
-
-char* getServerAreasHash(char* response) {
-    char header[] = "$ForbiddenZonesHash ";
-    char* hash = strstr(response, header);
-    if (hash)
-        hash += strlen(header);
-    if (char* end = strstr(hash, "#")) {
-        *end = '\0';
-        if (end - hash == 63) {
-            hash--;
-            *hash = '0';
-        }
-    }
-    return hash;
-}
-
-int updateAreas(char* str) {
+/**
+ * \~English Parses changes in no-flight areas.
+ * \param[in] str Pointer to no-flight areas changes string. Parses changes until "#" character.
+ * \return Returns 1 on successful parse, 0 otherwise.
+ * \~Russian Распознает изменения бесполетных зон.
+ * \param[in] str Указатель на строку с изменениями бесполетных зон. Распознает изменения до символа "#".
+ * \return Возвращает 1, если изменения были распознаны, иначе -- 0.
+ */
+int parseAreasDelta(char* str) {
     int32_t num;
     if (!parseInt(str, num, 0)) {
         logEntry("Failed to parse a number of no-flight areas", ENTITY_NAME, LogLevel::LOG_WARNING);
@@ -535,9 +384,106 @@ int updateAreas(char* str) {
     return 1;
 }
 
-int updateNoFlightAreas(char* response) {
+/**
+ * \~English Converts coordinate into a string.
+ * \param[out] string Pointer to string to write converted coordinate.
+ * \param[in] len Length of string to write coordinate.
+ * \param[in] coord Coordinate in degrees * 10^7.
+ * \~Russian Преобразует координату в строку.
+ * \param[out] string Указатель на строку, куда будет записана координата.
+ * \param[in] len Длина строка для записи координаты.
+ * \param[in] coord Координата в градусах * 10^7.
+ */
+void coordToString(char* string, uint8_t len, int32_t coord) {
+    snprintf(string, len, "%d.%d", coord / 10000000, coord % 10000000);
+    for (int k = strlen(string) - 1; k >= 0; k--)
+        if (string[k] == '0')
+            string[k] = '\0';
+        else if (string[k] == '.') {
+            string[k] = '\0';
+            break;
+        }
+        else
+            break;
+}
+
+int loadMission(char* mission) {
+    if (strstr(mission, "$-1#") != NULL) {
+        logEntry("No mission is available on the server", ENTITY_NAME, LogLevel::LOG_WARNING);
+        return 0;
+    }
+
+    char header[] = "$FlightMission ";
+    char* start = strstr(mission, header);
+    if (start == NULL) {
+        logEntry("Response from the server does not contain mission", ENTITY_NAME, LogLevel::LOG_WARNING);
+        return 0;
+    }
+    start += strlen(header);
+
+    return parseCommands(start);
+}
+
+void printMission() {
+    if (!commandNum) {
+        logEntry("No available mission", ENTITY_NAME, LogLevel::LOG_INFO);
+        return;
+    }
+    char logBuffer[256] = {0};
+    logEntry("Mission: ", ENTITY_NAME, LogLevel::LOG_INFO);
+    for (int i = 0; i < commandNum; i++) {
+        switch (commands[i].type) {
+        case CommandType::HOME:
+            snprintf(logBuffer, 256, "Home: %d, %d, %d", commands[i].content.waypoint.latitude,
+                commands[i].content.waypoint.longitude, commands[i].content.waypoint.altitude);
+            logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_INFO);
+            break;
+        case CommandType::TAKEOFF:
+            snprintf(logBuffer, 256, "Takeoff: %d", commands[i].content.takeoff.altitude);
+            logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_INFO);
+            break;
+        case CommandType::WAYPOINT:
+            snprintf(logBuffer, 256, "Waypoint: %d, %d, %d", commands[i].content.waypoint.latitude,
+                commands[i].content.waypoint.longitude, commands[i].content.waypoint.altitude);
+            logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_INFO);
+            break;
+        case CommandType::LAND:
+            snprintf(logBuffer, 256, "Land: %d, %d, %d", commands[i].content.waypoint.latitude,
+                commands[i].content.waypoint.longitude, commands[i].content.waypoint.altitude);
+            logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_INFO);
+            break;
+        case CommandType::SET_SERVO:
+            snprintf(logBuffer, 256, "Set servo: %d, %d", commands[i].content.servo.number, commands[i].content.servo.pwm);
+            logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_INFO);
+            break;
+        default:
+            logEntry("An unknown command", ENTITY_NAME, LogLevel::LOG_WARNING);
+            break;
+        }
+    }
+}
+
+MissionCommand* getMissionCommands(int &num) {
+    num = commandNum;
+    return commands;
+}
+
+int loadNoFlightAreas(char* areas) {
+    char header[] = "$ForbiddenZones ";
+    char* start = strstr(areas, header);
+    if (start == NULL) {
+        logEntry("Response from the server does not contain no-flight areas", ENTITY_NAME, LogLevel::LOG_WARNING);
+        return 0;
+    }
+    start += strlen(header);
+    *areasHash = '\0';
+
+    return parseAreas(start);
+}
+
+int updateNoFlightAreas(char* areas) {
     char header[] = "$ForbiddenZonesDelta ";
-    char* start = strstr(response, header);
+    char* start = strstr(areas, header);
     if (start == NULL) {
         logEntry("Response from the server does not contain no-flight areas delta", ENTITY_NAME, LogLevel::LOG_WARNING);
         return 0;
@@ -545,11 +491,91 @@ int updateNoFlightAreas(char* response) {
     start += strlen(header);
     *areasHash = '\0';
 
-    return updateAreas(start);
+    return parseAreasDelta(start);
 }
 
 void deleteNoFlightAreas() {
     for (int i = 0; i < areaNum; i++)
         free(areas[i].points);
     free(areas);
+}
+
+void printNoFlightAreas() {
+    if (!areaNum) {
+        logEntry("No-flight areas list is empty", ENTITY_NAME, LogLevel::LOG_INFO);
+        return;
+    }
+    char logBuffer[256];
+    snprintf(logBuffer, 256, "Number of no-flight areas: %d", areaNum);
+    logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_INFO);
+    for (int i = 0; i < areaNum; i++) {
+        snprintf(logBuffer, 256, "Area '%s' contains %d points", areas[i].name, areas[i].pointNum);
+        logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_INFO);
+        for (int j = 0; j < areas[i].pointNum; j++) {
+            snprintf(logBuffer, 256, "Point %d: %d, %d", j + 1, areas[i].points[j].latitude, areas[i].points[j].longitude);
+            logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_INFO);
+        }
+    }
+}
+
+NoFlightArea* getNoFlightAreas(int &num) {
+    num = areaNum;
+    return areas;
+}
+
+char* getNoFlightAreasHash() {
+    if (!strlen(areasHash)) {
+        char areasString[512] = {0};
+        char lat[13] = {0};
+        char lng[13] = {0};
+        snprintf(areasString, 512, "$ForbiddenZones %d", areaNum);
+        for (int i = 0; i < areaNum; i++) {
+            snprintf(areasString, 512, "%s&%s&%d", areasString, areas[i].name, areas[i].pointNum);
+            for (int j = 0; j < areas[i].pointNum; j++) {
+                coordToString(lat, 13, areas[i].points[j].latitude);
+                coordToString(lng, 13, areas[i].points[j].longitude);
+                snprintf(areasString, 512, "%s&%s_%s", areasString, lat, lng);
+            }
+        }
+
+        uint8_t hash[32] = {0};
+        mbedtls_sha256_context sha256;
+        mbedtls_sha256_init(&sha256);
+        if (mbedtls_sha256_starts(&sha256, 0) != 0) {
+            logEntry("Failed to calculate no-flight areas hash", ENTITY_NAME, LogLevel::LOG_WARNING);
+            mbedtls_sha256_free(&sha256);
+            return areasHash;
+        }
+        if (mbedtls_sha256_update(&sha256, (unsigned char*)areasString, strlen(areasString)) != 0) {
+            logEntry("Failed to calculate no-flight areas hash", ENTITY_NAME, LogLevel::LOG_WARNING);
+            mbedtls_sha256_free(&sha256);
+            return areasHash;
+        }
+        if (mbedtls_sha256_finish(&sha256, hash) != 0) {
+            logEntry("Failed to calculate no-flight areas hash", ENTITY_NAME, LogLevel::LOG_WARNING);
+            mbedtls_sha256_free(&sha256);
+            return areasHash;
+        }
+        mbedtls_sha256_free(&sha256);
+
+        for (int i = 0; i < 32; i++)
+            snprintf(areasHash, 65, "%s%02x", areasHash, hash[i]);
+    }
+
+    return areasHash;
+}
+
+char* extractNoFlightAreasHash(char* hash) {
+    char header[] = "$ForbiddenZonesHash ";
+    char* begin = strstr(hash, header);
+    if (begin)
+        begin += strlen(header);
+    if (char* end = strstr(begin, "#")) {
+        *end = '\0';
+        if (end - begin == 63) {
+            begin--;
+            *begin = '0';
+        }
+    }
+    return begin;
 }

@@ -280,20 +280,20 @@ TEST(FlighController, ParseCommands) {
     EXPECT_STRNE(getMockLog(), "Empty log");
 }
 
-TEST(FlighController, ParseMission) {
+TEST(FlighController, LoadMission) {
     char missionGood[] = "$FlightMission H53.1019446_107.3774394_846.22&T5.0&W0.0_53.1020863_107.3774180_5.0&S5.0_1200.0&L53.1019446_107.3774394_846.22#";
     logEntry("Empty log", "", LOG_INFO);
-    EXPECT_TRUE(parseMission(missionGood));
+    EXPECT_TRUE(loadMission(missionGood));
     EXPECT_STREQ(getMockLog(), "Empty log");
 
     char missionEmpty[] = "Response: $-1#";
     logEntry("Empty log", "", LOG_INFO);
-    EXPECT_FALSE(parseMission(missionEmpty));
+    EXPECT_FALSE(loadMission(missionEmpty));
     EXPECT_STRNE(getMockLog(), "Empty log");
 
     char missionNoHead[] = "H53.1019446_107.3774394_846.22&T5.0&W0.0_53.1020863_107.3774180_5.0&S5.0_1200.0&L53.1019446_107.3774394_846.22#";
     logEntry("Empty log", "", LOG_INFO);
-    EXPECT_FALSE(parseMission(missionNoHead));
+    EXPECT_FALSE(loadMission(missionNoHead));
     EXPECT_STRNE(getMockLog(), "Empty log");
 }
 
