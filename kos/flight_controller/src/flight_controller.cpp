@@ -277,7 +277,7 @@ int parseAreas(char* str) {
 int parseAreasDelta(char* str) {
     int32_t num;
     if (!parseInt(str, num, 0)) {
-        logEntry("Failed to parse a number of no-flight areas", ENTITY_NAME, LogLevel::LOG_WARNING);
+        logEntry("Failed to parse a number of no-flight areas changes", ENTITY_NAME, LogLevel::LOG_WARNING);
         return 0;
     }
 
@@ -296,6 +296,7 @@ int parseAreasDelta(char* str) {
         if (len > AREA_NAME_MAX_LEN)
             len = AREA_NAME_MAX_LEN;
         strncpy(areaName, str, len);
+        areaName[len] = '\0';
         str = end + 1;
         end = strstr(str, "&");
         if (end == NULL) {
@@ -304,29 +305,35 @@ int parseAreasDelta(char* str) {
             logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
             return 0;
         }
-        strncpy(modeType, str, end - str);
+        len = end - str;
+        strncpy(modeType, str, len);
+        modeType[len] = '\0';
         str = end + 1;
         if (!strcmp(modeType, "modified")) {
+            int32_t pointNum;
+            if (!parseInt(str, pointNum, 0)) {
+                logEntry("Failed to parse point number of no-flight area to modify", ENTITY_NAME, LogLevel::LOG_WARNING);
+                return 0;
+            }
+            Point2D* points = (Point2D*)malloc(pointNum * sizeof(Point2D));
+            for (int j = 0; j < pointNum; j++)
+                if (!parseInt(str, points[j].latitude, 7) || !parseInt(str, points[j].longitude, 7)) {
+                    char logBuffer[256];
+                    snprintf(logBuffer, 256, "Failed to parse point %d of no-flight area to modify", j + 1);
+                    logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
+                    return 0;
+                }
+            bool found = false;
             for (int j = 0; j < areaNum; j++)
                 if (!strcmp(areas[j].name, areaName)) {
-                    if (!parseInt(str, areas[j].pointNum, 0)) {
-                        char logBuffer[256];
-                        snprintf(logBuffer, 256, "Failed to parse a number of no-flight area %d points", j + 1);
-                        logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
-                        return 0;
-                    }
                     free(areas[j].points);
-                    areas[j].points = (Point2D*)malloc(areas[j].pointNum * sizeof(Point2D));
-                    for (int k = 0; k < areas[j].pointNum; k++) {
-                        if (!parseInt(str, areas[j].points[k].latitude, 7) || !parseInt(str, areas[j].points[k].longitude, 7)) {
-                            char logBuffer[256];
-                            snprintf(logBuffer, 256, "Failed to parse point %d of no-flight area %d", k + 1, j + 1);
-                            logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
-                            return 0;
-                        }
-                    }
+                    areas[j].pointNum = pointNum;
+                    areas[j].points = points;
+                    found = true;
                     break;
                 }
+            if (!found)
+                free(points);
         }
         else if (!strcmp(modeType, "added")) {
             areas = (NoFlightArea*)realloc(areas, (areaNum + 1) * sizeof(NoFlightArea));
@@ -348,6 +355,18 @@ int parseAreasDelta(char* str) {
             areaNum++;
         }
         else if (!strcmp(modeType, "deleted")) {
+            int32_t pointNum, coord;
+            if (!parseInt(str, pointNum, 0)) {
+                logEntry("Failed to parse point number of no-flight area to delete", ENTITY_NAME, LogLevel::LOG_WARNING);
+                return 0;
+            }
+            for (int k = 0; k < pointNum; k++)
+                if (!parseInt(str, coord, 7) || !parseInt(str, coord, 7)) {
+                    char logBuffer[256];
+                    snprintf(logBuffer, 256, "Failed to parse point %d of no-flight area to delete", k + 1);
+                    logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
+                    return 0;
+            }
             for (int j = 0; j < areaNum; j++)
                 if (!strcmp(areas[j].name, areaName)) {
                     free(areas[j].points);
@@ -358,18 +377,6 @@ int parseAreasDelta(char* str) {
                     }
                     areaNum--;
                     areas = (NoFlightArea*)realloc(areas, areaNum * sizeof(NoFlightArea));
-                    int32_t pointNum, coord;
-                    if (!parseInt(str, pointNum, 0)) {
-                        logEntry("Failed to parse a number of no-flight area to delete", ENTITY_NAME, LogLevel::LOG_WARNING);
-                        return 0;
-                    }
-                    for (int k = 0; k < pointNum; k++)
-                        if (!parseInt(str, coord, 7) || !parseInt(str, coord, 7)) {
-                            char logBuffer[256];
-                            snprintf(logBuffer, 256, "Failed to parse point %d of no-flight area to delete", k + 1);
-                            logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
-                            return 0;
-                        }
                     break;
                 }
         }
@@ -395,7 +402,7 @@ int parseAreasDelta(char* str) {
  * \param[in] coord Координата в градусах * 10^7.
  */
 void coordToString(char* string, uint8_t len, int32_t coord) {
-    snprintf(string, len, "%d.%d", coord / 10000000, coord % 10000000);
+    snprintf(string, len, "%d.%d", coord / 10000000, abs(coord % 10000000));
     for (int k = strlen(string) - 1; k >= 0; k--)
         if (string[k] == '0')
             string[k] = '\0';
@@ -570,6 +577,10 @@ char* extractNoFlightAreasHash(char* hash) {
     char* begin = strstr(hash, header);
     if (begin)
         begin += strlen(header);
+    else {
+        logEntry("Response from the server does not contain no-flight areas hash", ENTITY_NAME, LogLevel::LOG_WARNING);
+        return hash;
+    }
     if (char* end = strstr(begin, "#")) {
         *end = '\0';
         if (end - begin == 63) {
