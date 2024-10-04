@@ -337,7 +337,7 @@ int parseAreasDelta(char* str) {
         }
         else if (!strcmp(modeType, "added")) {
             areas = (NoFlightArea*)realloc(areas, (areaNum + 1) * sizeof(NoFlightArea));
-            strncpy(areas[areaNum].name, areaName, len);
+            strncpy(areas[areaNum].name, areaName, strlen(areaName));
             if (!parseInt(str, areas[areaNum].pointNum, 0)) {
                 char logBuffer[256];
                 snprintf(logBuffer, 256, "Failed to parse a number of no-flight area %d points", areaNum + 1);
@@ -483,7 +483,8 @@ int loadNoFlightAreas(char* areas) {
         return 0;
     }
     start += strlen(header);
-    *areasHash = '\0';
+    for (int i = 0; i < 65; i++)
+        areasHash[i] = '\0';
 
     return parseAreas(start);
 }
@@ -496,7 +497,8 @@ int updateNoFlightAreas(char* areas) {
         return 0;
     }
     start += strlen(header);
-    *areasHash = '\0';
+    for (int i = 0; i < 65; i++)
+        areasHash[i] = '\0';
 
     return parseAreasDelta(start);
 }
@@ -533,12 +535,12 @@ NoFlightArea* getNoFlightAreas(int &num) {
 char* getNoFlightAreasHash() {
     if (!strlen(areasHash)) {
         char areasString[512] = {0};
-        char lat[13] = {0};
-        char lng[13] = {0};
         snprintf(areasString, 512, "$ForbiddenZones %d", areaNum);
         for (int i = 0; i < areaNum; i++) {
             snprintf(areasString, 512, "%s&%s&%d", areasString, areas[i].name, areas[i].pointNum);
             for (int j = 0; j < areas[i].pointNum; j++) {
+                char lat[13] = {0};
+                char lng[13] = {0};
                 coordToString(lat, 13, areas[i].points[j].latitude);
                 coordToString(lng, 13, areas[i].points[j].longitude);
                 snprintf(areasString, 512, "%s&%s_%s", areasString, lat, lng);
