@@ -1,4 +1,4 @@
-from flask import Blueprint, request, render_template, redirect, jsonify
+from flask import Blueprint, request, render_template, redirect, jsonify, send_file
 from utils.api_handlers import *
 
 bp = Blueprint('main', __name__)
@@ -1472,3 +1472,84 @@ def forbidden_zones_hash():
                               query_str=f'/api/forbidden_zones_hash?id={id}', key_group=f'kos{id}', sig=sig, id=id)
     else:
         return bad_request('Wrong id')
+      
+      
+@bp.route('/admin/export_forbidden_zones')
+def export_forbidden_zones():
+    """
+    Экспортирует все запрещенные зоны в файл.
+    ---
+    tags:
+      - admin
+    parameters:
+      - name: token
+        in: query
+        type: string
+        required: true
+        description: Токен аутентификации
+    responses:
+      200:
+        description: Файл с запрещенными зонами
+        content:
+          application/json:
+            schema:
+              type: string
+      401:
+        description: Неавторизованный доступ
+    """
+    token = request.args.get('token')
+    if token is None or not check_user_token(token):
+        return jsonify({"error": "Unauthorized"}), 401
+
+    return send_file(FORBIDDEN_ZONES_PATH, as_attachment=True, attachment_filename='forbidden_zones.json')
+
+
+@bp.route('/admin/import_forbidden_zones', methods=['POST'])
+def import_forbidden_zones():
+    """
+    Импортирует запрещенные зоны из файла.
+    ---
+    tags:
+      - admin
+    parameters:
+      - name: file
+        in: formData
+        type: file
+        required: true
+        description: Файл с запрещенными зонами
+      - name: token
+        in: formData
+        type: string
+        required: true
+        description: Токен аутентификации
+    responses:
+      200:
+        description: Успешный импорт зон
+      400:
+        description: Ошибка импорта зон
+      401:
+        description: Неавторизованный доступ
+    """
+    token = request.form.get('token')
+    if token is None or not check_user_token(token):
+        return jsonify({"error": "Unauthorized"}), 401
+
+    file = request.files.get('file')
+    if file is None:
+        return jsonify({"error": "No file provided"}), 400
+
+    try:
+        with open(FORBIDDEN_ZONES_PATH, 'r', encoding='utf-8') as f:
+            old_zones = json.load(f)
+        
+        file.save(FORBIDDEN_ZONES_PATH)
+        
+        with open(FORBIDDEN_ZONES_PATH, 'r', encoding='utf-8') as f:
+            new_zones = json.load(f)
+        
+        compute_and_save_forbidden_zones_delta(old_zones, new_zones)
+        
+        return jsonify({"status": "success"}), 200
+    except Exception as e:
+        print(e)
+        return jsonify({"error": "Failed to save file"}), 400

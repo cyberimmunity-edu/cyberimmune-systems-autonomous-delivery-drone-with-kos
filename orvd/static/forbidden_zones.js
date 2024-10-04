@@ -303,3 +303,49 @@ document.getElementById('delete-zone').onclick = async function () {
         alert('Ошибка удаления зоны');
     }
 };
+
+document.getElementById('export-zones').onclick = async function () {
+    const token = document.getElementById('token').value;
+    const response = await fetch(`/admin/export_forbidden_zones?token=${token}`);
+    if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        a.download = 'forbidden_zones.json';
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+    } else {
+        alert('Ошибка экспорта зон');
+    }
+};
+
+document.getElementById('import-zones').onclick = function () {
+    document.getElementById('import-zones-file').click();
+};
+
+document.getElementById('import-zones-file').onchange = async function (event) {
+    const file = event.target.files[0];
+    if (!file) {
+        return;
+    }
+
+    const token = document.getElementById('token').value;
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('token', token);
+
+    const response = await fetch('/admin/import_forbidden_zones', {
+        method: 'POST',
+        body: formData
+    });
+
+    if (response.ok) {
+        alert('Зоны успешно импортированы');
+        await createVectorLayer();
+    } else {
+        alert('Ошибка импорта зон');
+    }
+};

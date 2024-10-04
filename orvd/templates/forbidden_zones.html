@@ -24,6 +24,9 @@
             <button type="button" id="save-zone" class="form-button">Сохранить зону</button>
             <button type="button" id="start-drawing" class="form-button">Нарисовать новую зону</button>
             <button type="button" id="delete-zone" class="form-button">Удалить выбранную зону</button>
+            <button type="button" id="export-zones" class="form-button">Экспортировать зоны</button>
+            <input type="file" id="import-zones-file" style="display: none;">
+            <button type="button" id="import-zones" class="form-button">Импортировать зоны</button>
         </form>
     </div>
     <script src="{{ url_for('static', filename='forbidden_zones.js') }}"></script>
