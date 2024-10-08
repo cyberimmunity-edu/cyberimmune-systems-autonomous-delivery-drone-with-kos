@@ -414,23 +414,26 @@ def fmission_ms_handler(id: str, mission_str: str):
         mission_str (str): Строка с полетным заданием.
 
     Returns:
-        str: OK в случае успешного сохранения.
+        str: Статус верификации миссии.
     """
-    mission_entity = get_entity_by_key(Mission, id)
-    if mission_entity:
-        get_entities_by_field(MissionStep, MissionStep.mission_id, id).delete()
-        delete_entity(mission_entity)
-        commit_changes()
-    mission_entity = Mission(uav_id=id, is_accepted=False)
-    add_changes(mission_entity)
-    mission_list = read_mission(mission_str)
-    encoded_mission = encode_mission(mission_list)
-    for idx, cmd in enumerate(encoded_mission):
-        mission_step_entity = MissionStep(mission_id=id, step=idx, operation=cmd)
-        add_changes(mission_step_entity)
-    commit_changes()
+    mission_list, mission_verification_status = read_mission(mission_str)
+    
+    if mission_verification_status == MissionVerificationStatus.OK:
+        mission_entity = get_entity_by_key(Mission, id)
+        if mission_entity:
+            get_entities_by_field(MissionStep, MissionStep.mission_id, id).delete()
+            delete_entity(mission_entity)
+            commit_changes()
         
-    return OK
+        mission_entity = Mission(uav_id=id, is_accepted=False)
+        add_changes(mission_entity)
+        encoded_mission = encode_mission(mission_list)
+        for idx, cmd in enumerate(encoded_mission):
+            mission_step_entity = MissionStep(mission_id=id, step=idx, operation=cmd)
+            add_changes(mission_step_entity)
+        commit_changes()
+        
+    return mission_verification_status
 
 
 def get_logs_handler(id: str):

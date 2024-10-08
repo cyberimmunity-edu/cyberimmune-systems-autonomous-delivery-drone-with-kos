@@ -244,37 +244,37 @@ TEST(FlighController, ParseInt) {
 }
 
 TEST(FlighController, ParseCommands) {
-    char commandsGood[] = "H53.1019446_107.3774394_846.22&T5.0&W0.0_53.1020863_107.3774180_5.0&S5.0_1200.0&L53.1019446_107.3774394_846.22#";
+    char commandsGood[] = "H53.1019446_107.3774394_846.22&T5.0&W53.1020863_107.3774180_5.0&D1.2&S5.0_1200.0&L53.1019446_107.3774394_846.22#";
     logEntry("Empty log", "", LOG_INFO);
     EXPECT_TRUE(parseCommands(commandsGood));
     EXPECT_STREQ(getMockLog(), "Empty log");
 
-    char commandsWrongCommand[] = "H53.1019446_107.3774394_846.22&X5.0&W0.0_53.1020863_107.3774180_5.0&S5.0_1200.0&L53.1019446_107.3774394_846.22#";
+    char commandsWrongCommand[] = "H53.1019446_107.3774394_846.22&X5.0&W53.1020863_107.3774180_5.0&S5.0_1200.0&L53.1019446_107.3774394_846.22#";
     logEntry("Empty log", "", LOG_INFO);
     EXPECT_FALSE(parseCommands(commandsWrongCommand));
     EXPECT_STRNE(getMockLog(), "Empty log");
 
-    char commandsNoCommands[] = "53.1019446_107.3774394_846.22&5.0&0.0_53.1020863_107.3774180_5.0&5.0_1200.0&53.1019446_107.3774394_846.22#";
+    char commandsNoCommands[] = "53.1019446_107.3774394_846.22&5.0&53.1020863_107.3774180_5.0&5.0_1200.0&53.1019446_107.3774394_846.22#";
     logEntry("Empty log", "", LOG_INFO);
     EXPECT_FALSE(parseCommands(commandsNoCommands));
     EXPECT_STRNE(getMockLog(), "Empty log");
 
-    char commandsWrongArguments1[] = "H53.1019446_846.22&T5.0&W0.0_53.1020863_107.3774180_5.0&S5.0_1200.0&L53.1019446_107.3774394_846.22#";
+    char commandsWrongArguments1[] = "H53.1019446_846.22&T5.0&W53.1020863_107.3774180_5.0&S5.0_1200.0&L53.1019446_107.3774394_846.22#";
     logEntry("Empty log", "", LOG_INFO);
     EXPECT_FALSE(parseCommands(commandsWrongArguments1));
     EXPECT_STRNE(getMockLog(), "Empty log");
 
-    char commandsWrongArguments2[] = "H53.1019446_107.3774394_846.22&T5.0&W0.0_53.1020863_107.3774180&S5.0_1200.0&L53.1019446_107.3774394_846.22#";
+    char commandsWrongArguments2[] = "H53.1019446_107.3774394_846.22&T5.0&W53.1020863_107.3774180&S5.0_1200.0&L53.1019446_107.3774394_846.22#";
     logEntry("Empty log", "", LOG_INFO);
     EXPECT_FALSE(parseCommands(commandsWrongArguments2));
     EXPECT_STRNE(getMockLog(), "Empty log");
 
-    char commandsWrongArguments3[] = "H53.1019446_107.3774394_846.22&T5.0&W0.0_53.1020863_107.3774180_5.0&S1200.0&L53.1019446_107.3774394_846.22#";
+    char commandsWrongArguments3[] = "H53.1019446_107.3774394_846.22&T5.0&W53.1020863_107.3774180_5.0&S1200.0&L53.1019446_107.3774394_846.22#";
     logEntry("Empty log", "", LOG_INFO);
     EXPECT_FALSE(parseCommands(commandsWrongArguments3));
     EXPECT_STRNE(getMockLog(), "Empty log");
 
-    char commandsWrongArguments4[] = "H53.1019446_107.3774394_846.22&T5.0&W0.0_53.1020863_107.3774180_5.0&S5.0_1200.0&L107.3774394_846.22#";
+    char commandsWrongArguments4[] = "H53.1019446_107.3774394_846.22&T5.0&W53.1020863_107.3774180_5.0&S5.0_1200.0&L107.3774394_846.22#";
     logEntry("Empty log", "", LOG_INFO);
     EXPECT_FALSE(parseCommands(commandsWrongArguments4));
     EXPECT_STRNE(getMockLog(), "Empty log");
@@ -352,7 +352,7 @@ TEST(FlighController, CoordinateToString) {
 }
 
 TEST(FlighController, LoadMission) {
-    char missionGood[] = "$FlightMission H53.1019446_107.3774394_846.22&T5.0&W0.0_53.1020863_107.3774180_5.0&S5.0_1200.0&L53.1019446_107.3774394_846.22#";
+    char missionGood[] = "$FlightMission H53.1019446_107.3774394_846.22&T5.0&W53.1020863_107.3774180_5.0&S5.0_1200.0&L53.1019446_107.3774394_846.22#";
     logEntry("Empty log", "", LOG_INFO);
     EXPECT_TRUE(loadMission(missionGood));
     EXPECT_STREQ(getMockLog(), "Empty log");
@@ -362,7 +362,7 @@ TEST(FlighController, LoadMission) {
     EXPECT_FALSE(loadMission(missionEmpty));
     EXPECT_STRNE(getMockLog(), "Empty log");
 
-    char missionNoHead[] = "H53.1019446_107.3774394_846.22&T5.0&W0.0_53.1020863_107.3774180_5.0&S5.0_1200.0&L53.1019446_107.3774394_846.22#";
+    char missionNoHead[] = "H53.1019446_107.3774394_846.22&T5.0&W53.1020863_107.3774180_5.0&S5.0_1200.0&L53.1019446_107.3774394_846.22#";
     logEntry("Empty log", "", LOG_INFO);
     EXPECT_FALSE(loadMission(missionNoHead));
     EXPECT_STRNE(getMockLog(), "Empty log");

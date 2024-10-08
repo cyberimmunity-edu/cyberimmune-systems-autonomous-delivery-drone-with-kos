@@ -65,6 +65,13 @@ let servo_marker_style = new ol.style.Style({
   })
 })
 
+let delay_marker_style = new ol.style.Style({
+  image: new ol.style.Icon({
+    anchor: [0.5, 1],
+    src: 'static/resources/delay_marker.png'
+  })
+})
+
 let polyline_style = new ol.style.Style({
   stroke: new ol.style.Stroke({
     color: [0, 0, 0, 255],
@@ -233,6 +240,9 @@ function add_marker(lat, lon, alt, marker_type) {
     } else if (marker_type == 'servo') {
       marker.setStyle(servo_marker_style);
       marker.set('description', 'Сброс груза\nВысота: ' + alt);
+    } else if (marker_type === 'delay') {
+      marker.setStyle(delay_marker_style);
+      marker.set('description', 'Задержка\nВысота: ' + alt);
     } else {
       marker.setStyle(regular_marker_style);
       marker.set('description', 'Высота: ' + alt);
@@ -388,14 +398,16 @@ async function get_mission() {
           map.getView().setCenter([lon, lat]);
       }
       else if (mission_list[idx][0] == 'W') {
-          var lat = parseFloat(mission_list[idx][2]);
-          var lon = parseFloat(mission_list[idx][3]);
-          var alt = mission_list[idx][4];
+          var lat = parseFloat(mission_list[idx][1]);
+          var lon = parseFloat(mission_list[idx][2]);
+          var alt = mission_list[idx][3];
           if (idx < mission_list.length - 1 && mission_list[idx+1][0] == 'S') {
-              add_marker(lat, lon, alt, 'servo');              
+            add_marker(lat, lon, alt, 'servo');              
+          } else if (idx < mission_list.length - 1 && mission_list[idx+1][0] == 'D') {
+            add_marker(lat, lon, alt, 'delay');
           }
           else {
-              add_marker(lat, lon, alt, 'regular');
+            add_marker(lat, lon, alt, 'regular');
           }
           mission_path.push([lon, lat]);
       }

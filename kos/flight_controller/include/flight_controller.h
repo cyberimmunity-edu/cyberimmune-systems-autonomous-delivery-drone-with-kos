@@ -44,7 +44,12 @@ enum CommandType {
      * \~English Set specified PWM value for specified servo.
      * \~Russian Установка указанного значения ШИМ для указанного сервопривода.
      */
-    SET_SERVO
+    SET_SERVO,
+    /**
+     * \~English Command to wait for specified amount of seconds before next command execution.
+     * \~Russian Ожидание указанног очисла секунд перед выполнением следующей команды.
+     */
+    DELAY
 };
 
 /**
@@ -142,6 +147,28 @@ struct CommandServo {
 };
 
 /**
+ * \~English Structure to store \ref DELAY command arguments.
+ * \~Russian Структура для хранения аргументов команды \ref DELAY.
+ */
+struct CommandDelay {
+    /**
+     * \~English Delay in seconds before next command.
+     * \~Russian Задержка в секундах перед выполнением следующей команды.
+     */
+    int32_t delay;
+
+    /**
+     * \~English Default constructor.
+     * \param[in] delay_ Delay in seconds.
+     * \~Russian Конструктор по умолчанию.
+     * \param[in] delay_ Задержка в секундах.
+     */
+    CommandDelay(int32_t delay_) {
+        delay = delay_;
+    }
+};
+
+/**
  * \~English Union to store any command arguments.
  * \~Russian Объединение для хранения аргументов команды любого типа.
  */
@@ -161,6 +188,11 @@ union CommandContent {
      * \~Russian Аргументы команды \ref SET_SERVO. См. \ref CommandServo.
      */
     CommandServo servo;
+    /**
+     * \~English \ref DELAY command arguments. See \ref CommandDelay.
+     * \~Russian Аргументы команды \ref DELAY. См. \ref CommandDelay.
+     */
+    CommandDelay delay;
 };
 
 /**
