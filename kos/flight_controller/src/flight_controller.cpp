@@ -170,8 +170,7 @@ int parseCommands(char* str) {
             commands[i].content.takeoff = CommandTakeoff(alt);
             break;
         case 'W': {
-            int32_t hold;
-            if (!parseInt(stringPtr, hold, 0) || !parseInt(stringPtr, lat, 7) || !parseInt(stringPtr, lng, 7) || !parseInt(stringPtr, alt, 2)) {
+            if (!parseInt(stringPtr, lat, 7) || !parseInt(stringPtr, lng, 7) || !parseInt(stringPtr, alt, 2)) {
                 logEntry("Failed to parse values for 'waypoint' command", ENTITY_NAME, LogLevel::LOG_WARNING);
                 free(commands);
                 return 0;
@@ -198,6 +197,16 @@ int parseCommands(char* str) {
             }
             commands[i].type = CommandType::SET_SERVO;
             commands[i].content.servo = CommandServo(num, pwm);
+            break;
+        }
+        case 'D': {
+            if (!parseInt(stringPtr, alt, 0)) {
+                logEntry("Failed to parse values for 'delay' command", ENTITY_NAME, LogLevel::LOG_WARNING);
+                free(commands);
+                return 0;
+            }
+            commands[i].type = CommandType::DELAY;
+            commands[i].content.delay = CommandDelay(alt);
             break;
         }
         default: {
@@ -461,6 +470,10 @@ void printMission() {
             break;
         case CommandType::SET_SERVO:
             snprintf(logBuffer, 256, "Set servo: %d, %d", commands[i].content.servo.number, commands[i].content.servo.pwm);
+            logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_INFO);
+            break;
+        case CommandType::DELAY:
+            snprintf(logBuffer, 256, "Delay: %d", commands[i].content.delay.delay);
             logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_INFO);
             break;
         default:
