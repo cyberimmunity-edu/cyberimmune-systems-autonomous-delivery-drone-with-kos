@@ -1185,7 +1185,48 @@ def fly_accept():
     else:
         return bad_request('Wrong id')
 
-
+ 
+@bp.route('/api/flight_info')
+def flight_info():
+    """
+    Обрабатывает запрос на информацию полета от БПЛА.
+    ---
+    tags:
+      - api
+    parameters:
+      - name: id
+        in: query
+        type: string
+        required: true
+        description: Идентификатор БПЛА.
+      - name: sig
+        in: query
+        type: string
+        required: true
+        description: Подпись запроса.
+    responses:
+      200:
+        description: Состояние полета (-1 в случае kill switch, 0 в случае продолжения полета, 1 в случае приостановки полета), хэш запретных зон и время до следующего сеанса связи или $-1, если БПЛА не найден.
+        schema:
+          type: string
+          example: "$Flight {status}$ForbiddenZonesHash {hash}$Delay {time in seconds}#{signature}"
+      400:
+        description: Неверный идентификатор.
+        schema:
+          type: string
+          example: "Wrong id"
+      403:
+        description: Ошибка проверки подписи.
+    """
+    id = cast_wrapper(request.args.get('id'), str)
+    sig = request.args.get('sig')
+    if id:
+        return signed_request(handler_func=flight_info_handler, verifier_func=verify, signer_func=sign,
+                          query_str=f'/api/flight_info?id={id}', key_group=f'kos{id}', sig=sig, id=id)
+    else:
+        return bad_request('Wrong id')
+      
+      
 @bp.route('/api/telemetry')
 def telemetry():
     """
@@ -1553,3 +1594,85 @@ def import_forbidden_zones():
     except Exception as e:
         print(e)
         return jsonify({"error": "Failed to save file"}), 400
+      
+
+@bp.route('/admin/get_delay')
+def get_delay():
+    """
+    Получает время до следующего сеанса связи для указанного БПЛА.
+    ---
+    tags:
+      - admin
+    parameters:
+      - name: id
+        in: query
+        type: string
+        required: true
+        description: Идентификатор БПЛА.
+      - name: token
+        in: query
+        type: string
+        required: true
+        description: Токен аутентификации.
+    responses:
+      200:
+        description: Время до следующего сеанса связи.
+        schema:
+          type: string
+          example: "30"
+      400:
+        description: Какие-то параметры неверные
+        schema:
+          type: string
+          example: "Wrong id"
+    """
+    id = cast_wrapper(request.args.get('id'), str)
+    token = request.args.get('token')
+    if id:
+        return authorized_request(handler_func=get_delay_handler, token=token, id=id)
+    else:
+        return bad_request('Wrong id')
+
+
+@bp.route('/admin/set_delay')
+def set_delay():
+    """
+    Устанавливает время до следующего сеанса связи для указанного БПЛА.
+    ---
+    tags:
+      - admin
+    parameters:
+      - name: id
+        in: query
+        type: string
+        required: true
+        description: Идентификатор БПЛА.
+      - name: delay
+        in: query
+        type: integer
+        required: true
+        description: Время до следующего сеанса связи.
+      - name: token
+        in: query
+        type: string
+        required: true
+        description: Токен аутентификации.
+    responses:
+      200:
+        description: Результат установки времени до следующего сеанса связи.
+        schema:
+          type: string
+          example: "$OK"
+      400:
+        description: Какие-то параметры неверные
+        schema:
+          type: string
+          example: "Wrong id/delay"
+    """
+    id = cast_wrapper(request.args.get('id'), str)
+    delay = cast_wrapper(request.args.get('delay'), int)
+    token = request.args.get('token')
+    if id and delay is not None:
+        return authorized_request(handler_func=set_delay_handler, token=token, id=id, delay=delay)
+    else:
+        return bad_request('Wrong id/delay')

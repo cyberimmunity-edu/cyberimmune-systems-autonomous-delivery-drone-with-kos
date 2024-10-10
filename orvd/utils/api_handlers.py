@@ -188,7 +188,7 @@ def arm_handler(id: str):
     if not uav_entity:
         return NOT_FOUND
     elif uav_entity.is_armed:
-        return f'$Arm: {ARMED}' 
+        return f'$Arm {ARMED}$Delay {uav_entity.delay}' 
     else:
         mission = get_entity_by_key(Mission, id)
         if mission and mission.is_accepted == True:
@@ -201,9 +201,9 @@ def arm_handler(id: str):
             else:
                 uav_entity.state = 'В сети'
             commit_changes()
-            return f'$Arm: {decision}'
+            return f'$Arm {decision}$Delay {uav_entity.delay}'
         else:
-            return f'$Arm: {DISARMED}'
+            return f'$Arm {DISARMED}$Delay {uav_entity.delay}'
 
 
 def _arm_wait_decision(id: str):
@@ -239,9 +239,9 @@ def fly_accept_handler(id: str):
     if not uav_entity:
         return NOT_FOUND
     elif uav_entity.is_armed:
-        return f'$Arm: {ARMED}'
+        return f'$Arm {ARMED}$Delay {uav_entity.delay}'
     else:
-        return f'$Arm: {DISARMED}'
+        return f'$Arm {DISARMED}$Delay {uav_entity.delay}'
 
 
 def kill_switch_handler(id: str):
@@ -258,9 +258,34 @@ def kill_switch_handler(id: str):
     if not uav_entity:
         return NOT_FOUND
     elif uav_entity.kill_switch_state:
-        return f'$KillSwitch: {KILL_SWITCH_ON}'
+        return f'$KillSwitch {KILL_SWITCH_ON}'
     else:
-        return f'$KillSwitch: {KILL_SWITCH_OFF}'
+        return f'$KillSwitch {KILL_SWITCH_OFF}'
+
+
+def flight_info_handler(id: str) -> str:
+    """
+    Обрабатывает запрос на проверку информации полета БПЛА.
+
+    Args:
+        id (str): Идентификатор БПЛА.
+
+    Returns:
+        str: Состояние полета БПЛА.
+    """
+    uav_entity = get_entity_by_key(Uav, id)
+    if not uav_entity:
+        return NOT_FOUND
+    else:
+        forbidden_zones_hash = get_all_forbidden_zones_handler(id)
+        delay = f'$Delay {uav_entity.delay}'
+        if uav_entity.kill_switch_state:
+            status = '$Flight -1'
+        elif uav_entity.is_armed:
+            status = '$Flight 0'
+        else:
+            status = '$Flight 1'
+        return ''.join([status, forbidden_zones_hash, delay])
 
 
 def telemetry_handler(id: str, lat: float, lon: float, alt: float,
@@ -880,3 +905,40 @@ def delete_forbidden_zone_handler(name: str):
         return OK
     
     return NOT_FOUND
+
+
+def get_delay_handler(id: str):
+    """
+    Обрабатывает запрос на получение времени до следующего сеанса связи для указанного БПЛА.
+
+    Args:
+        id (str): Идентификатор БПЛА.
+
+    Returns:
+        str: Время до следующего сеанса связи или NOT_FOUND.
+    """
+    uav_entity = get_entity_by_key(Uav, id)
+    if not uav_entity:
+        return NOT_FOUND
+    else:
+        return str(uav_entity.delay)
+
+
+def set_delay_handler(id: str, delay: int):
+    """
+    Обрабатывает запрос на установку времени до следующего сеанса связи для указанного БПЛА.
+
+    Args:
+        id (str): Идентификатор БПЛА.
+        delay (int): Время до следующего сеанса связи.
+
+    Returns:
+        str: OK в случае успешной установки или NOT_FOUND.
+    """
+    uav_entity = get_entity_by_key(Uav, id)
+    if not uav_entity:
+        return NOT_FOUND
+    else:
+        uav_entity.delay = delay
+        commit_changes()
+        return OK
