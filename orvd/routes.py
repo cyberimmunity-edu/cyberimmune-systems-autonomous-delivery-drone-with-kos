@@ -1083,10 +1083,10 @@ def arm_request():
         description: Подпись запроса.
     responses:
       200:
-        description: Состояние арма (0 - вкл, 1 - выкл) или $-1, если БПЛА не найден.
+        description: Состояние арма (0 - вкл, 1 - выкл) и время до следующего сеанса связи или $-1, если БПЛА не найден.
         schema:
           type: string
-          example: "$Arm: {state}#{signature}"
+          example: "$Arm {state}$Delay {time in seconds}#{signature}"
       400:
         description: Неверный идентификатор.
         schema:
@@ -1165,10 +1165,10 @@ def fly_accept():
         description: Подпись запроса.
     responses:
       200:
-        description: Состояние арма (0 - вкл, 1 - выкл) или $-1, если БПЛА не найден.
+        description: Состояние арма (0 - вкл, 1 - выкл) и время до следующего сеанса связи или $-1, если БПЛА не найден.
         schema:
           type: string
-          example: "$Arm: {state}#{signature}"
+          example: "$Arm: {state}$Delay {time in seconds}#{signature}"
       400:
         description: Неверный идентификатор.
         schema:
