@@ -26,14 +26,7 @@ int initServerConnector() {
 }
 
 int requestServer(char* query, char* response, uint32_t responseSize) {
-    if (strstr(query, "/api/kill_switch?") != NULL) {
-        if (responseSize < 16) {
-            logEntry("Size of response does not fit given buffer", ENTITY_NAME, LogLevel::LOG_WARNING);
-            return 0;
-        }
-        strncpy(response, "$KillSwitch: 1#", 16);
-    }
-    else if (strstr(query, "/api/auth?") != NULL) {
+    if (strstr(query, "/api/auth?") != NULL) {
         if (responseSize < 10) {
             logEntry("Size of response does not fit given buffer", ENTITY_NAME, LogLevel::LOG_WARNING);
             return 0;

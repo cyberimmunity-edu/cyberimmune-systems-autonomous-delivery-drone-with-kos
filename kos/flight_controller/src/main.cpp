@@ -27,7 +27,7 @@
 #define FLY_ACCEPT_PERIOD_US 500000
 
 char boardId[32] = {0};
-std::thread noFlightAreasThread;
+std::thread sessionThread;
 /** \endcond */
 
 /**
@@ -78,11 +78,11 @@ int sendSignedMessage(char* method, char* response, char* errorMessage, uint8_t 
     return 1;
 }
 
-void checkNoFlightAreas() {
+void serverSession() {
     char response[1024] = {0};
     while (true) {
-        sendSignedMessage("/api/forbidden_zones_hash", response, "no-flight areas", RETRY_DELAY_SEC);
-        char* receivedHash = extractNoFlightAreasHash(response);
+        sendSignedMessage("/api/flight_info", response, "session", RETRY_DELAY_SEC);
+        /*char* receivedHash = extractNoFlightAreasHash(response);
         char* calculatedHash = getNoFlightAreasHash();
         if (strcmp(receivedHash, calculatedHash)) {
             logEntry("No-flight areas on the server were updated", ENTITY_NAME, LogLevel::LOG_INFO);
@@ -101,7 +101,7 @@ void checkNoFlightAreas() {
                 loadNoFlightAreas(response);
             }
             printNoFlightAreas();
-        }
+        }*/
         sleep(1);
     }
 }
@@ -184,8 +184,6 @@ int main(void) {
             && loadNoFlightAreas(responseBuffer)) {
             logEntry("Successfully received no-flight areas from the server", ENTITY_NAME, LogLevel::LOG_INFO);
             printNoFlightAreas();
-            //Start thread to ask server for no-flight areas updates.
-            noFlightAreasThread = std::thread(checkNoFlightAreas);
             break;
         }
         sleep(RETRY_REQUEST_DELAY_SEC);
@@ -205,7 +203,7 @@ int main(void) {
         //When autopilot asked for arm, we need to receive permission from ORVD
         sendSignedMessage("/api/arm", responseBuffer, "arm", RETRY_DELAY_SEC);
 
-        if (strstr(responseBuffer, "$Arm: 0#") != NULL) {
+        if (strstr(responseBuffer, "$Arm 0$") != NULL) {
             //If arm was permitted, we enable motors
             logEntry("Arm is permitted", ENTITY_NAME, LogLevel::LOG_INFO);
             while (!setKillSwitch(true)) {
@@ -215,9 +213,11 @@ int main(void) {
             }
             if (!permitArm())
                 logEntry("Failed to permit arm through Autopilot Connector", ENTITY_NAME, LogLevel::LOG_WARNING);
+            //Start ORVD connection thread
+            sessionThread = std::thread(serverSession);
             break;
         }
-        else if (strstr(responseBuffer, "$Arm: 1#") != NULL) {
+        else if (strstr(responseBuffer, "$Arm 1$") != NULL) {
             logEntry("Arm is forbidden", ENTITY_NAME, LogLevel::LOG_INFO);
             if (!forbidArm())
                 logEntry("Failed to forbid arm through Autopilot Connector", ENTITY_NAME, LogLevel::LOG_WARNING);
