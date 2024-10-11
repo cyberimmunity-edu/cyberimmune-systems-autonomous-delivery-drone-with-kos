@@ -149,14 +149,14 @@ int shareRsaKey() {
         sleep(1);
     }
 
-    char rsaServerRequest[1025] = {0};
-    char rsaServerResponse[1025] = {0};
-    snprintf(rsaServerRequest, 1024, "/api/key?id=%s&e=0x%s&n=0x%s", boardId, keyE, keyN);
-    while (!sendRequest(rsaServerRequest, rsaServerResponse, 1025)) {
+    char request[1024] = {0};
+    char response[1024] = {0};
+    snprintf(request, 1024, "/api/key?id=%s&e=0x%s&n=0x%s", boardId, keyE, keyN);
+    while (!sendRequest(request, response, 1024)) {
         logEntry("Failed to share RSA key. Trying again in 1s", ENTITY_NAME, LogLevel::LOG_WARNING);
         sleep(1);
     }
-    return setRsaKey(rsaServerResponse);
+    return setRsaKey(response);
 }
 
 int getMessageSignature(char* message, char* sign) {

@@ -7,6 +7,10 @@
 #pragma once
 #include <stdint.h>
 
+/** \cond */
+#define AREA_NAME_MAX_LEN 32
+/** \endcond */
+
 /**
  * \~English Mission command type recognized by the security module.
  * \~Russian Тип распознаваемой модулем безопасности команды миссии.
@@ -209,16 +213,132 @@ struct MissionCommand {
 };
 
 /**
+ * \~English Structure to store coordinates of no-flight area vertex.
+ * \~Russian Структура для хранения координат вершины бесполетной зоны.
+ */
+struct Point2D {
+    /**
+     * \~English Latitude in degrees * 10^7.
+     * \~Russian Широта в градусах * 10^7.
+     */
+    int32_t latitude;
+    /**
+     * \~English Command type. See \ref CommandType.
+     * \~Russian Longitude in degrees * 10^7.
+     */
+    int32_t longitude;
+
+    /**
+     * \~English Default constructor.
+     * \param[in] lat Latitude in degrees * 10^7.
+     * \param[in] lng Longitude in degrees * 10^7.
+     * \~Russian Конструктор по умолчанию.
+     * \param[in] lat Широта в градусах * 10^7.
+     * \param[in] lng Долгота в градусах * 10^7.
+     */
+    Point2D(int32_t lat, int32_t lng) {
+        latitude = lat;
+        longitude = lng;
+    }
+};
+
+/**
+ * \~English Structure to store no-flight area.
+ * \~Russian Структура для хранения бесполетной зоны.
+ */
+struct NoFlightArea {
+    /**
+     * \~English No-flight area name.
+     * \~Russian Имя бесполетной зоны.
+     */
+    char name[AREA_NAME_MAX_LEN + 1];
+    /**
+     * \~English Number of vertices of the polygon that forms the no-flight area.
+     * \~Russian Число вершин многоугольника, образующего бесполетную зону.
+     */
+    int pointNum;
+    /**
+     * \~English No-flight area vertices.
+     * \~Russian Веришны бесполетной зоны.
+     */
+    Point2D* points;
+};
+
+/**
  * \~English Converts a mission received from the ATM server into an array of commands of \ref MissionCommand type.
- * \param [in] response Mission from the ATM server. Expected form is "$FlightMission mission#".
+ * \param[in] mission Mission from the ATM server. Expected form is "$FlightMission mission#".
  * \return Returns 1 on successful conversion, 0 otherwise.
  * \~Russian Преобразует миссию, полученную от сервера ОРВД, в массив команд типа \ref MissionCommand.
- * \param[in] response Миссия, пришедшая от сервера ОРВД. Ожидается в виде "$FlightMission миссия#".
+ * \param[in] mission Миссия, пришедшая от сервера ОРВД. Ожидается в виде "$FlightMission миссия#".
  * \return Возвращает 1, если миссия была успешно распознана, иначе -- 0.
  */
-int parseMission(char* response);
+int loadMission(char* mission);
 /**
  * \~English Logs an existing mission and at the same time prints it to the console.
  * \~Russian Записывает имеющуюся миссию в лог и одновременно выводит ее в консоль.
  */
 void printMission();
+/**
+ * \~English Returns current drone mission.
+ * \param[out] num Number of mission commands.
+ * \return Returns pointer to a mission commands array.
+ * \~Russian Возвращает текущую миссию дрона.
+ * \param[out] num Число команд в миссии.
+ * \return Возвращает указатель на массив команд миссии.
+ */
+MissionCommand* getMissionCommands(int &num);
+
+/**
+ * \~English Converts a no-flight areas string received from the ATM server into an array of areas of \ref NoFlightArea type.
+ * \param[in] areas String from the ATM server. Expected form is "$ForbiddenZones areas#".
+ * \return Returns 1 on successful conversion, 0 otherwise.
+ * \~Russian Преобразует строку с бесполетным зонами, полученную от сервера ОРВД, в массив зон типа \ref NoFlightArea.
+ * \param[in] areas Строка, пришедшая от сервера ОРВД. Ожидается в виде "$ForbiddenZones зоны#".
+ * \return Возвращает 1, если зоны были успешно распознаны, иначе -- 0.
+ */
+int loadNoFlightAreas(char* areas);
+/**
+ * \~English Converts a string with changes in no-flight areas received from the ATM server, and updates current no-flight areas array.
+ * \param[in] areas String from the ATM server. Expected form is "$ForbiddenZonesDelta changes#".
+ * \return Returns 1 on successful conversion, 0 otherwise.
+ * \~Russian Преобразует строку с изменениями бесполетных зон, полученную от сервера ОРВД, и обновляет массив бесполетных зон.
+ * \param[in] areas Строка, пришедшая от сервера ОРВД. Ожидается в виде "$ForbiddenZonesDelta изменения#".
+ * \return Возвращает 1, если изменения зон были успешно распознаны, иначе -- 0.
+ */
+int updateNoFlightAreas(char* areas);
+/**
+ * \~English Deletes all no-flight areas.
+ * \~Russian Очищает список бесполетных зон.
+ */
+void deleteNoFlightAreas();
+/**
+ * \~English Logs current no-flight areas and at the same time prints them to the console.
+ * \~Russian Записывает имеющиеся бесполетные зоны в лог и одновременно выводит их в консоль.
+ */
+void printNoFlightAreas();
+/**
+ * \~English Returns current no-flight areas.
+ * \param[out] num Number of no-flight areas.
+ * \return Returns pointer to a no-flight areas array.
+ * \~Russian Возвращает текущие бесполетные зоны.
+ * \param[out] num Число бесполетных зон.
+ * \return Возвращает указатель на массив бесполетных зон.
+ */
+NoFlightArea* getNoFlightAreas(int &num);
+
+/**
+ * \~English Calculates hash of current no-flight areas list.
+ * \return Returns pointer to the calculated hash string.
+ * \~Russian Вычисляет хэш-значение текущего списка бесполетных зон.
+ * \return Возвращает указатель на строку с вычисленным хэшем.
+ */
+char* getNoFlightAreasHash();
+/**
+ * \~English Extracts hash from the string received from the ATM server.
+ * \param[in] hash String from the ATM server. Expected form is "$ForbiddenZonesHash hash#".
+ * \return Returns pointer to the received hash string.
+ * \~Russian Извлекает хэш из стркои, полученной от сервера ОРВД.
+ * \param[in] hash Строка, пришедшая от сервера ОРВД. Ожидается в виде "$ForbiddenZonesHash хэш#".
+ * \return Возвращает указатель на строку с полученным хэшем.
+ */
+char* extractNoFlightAreasHash(char* hash);

@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Запрещенные зоны</title>
+    <script src="{{ url_for('static', filename='ol/dist/ol.js') }}"></script>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='ol/ol.css') }}">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles/style.css') }}">
+    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+</head>
+<body>
+    <div id="map" class="map">
+        <div id="info"></div>
+    </div>
+    <div class="container">
+        <h2 class="center-title">Запрещенные зоны</h2>
+        <form id="zone-form">
+            <div class="zone-name-input">
+                <label for="zone-name">Имя зоны:</label>
+                <input type="text" id="zone-name" name="zone-name" required>
+            </div>
+            <input type="hidden" id="token" name="token" value="{{ token }}">
+            <button type="button" id="save-zone" class="form-button">Сохранить зону</button>
+            <button type="button" id="start-drawing" class="form-button">Нарисовать новую зону</button>
+            <button type="button" id="delete-zone" class="form-button">Удалить выбранную зону</button>
+            <button type="button" id="export-zones" class="form-button">Экспортировать зоны</button>
+            <input type="file" id="import-zones-file" style="display: none;">
+            <button type="button" id="import-zones" class="form-button">Импортировать зоны</button>
+        </form>
+    </div>
+    <script src="{{ url_for('static', filename='forbidden_zones.js') }}"></script>
+</body>
+</html>

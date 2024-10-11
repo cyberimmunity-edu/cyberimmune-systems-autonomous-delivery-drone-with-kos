@@ -11,7 +11,7 @@
 #include <string.h>
 
 /** \cond */
-char mockLog[1025] = {0};
+char mockLog[1024] = {0};
 bool mockBuzzerEnabled = false;
 /** \endcond */
 

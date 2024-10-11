@@ -43,7 +43,7 @@ UartHandle autopilotUartHandler = NULL;
 int writeIntValue(int32_t value) {
     rtl_size_t writtenBytes;
     ssize_t expectedSize = sizeof(int32_t);
-    char logBuffer[257] = {0};
+    char logBuffer[256] = {0};
     Retcode rc = UartWrite(autopilotUartHandler, (uint8_t*)(&value), expectedSize, NULL, &writtenBytes);
     if (rc != rcOk) {
         snprintf(logBuffer, 256, "Failed to write to UART %s ("RETCODE_HR_FMT")", autopilotUart, RETCODE_HR_PARAMS(rc));
@@ -77,7 +77,7 @@ int initAutopilotConnector() {
         return 0;
     }
 
-    char logBuffer[257] = {0};
+    char logBuffer[256] = {0};
     Retcode rc = BspInit(NULL);
     if (rc != rcOk) {
         snprintf(logBuffer, 256, "Failed to initialize BSP ("RETCODE_HR_FMT")", RETCODE_HR_PARAMS(rc));
@@ -109,7 +109,7 @@ int initAutopilotConnector() {
 int initConnection() {
     Retcode rc = UartOpenPort(autopilotUart, &autopilotUartHandler);
     if (rc != rcOk) {
-        char logBuffer[257] = {0};
+        char logBuffer[256] = {0};
         snprintf(logBuffer, 256, "Failed to open UART %s ("RETCODE_HR_FMT")", autopilotUart, RETCODE_HR_PARAMS(rc));
         logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
         return 0;
@@ -120,7 +120,7 @@ int initConnection() {
 
 int getAutopilotCommand(uint8_t& command) {
     uint8_t message[sizeof(AutopilotCommandMessage)];
-    char logBuffer[257] = {0};
+    char logBuffer[256] = {0};
     for (int i = 0; i < AUTOPILOT_COMMAND_MESSAGE_HEAD_SIZE; i++) {
         Retcode rc = UartReadByte(autopilotUartHandler, message + i);
         if (rc != rcOk) {
@@ -159,7 +159,7 @@ int sendAutopilotCommand(AutopilotCommand command) {
 
     rtl_size_t writtenBytes;
     ssize_t expectedSize = sizeof(AutopilotCommandMessage);
-    char logBuffer[257] = {0};
+    char logBuffer[256] = {0};
     Retcode rc = UartWrite(autopilotUartHandler, (uint8_t*)(&message), expectedSize, NULL, &writtenBytes);
     if (rc != rcOk) {
         snprintf(logBuffer, 256, "Failed to write to UART %s ("RETCODE_HR_FMT")", autopilotUart, RETCODE_HR_PARAMS(rc));

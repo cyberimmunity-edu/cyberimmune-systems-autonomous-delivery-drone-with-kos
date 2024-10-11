@@ -2,7 +2,7 @@
 ServerName orvd.com
 DocumentRoot /var/www/orvd/
 
-WSGIDaemonProcess app user=www-data group=www-data threads=5
+WSGIDaemonProcess app user=www-data group=www-data threads=5 home=/var/www/orvd
 WSGIScriptAlias / /var/www/orvd/orvd_server.wsgi process-group=app application-group=%{GLOBAL}
 
 ErrorLog /dev/stderr

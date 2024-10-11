@@ -1,4 +1,4 @@
-from flask import Blueprint, request, render_template, redirect, jsonify
+from flask import Blueprint, request, render_template, redirect, jsonify, send_file
 from utils.api_handlers import *
 
 bp = Blueprint('main', __name__)
@@ -118,6 +118,12 @@ def auth_page():
     ---
     tags:
       - admin
+    parameters:
+      - name: next
+        in: query
+        type: string
+        required: false
+        description: URL для перенаправления после успешной аутентификации.
     responses:
       200:
         description: Cтраница аутентификации
@@ -127,7 +133,8 @@ def auth_page():
               type: string
               example: "<html>...</html>"
     """
-    return render_template('admin_auth.html')
+    next_url = request.args.get('next', '/admin')
+    return render_template('admin_auth.html', next_url=next_url)
 
 
 @bp.route('/admin/arm_decision')
@@ -622,6 +629,36 @@ def change_fly_accept():
                        id=id, decision=decision)
     else:
         return bad_request('Wrong id/decision')
+      
+
+@bp.route('/admin/get_forbidden_zones')
+def get_forbidden_zones():
+    """
+    Возвращает все запрещенные зоны.
+    ---
+    tags:
+      - admin
+    parameters:
+      - name: token
+        in: query
+        type: string
+        required: true
+        description: Токен аутентификации
+    responses:
+      200:
+        description: GeoJSON с запрещенными зонами
+        content:
+          application/json:
+            schema:
+              type: object
+      401:
+        description: Неавторизованный доступ
+    """
+    token = request.args.get('token')
+    if token is None or not check_user_token(token):
+        return jsonify({"error": "Unauthorized"}), 401
+    
+    return authorized_request(handler_func=get_forbidden_zones_handler, token=token)
 
 
 @bp.route('/admin/get_forbidden_zone')
@@ -696,7 +733,11 @@ def set_forbidden_zone():
     parameters:
       - name: geometry
         in: body
-        type: string
+        type: array
+        items:
+          type: array
+          items:
+            type: number
         required: true
         description: Геометрия зоны.
       - name: name
@@ -721,16 +762,17 @@ def set_forbidden_zone():
           type: string
           example: "Wrong name"
     """
-    geometry = request.json.get('geometry')
-    name = request.json.get('name')
-    token = request.json.get('token')
+    data = request.json
+    geometry = data.get('geometry')
+    name = data.get('name')
+    token = data.get('token')
     if name:
         return authorized_request(handler_func=set_forbidden_zone_handler, token=token, name=name, geometry=geometry)
     else:
         return bad_request('Wrong name')
 
 
-@bp.route('/admin/delete_forbidden_zone')
+@bp.route('/admin/delete_forbidden_zone', methods=['DELETE'])
 def delete_forbidden_zone():
     """
     Удаляет запрещенную для полета зону по ее имени.
@@ -766,6 +808,35 @@ def delete_forbidden_zone():
         return authorized_request(handler_func=delete_forbidden_zone_handler, token=token, name=name)
     else:
         return bad_request('Wrong name')
+  
+
+@bp.route('/admin/forbidden_zones')
+def forbidden_zones():
+    """
+    Отображает страницу управления запрещенными зонами.
+    ---
+    tags:
+      - admin
+    parameters:
+      - name: token
+        in: query
+        type: string
+        required: true
+        description: Токен аутентификации
+    responses:
+      200:
+        description: Страница управления запрещенными зонами
+        content:
+          text/html:
+            schema:
+              type: string
+              example: "<html>...</html>"
+    """
+    token = request.args.get('token')
+    if token is None or not check_user_token(token):
+        return redirect(f"/admin/auth_page?next={request.path}")
+    else:
+        return render_template('forbidden_zones.html', token=token)
 
 
 @bp.route('/logs')
@@ -1303,7 +1374,7 @@ def get_all_forbidden_zones():
         description: Информация о запрещенных зонах.
         schema:
           type: string
-          example: "1&2&100_50&100_0#{signature}"
+          example: "$ForbiddenZones 1&test_name&2&100_50&100_0#{signature}"
       400:
         description: Неверный идентификатор.
         schema:
@@ -1319,3 +1390,166 @@ def get_all_forbidden_zones():
                           query_str=f'/api/get_all_forbidden_zones?id={id}', key_group=f'kos{id}', sig=sig, id=id)
     else:
         return bad_request('Wrong id')
+      
+      
+@bp.route('/api/get_forbidden_zones_delta')
+def get_forbidden_zones_delta():
+    """
+    Возвращает дельту изменений в запрещенных для полета зонах.
+    ---
+    tags:
+      - api
+    parameters:
+      - name: id
+        in: query
+        type: string
+        required: true
+        description: Идентификатор БПЛА.
+      - name: sig
+        in: query
+        type: string
+        required: true
+        description: Подпись запроса.
+    responses:
+      200:
+        description: Дельта изменений в запрещенных зонах.
+        schema:
+          type: string
+          example: "$ForbiddenZonesDelta 1&test_name&modified&2&100_50&100_0#{signature}"
+      400:
+        description: Неверный идентификатор.
+        schema:
+          type: string
+          example: "Wrong id"
+      403:
+        description: Ошибка проверки подписи.
+    """
+    id = cast_wrapper(request.args.get('id'), str)
+    sig = request.args.get('sig')
+    if id:
+        return signed_request(handler_func=get_forbidden_zones_delta_handler, verifier_func=verify, signer_func=sign,
+                              query_str=f'/api/get_forbidden_zones_delta?id={id}', key_group=f'kos{id}', sig=sig, id=id)
+    else:
+        return bad_request('Wrong id')
+      
+      
+@bp.route('/api/forbidden_zones_hash')
+def forbidden_zones_hash():
+    """
+    Возвращает SHA-256 хэш строки запрещенных для полета зон.
+    ---
+    tags:
+      - api
+    parameters:
+      - name: id
+        in: query
+        type: string
+        required: true
+        description: Идентификатор БПЛА.
+      - name: sig
+        in: query
+        type: string
+        required: true
+        description: Подпись запроса.
+    responses:
+      200:
+        description: SHA-256 хэш строки запрещенных зон.
+        schema:
+          type: string
+          example: "$ForbiddenZonesHash 3a7bd3e2360a3d5f0d5f0d5f0d5f0d5f0d5f0d5f0d5f0d5f0d5f0d5f0d5f0d5f#{signature}"
+      400:
+        description: Неверный идентификатор.
+        schema:
+          type: string
+          example: "Wrong id"
+      403:
+        description: Ошибка проверки подписи.
+    """
+    id = cast_wrapper(request.args.get('id'), str)
+    sig = request.args.get('sig')
+    if id:
+        return signed_request(handler_func=get_forbidden_zones_hash_handler, verifier_func=verify, signer_func=sign,
+                              query_str=f'/api/forbidden_zones_hash?id={id}', key_group=f'kos{id}', sig=sig, id=id)
+    else:
+        return bad_request('Wrong id')
+      
+      
+@bp.route('/admin/export_forbidden_zones')
+def export_forbidden_zones():
+    """
+    Экспортирует все запрещенные зоны в файл.
+    ---
+    tags:
+      - admin
+    parameters:
+      - name: token
+        in: query
+        type: string
+        required: true
+        description: Токен аутентификации
+    responses:
+      200:
+        description: Файл с запрещенными зонами
+        content:
+          application/json:
+            schema:
+              type: string
+      401:
+        description: Неавторизованный доступ
+    """
+    token = request.args.get('token')
+    if token is None or not check_user_token(token):
+        return jsonify({"error": "Unauthorized"}), 401
+
+    return send_file(FORBIDDEN_ZONES_PATH, as_attachment=True, attachment_filename='forbidden_zones.json')
+
+
+@bp.route('/admin/import_forbidden_zones', methods=['POST'])
+def import_forbidden_zones():
+    """
+    Импортирует запрещенные зоны из файла.
+    ---
+    tags:
+      - admin
+    parameters:
+      - name: file
+        in: formData
+        type: file
+        required: true
+        description: Файл с запрещенными зонами
+      - name: token
+        in: formData
+        type: string
+        required: true
+        description: Токен аутентификации
+    responses:
+      200:
+        description: Успешный импорт зон
+      400:
+        description: Ошибка импорта зон
+      401:
+        description: Неавторизованный доступ
+    """
+    token = request.form.get('token')
+    if token is None or not check_user_token(token):
+        return jsonify({"error": "Unauthorized"}), 401
+
+    file = request.files.get('file')
+    if file is None:
+        return jsonify({"error": "No file provided"}), 400
+
+    try:
+        with open(FORBIDDEN_ZONES_PATH, 'r', encoding='utf-8') as f:
+            old_zones = json.load(f)
+        
+        file.save(FORBIDDEN_ZONES_PATH)
+        
+        with open(FORBIDDEN_ZONES_PATH, 'r', encoding='utf-8') as f:
+            new_zones = json.load(f)
+        
+        compute_and_save_forbidden_zones_delta(old_zones, new_zones)
+        
+        return jsonify({"status": "success"}), 200
+    except Exception as e:
+        print(e)
+        return jsonify({"error": "Failed to save file"}), 400

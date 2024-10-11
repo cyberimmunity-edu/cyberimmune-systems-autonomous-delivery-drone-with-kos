@@ -125,7 +125,7 @@ int initGpioPins() {
     address.sin_port = htons(peripheryPort);
 
     if (connect(peripherySocket, (struct sockaddr*)&address, sizeof(address)) != 0) {
-        char logBuffer[257] = {0};
+        char logBuffer[256] = {0};
         snprintf(logBuffer, 256, "Connection to %s:%d has failed", SIMULATOR_IP, peripheryPort);
         logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
         return 0;
@@ -139,7 +139,7 @@ bool isKillSwitchEnabled() {
 }
 
 int setBuzzer(bool enable) {
-    char logBuffer[257] = {0};
+    char logBuffer[256] = {0};
     snprintf(logBuffer, 256, "Buzzer is %s", enable ? "enabled" : "disabled");
     logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_INFO);
 

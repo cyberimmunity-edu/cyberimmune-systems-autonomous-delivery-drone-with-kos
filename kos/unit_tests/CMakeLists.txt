@@ -13,7 +13,7 @@ set (PERIPHERY_CONTROLLER_DIR ${CMAKE_SOURCE_DIR}/periphery_controller)
 add_executable (UnitTests "src/unit_tests.cpp" "src/mock.cpp"
     "${CREDENTIAL_MANAGER_DIR}/src/credential_manager_online.cpp"
     "${CREDENTIAL_MANAGER_DIR}/src/credential_manager.cpp"
-    "${LOGGER_DIR}/src/logger.cpp" "${FLIGHT_CONTROLLER_DIR}/src/mission.cpp"
+    "${LOGGER_DIR}/src/logger.cpp" "${FLIGHT_CONTROLLER_DIR}/src/flight_controller.cpp"
     "${NAVIGATION_SYSTEM_DIR}/src/navigation_system.cpp"
     "${PERIPHERY_CONTROLLER_DIR}/src/periphery_controller.cpp")
 

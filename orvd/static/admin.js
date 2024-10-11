@@ -24,6 +24,7 @@ document.getElementById("id_select").addEventListener("change", onChangeSelector
 document.getElementById('mission_checkbox').onclick = mission_decision;
 document.getElementById('kill_switch').onclick = kill_switch;
 document.getElementById('fly_accept_checkbox').onclick = fly_accept;
+document.getElementById('forbidden_zones_checkbox').onclick = toggleForbiddenZones;
 
 ol.proj.useGeographic()
 const place = [142.812588, 46.617637];
@@ -34,6 +35,7 @@ let current_mission = null;
 let uav = null;
 let access_token = params.token;
 var current_state = null;
+let forbidden_zones_display = false;
 
 let uav_style = new ol.style.Style({
   image: new ol.style.Icon({
@@ -137,15 +139,34 @@ const styleFunction = function (feature) {
   return styles[feature.getGeometry().getType()];
 };
 
-  
-const geoJSONLayer = new ol.layer.Vector({
-  source: new ol.source.Vector({
-    url: '/static/resources/forbidden_zones.json',
-    format: new ol.format.GeoJSON()
-  }),
-  style: styleFunction
-});
-map.addLayer(geoJSONLayer);
+let geoJSONLayer;
+
+async function createGeoJSONLayer() {
+  const response = await fetch(`/admin/get_forbidden_zones?token=${access_token}`);
+  if (!response.ok) {
+    console.error('Failed to fetch forbidden zones');
+    return;
+  }
+  const geojsonObject = await response.json();
+
+  if (geoJSONLayer) {
+    map.removeLayer(geoJSONLayer);
+  }
+
+  geoJSONLayer = new ol.layer.Vector({
+    source: new ol.source.Vector({
+      features: new ol.format.GeoJSON().readFeatures(geojsonObject),
+    }),
+    style: styleFunction
+  });
+
+  // Добавляем имя зоны в свойство description каждой фичи
+  geoJSONLayer.getSource().getFeatures().forEach(feature => {
+    feature.set('description', `Запрещенная зона: ${feature.get('name')}`);
+  });
+
+  map.addLayer(geoJSONLayer);
+}
 
 var markers = new ol.layer.Vector({
   source: new ol.source.Vector(),
@@ -167,7 +188,7 @@ const displayFeatureInfo = function (pixel, target) {
     info.style.top = pixel[1] + 'px';
     if (feature !== currentFeature) {
       info.style.visibility = 'visible';
-      info.innerText = feature.get('description');
+      info.innerText = feature.get('description') || 'Нет описания';
     }
   } else {
     info.style.visibility = 'hidden';
@@ -472,13 +493,30 @@ async function get_ids() {
 }
 
 
-setInterval(async function(){
+async function updateForbiddenZones() {
+  await createGeoJSONLayer();
+}
+
+function toggleForbiddenZones() {
+  forbidden_zones_display = document.getElementById('forbidden_zones_checkbox').checked;
+  if (forbidden_zones_display) {
+    updateForbiddenZones();
+  } else if (geoJSONLayer) {
+    map.removeLayer(geoJSONLayer);
+    geoJSONLayer = null;
+  }
+}
+
+setInterval(async function() {
   get_ids();
-  if(active_id != null) {
+  if (active_id != null) {
     status_change();
     waiters_change();
     get_mission();
     get_telemetry();
     get_mission_state();
   }
- }, 1000);
+  if (forbidden_zones_display) {
+    await updateForbiddenZones();
+  }
+}, 1000);

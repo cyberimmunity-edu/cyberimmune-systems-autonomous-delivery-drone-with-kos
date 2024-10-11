@@ -44,7 +44,7 @@ uint8_t hexCharToInt(char c) {
     else if (c >= 'A' && c <= 'F')
         return c - 'A' + 10;
     else {
-        char logBuffer[257] = {0};
+        char logBuffer[256] = {0};
         snprintf(logBuffer, 256, "%c is not a viable hex value", c);
         logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
         return 0;
@@ -70,7 +70,7 @@ uint8_t hexCharToInt(char c) {
  * \param[in] destinationSize Размер массива для записи результата. Ожидается не меньше 128 байт.
  */
 void stringToBytes(char* source, uint32_t sourceSize, uint8_t* destination, uint32_t destinationSize) {
-    char logBuffer[513] = {0};
+    char logBuffer[512] = {0};
     int j = destinationSize - 1;
     for (int32_t i = sourceSize - 1; i >= 0; i -= 2) {
         if (j < 0) {
@@ -101,8 +101,8 @@ int getRsaKey() {
             logEntry("Failed to create file to store generated RSA key", ENTITY_NAME, LogLevel::LOG_ERROR);
             return 0;
         }
-        char key[1025] = {0};
-        sprintf(key, "%s\n%s\n%s\n", getKeyN(), getKeyE(), getKeyD());
+        char key[1024] = {0};
+        snprintf(key, 1024, "%s\n%s\n%s\n", getKeyN(), getKeyE(), getKeyD());
         uint32_t len = strlen(key);
         if (write(file, key, len) != len) {
             logEntry("Failed to store RSA key in file", ENTITY_NAME, LogLevel::LOG_ERROR);

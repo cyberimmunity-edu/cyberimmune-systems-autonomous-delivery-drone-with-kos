@@ -1,6 +1,6 @@
 .PHONY: docker-compose-stop docs
 
-docs: 
+docs:
 	doxygen Doxyfile
 
 docker: docker-image

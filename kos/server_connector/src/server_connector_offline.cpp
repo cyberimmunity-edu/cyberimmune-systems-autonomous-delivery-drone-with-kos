@@ -54,6 +54,20 @@ int requestServer(char* query, char* response, uint32_t responseSize) {
         }
         strncpy(response, "$Arm: 0#", 9);
     }
+    else if (strstr(query, "/api/get_all_forbidden_zones?") != NULL) {
+        if (responseSize < 191) {
+            logEntry("Size of response does not fit given buffer", ENTITY_NAME, LogLevel::LOG_WARNING);
+            return 0;
+        }
+        strncpy(response, "$ForbiddenZones 1&test_area&7&53.1021169_107.377713&53.1022184_107.3779973&53.1022023_107.3783299&53.1020767_107.3784882&53.1019962_107.3782709&53.1019189_107.3779812&53.1019656_107.3777157#", 191);
+    }
+    else if (strstr(query, "/api/forbidden_zones_hash?") != NULL) {
+        if (responseSize < 86) {
+            logEntry("Size of response does not fit given buffer", ENTITY_NAME, LogLevel::LOG_WARNING);
+            return 0;
+        }
+        strncpy(response, "$ForbiddenZonesHash bdbac12490e31f4d0b3b5ee45a37dea125a35510b100e48d79e143eb3f419205#", 86);
+    }
     else {
         if (responseSize < 3) {
             logEntry("Size of response does not fit given buffer", ENTITY_NAME, LogLevel::LOG_WARNING);

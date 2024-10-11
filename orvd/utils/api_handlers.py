@@ -348,15 +348,61 @@ def get_all_forbidden_zones_handler(id: str):
     Returns:
         str: Строка с информацией о запрещенных зонах или NOT_FOUND.
     """
-    with open(FORBIDDEN_ZONES_PATH, 'r', encoding='utf-8') as f:
-        forbidden_zones = json.load(f)
-        result_str = f'$ForbiddenZones {len(forbidden_zones["features"])}'
-        for zone in forbidden_zones['features']:
-            coordinates = zone['geometry']['coordinates'][0]
-            result_str += f'&{len(coordinates)}&{"&".join(list(map(lambda e: str(e[0]) + "_" + str(e[1]), coordinates)))}'
-        return result_str
+    try:
+        with open(FORBIDDEN_ZONES_PATH, 'r', encoding='utf-8') as f:
+            forbidden_zones = json.load(f)
+            result_str = generate_forbidden_zones_string(forbidden_zones)
+            return result_str
 
-    return NOT_FOUND
+    except Exception as e:
+        print(e)
+        return NOT_FOUND
+
+
+def get_forbidden_zones_delta_handler(id: str):
+    """
+    Обрабатывает запрос на получение дельты изменений в запрещенных для полета зонах.
+
+    Args:
+        id (str): Идентификатор БПЛА.
+
+    Returns:
+        str: Строка с дельтой изменений в запрещенных зонах или NOT_FOUND.
+    """
+    try:
+        with open(FORBIDDEN_ZONES_DELTA_PATH, 'r', encoding='utf-8') as f:
+            delta_zones = json.load(f)
+        
+        delta_str = f'$ForbiddenZonesDelta {len(delta_zones["features"])}'
+        for zone in delta_zones['features']:
+            name = zone['properties']['name']
+            change_type = zone['properties']['change_type']
+            coordinates = zone['geometry']['coordinates'][0]
+            delta_str += f'&{name}&{change_type}&{len(coordinates)}&{"&".join(list(map(lambda e: str(e[0]) + "_" + str(e[1]), coordinates)))}'
+        
+        return delta_str
+    except Exception as e:
+        print(e)
+        return NOT_FOUND
+    
+
+def get_forbidden_zones_hash_handler(id: str):
+    """
+    Обрабатывает запрос на получение SHA-256 хэша строки запрещенных зон.
+
+    Returns:
+        str: SHA-256 хэш строки запрещенных зон или NOT_FOUND.
+    """
+    try:
+        with open(FORBIDDEN_ZONES_PATH, 'r', encoding='utf-8') as f:
+            forbidden_zones = json.load(f)
+            result_str = generate_forbidden_zones_string(forbidden_zones)
+            hash_value = get_sha256_hex(result_str)
+            return f'$ForbiddenZonesHash {hash_value}'
+
+    except Exception as e:
+        print(e)
+        return NOT_FOUND
 
 
 def fmission_ms_handler(id: str, mission_str: str):
@@ -730,6 +776,18 @@ def get_forbidden_zone_handler(name: str):
     return NOT_FOUND
 
 
+def get_forbidden_zones_handler():
+    """
+    Обрабатывает запрос на получение всех запрещенных зон.
+
+    Returns:
+        dict: GeoJSON с запрещенными зонами
+    """
+    with open(FORBIDDEN_ZONES_PATH, 'r', encoding='utf-8') as f:
+        forbidden_zones = json.load(f)
+    return forbidden_zones
+
+
 def get_forbidden_zones_names_handler():
     """ 
     Обрабатывает запрос на получение имен всех запрещенных зон.
@@ -747,41 +805,46 @@ def get_forbidden_zones_names_handler():
     return NOT_FOUND
 
 
-def set_forbidden_zone_handler(name: str, geometry: str):
+def set_forbidden_zone_handler(name: str, geometry: list):
     """
     Обрабатывает запрос на установку или обновление запрещенной для полета зоны.
 
     Args:
         name (str): Имя запрещенной зоны.
-        geometry (str): Строка с координатами зоны.
+        geometry (list): Массив координат зоны.
 
     Returns:
         str: OK в случае успешной установки или сообщение об ошибке.
     """
-    geometry_coordinates = cast_wrapper(geometry, ast.literal_eval)
-    if geometry_coordinates == None:
+    if not isinstance(geometry, list) or not all(isinstance(coord, list) and len(coord) == 2 for coord in geometry):
         return 'Bad geometry'
-    for idx in range(len(geometry_coordinates)):
-        geometry_coordinates[idx][0] = round(geometry_coordinates[idx][0], 7)
-        geometry_coordinates[idx][1] = round(geometry_coordinates[idx][1], 7)
+    
+    for idx in range(len(geometry)):
+        geometry[idx][0] = round(geometry[idx][0], 7)
+        geometry[idx][1] = round(geometry[idx][1], 7)
         
     forbidden_zones = None
+    
+    with open(FORBIDDEN_ZONES_PATH, 'r', encoding='utf-8') as f:
+        old_zones = json.load(f)
     
     with open(FORBIDDEN_ZONES_PATH, 'r', encoding='utf-8') as f:
         forbidden_zones = json.load(f)
         existing_zone = False
         for zone in forbidden_zones['features']:
             if zone['properties'].get('name') == name:
-                zone['geometry']['coordinates'][0] = geometry_coordinates
+                zone['geometry']['coordinates'][0] = geometry
                 existing_zone = True
         
         if not existing_zone:
-            new_feature = get_new_polygon_feature(name, geometry_coordinates)
+            new_feature = get_new_polygon_feature(name, geometry)
             forbidden_zones['features'].append(new_feature)
     
-    if forbidden_zones != None:
+    if forbidden_zones is not None:
         with open(FORBIDDEN_ZONES_PATH, 'w', encoding='utf-8') as f:
             json.dump(forbidden_zones, f, ensure_ascii=False, indent=4)
+            
+        compute_and_save_forbidden_zones_delta(old_zones, forbidden_zones)
     
     return OK
 
@@ -799,6 +862,9 @@ def delete_forbidden_zone_handler(name: str):
     forbidden_zones = None
     
     with open(FORBIDDEN_ZONES_PATH, 'r', encoding='utf-8') as f:
+        old_zones = json.load(f)
+    
+    with open(FORBIDDEN_ZONES_PATH, 'r', encoding='utf-8') as f:
         forbidden_zones = json.load(f)
         for idx, zone in enumerate(forbidden_zones['features']):
             if zone['properties'].get('name') == name:
@@ -808,7 +874,9 @@ def delete_forbidden_zone_handler(name: str):
     if forbidden_zones != None:
         with open(FORBIDDEN_ZONES_PATH, 'w', encoding='utf-8') as f:
             json.dump(forbidden_zones, f, ensure_ascii=False, indent=4)
-            return OK
+            
+        compute_and_save_forbidden_zones_delta(old_zones, forbidden_zones)
+        
+        return OK
     
     return NOT_FOUND
-    

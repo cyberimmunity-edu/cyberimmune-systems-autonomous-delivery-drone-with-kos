@@ -4,7 +4,7 @@
  * \~Russian \brief Реализация основного цикла компонента FlightController модуля безопасности.
  */
 
-#include "../include/mission.h"
+#include "../include/flight_controller.h"
 #include "../../shared/include/initialization_interface.h"
 #include "../../shared/include/ipc_messages_initialization.h"
 #include "../../shared/include/ipc_messages_autopilot_connector.h"
@@ -19,6 +19,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <thread>
 
 /** \cond */
 #define RETRY_DELAY_SEC 1
@@ -26,6 +27,7 @@
 #define FLY_ACCEPT_PERIOD_US 500000
 
 char boardId[32] = {0};
+std::thread noFlightAreasThread;
 /** \endcond */
 
 /**
@@ -48,20 +50,19 @@ char boardId[32] = {0};
  * \return Возвращает 1 при успешной отправке, иначе -- 0.
  */
 int sendSignedMessage(char* method, char* response, char* errorMessage, uint8_t delay) {
-    char message[513] = {0};
+    char logBuffer[256] = {0};
     char signature[257] = {0};
-    char request[1025] = {0};
-    char logBuffer[257] = {0};
-    snprintf(message, 512, "%s?id=%s", method, boardId);
+    char request[512] = {0};
+    snprintf(request, 512, "%s?id=%s", method, boardId);
 
-    while (!signMessage(message, signature, 257)) {
+    while (!signMessage(request, signature, 257)) {
         snprintf(logBuffer, 256, "Failed to sign %s message at Credential Manager. Trying again in %ds", errorMessage, delay);
         logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
         sleep(delay);
     }
-    snprintf(request, 1024, "%s&sig=0x%s", message, signature);
+    snprintf(request, 512, "%s&sig=0x%s", request, signature);
 
-    while (!sendRequest(request, response, 1025)) {
+    while (!sendRequest(request, response, 1024)) {
         snprintf(logBuffer, 256, "Failed to send %s request through Server Connector. Trying again in %ds", errorMessage, delay);
         logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
         sleep(delay);
@@ -77,6 +78,34 @@ int sendSignedMessage(char* method, char* response, char* errorMessage, uint8_t 
     return 1;
 }
 
+void checkNoFlightAreas() {
+    char response[1024] = {0};
+    while (true) {
+        sendSignedMessage("/api/forbidden_zones_hash", response, "no-flight areas", RETRY_DELAY_SEC);
+        char* receivedHash = extractNoFlightAreasHash(response);
+        char* calculatedHash = getNoFlightAreasHash();
+        if (strcmp(receivedHash, calculatedHash)) {
+            logEntry("No-flight areas on the server were updated", ENTITY_NAME, LogLevel::LOG_INFO);
+            char hash[65] = {0};
+            strcpy(hash, receivedHash);
+            sendSignedMessage("/api/get_forbidden_zones_delta", response, "no-flight areas", RETRY_DELAY_SEC);
+            int successful = updateNoFlightAreas(response);
+            if (successful) {
+                calculatedHash = getNoFlightAreasHash();
+                successful = !strcmp(hash, calculatedHash);
+            }
+            if (!successful) {
+                logEntry("Completely redownloading no-flight areas", ENTITY_NAME, LogLevel::LOG_INFO);
+                deleteNoFlightAreas();
+                sendSignedMessage("/api/get_all_forbidden_zones", response, "no-flight areas", RETRY_DELAY_SEC);
+                loadNoFlightAreas(response);
+            }
+            printNoFlightAreas();
+        }
+        sleep(1);
+    }
+}
+
 /**
  * \~English Security module main loop. Waits for all other components to initialize. Authenticates
  * on the ATM server and receives the mission from it. After a mission and an arm request from the autopilot
@@ -89,7 +118,8 @@ int sendSignedMessage(char* method, char* response, char* errorMessage, uint8_t 
  * \return Возвращает 1 при завершении без ошибок.
  */
 int main(void) {
-    char logBuffer[257] = {0};
+    char logBuffer[256] = {0};
+    char responseBuffer[1024] = {0};
     //Before do anything, we need to ensure, that other modules are ready to work
     while (!waitForInit("logger_connection", "Logger")) {
         snprintf(logBuffer, 256, "Failed to receive initialization notification from Logger. Trying again in %ds", RETRY_DELAY_SEC);
@@ -127,25 +157,35 @@ int main(void) {
         logEntry("Failed to get board ID from ServerConnector. Trying again in 1s", ENTITY_NAME, LogLevel::LOG_WARNING);
         sleep(1);
     }
-    char initNotification[64] = {0};
-    snprintf(initNotification, 64, "Board '%s' is initialized", boardId);
-    logEntry(initNotification, ENTITY_NAME, LogLevel::LOG_INFO);
+    snprintf(logBuffer, 256, "Board '%s' is initialized", boardId);
+    logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_INFO);
 
     //Enable buzzer to indicate, that all modules has been initialized
     if (!enableBuzzer())
         logEntry("Failed to enable buzzer at Periphery Controller", ENTITY_NAME, LogLevel::LOG_WARNING);
 
     //Copter need to be registered at ORVD
-    char authResponse[1025] = {0};
-    sendSignedMessage("/api/auth", authResponse, "authentication", RETRY_DELAY_SEC);
+    sendSignedMessage("/api/auth", responseBuffer, "authentication", RETRY_DELAY_SEC);
     logEntry("Successfully authenticated on the server", ENTITY_NAME, LogLevel::LOG_INFO);
 
     //Constantly ask server, if mission for the drone is available. Parse it and ensure, that mission is correct
     while (true) {
-        char missionResponse[1025] = {0};
-        if (sendSignedMessage("/api/fmission_kos", missionResponse, "mission", RETRY_DELAY_SEC) && parseMission(missionResponse)) {
+        if (sendSignedMessage("/api/fmission_kos", responseBuffer, "mission", RETRY_DELAY_SEC) && loadMission(responseBuffer)) {
             logEntry("Successfully received mission from the server", ENTITY_NAME, LogLevel::LOG_INFO);
             printMission();
+            break;
+        }
+        sleep(RETRY_REQUEST_DELAY_SEC);
+    }
+
+    //Constantly ask server, if no-flight areas are available.
+    while (true) {
+        if (sendSignedMessage("/api/get_all_forbidden_zones", responseBuffer, "no-flight areas", RETRY_DELAY_SEC)
+            && loadNoFlightAreas(responseBuffer)) {
+            logEntry("Successfully received no-flight areas from the server", ENTITY_NAME, LogLevel::LOG_INFO);
+            printNoFlightAreas();
+            //Start thread to ask server for no-flight areas updates.
+            noFlightAreasThread = std::thread(checkNoFlightAreas);
             break;
         }
         sleep(RETRY_REQUEST_DELAY_SEC);
@@ -163,10 +203,9 @@ int main(void) {
         logEntry("Received arm request. Notifying the server", ENTITY_NAME, LogLevel::LOG_INFO);
 
         //When autopilot asked for arm, we need to receive permission from ORVD
-        char armRespone[1025] = {0};
-        sendSignedMessage("/api/arm", armRespone, "arm", RETRY_DELAY_SEC);
+        sendSignedMessage("/api/arm", responseBuffer, "arm", RETRY_DELAY_SEC);
 
-        if (strstr(armRespone, "$Arm: 0#") != NULL) {
+        if (strstr(responseBuffer, "$Arm: 0#") != NULL) {
             //If arm was permitted, we enable motors
             logEntry("Arm is permitted", ENTITY_NAME, LogLevel::LOG_INFO);
             while (!setKillSwitch(true)) {
@@ -178,7 +217,7 @@ int main(void) {
                 logEntry("Failed to permit arm through Autopilot Connector", ENTITY_NAME, LogLevel::LOG_WARNING);
             break;
         }
-        else if (strstr(armRespone, "$Arm: 1#") != NULL) {
+        else if (strstr(responseBuffer, "$Arm: 1#") != NULL) {
             logEntry("Arm is forbidden", ENTITY_NAME, LogLevel::LOG_INFO);
             if (!forbidArm())
                 logEntry("Failed to forbid arm through Autopilot Connector", ENTITY_NAME, LogLevel::LOG_WARNING);

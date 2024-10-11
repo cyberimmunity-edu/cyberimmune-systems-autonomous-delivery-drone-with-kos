@@ -28,6 +28,7 @@ OK = '$OK'
 
 LOGS_PATH = './logs'
 FORBIDDEN_ZONES_PATH = './static/resources/forbidden_zones.json'
+FORBIDDEN_ZONES_DELTA_PATH = './static/resources/forbidden_zones_delta.json'
 
 loaded_keys = {}
 
@@ -511,3 +512,65 @@ def create_csv_from_telemetry(telemetry_data):
 
     output.seek(0)
     return output.getvalue()
+
+
+def compute_forbidden_zones_delta(old_zones, new_zones):
+    """
+    Вычисляет дельту изменений между старыми и новыми запрещенными зонами.
+
+    Args:
+        old_zones (dict): Старые запрещенные зоны.
+        new_zones (dict): Новые запрещенные зоны.
+
+    Returns:
+        dict: Дельта изменений.
+    """
+    delta_zones = {"type": "FeatureCollection", "features": []}
+    
+    old_zones_dict = {zone['properties']['name']: zone for zone in old_zones['features']}
+    new_zones_dict = {zone['properties']['name']: zone for zone in new_zones['features']}
+    
+    # Обработка добавленных и измененных зон
+    for name, new_zone in new_zones_dict.items():
+        if name not in old_zones_dict:
+            new_zone['properties']['change_type'] = 'added'
+            delta_zones['features'].append(new_zone)
+        elif old_zones_dict[name]['geometry'] != new_zone['geometry']:
+            new_zone['properties']['change_type'] = 'modified'
+            delta_zones['features'].append(new_zone)
+    
+    # Обработка удаленных зон
+    for name, old_zone in old_zones_dict.items():
+        if name not in new_zones_dict:
+            old_zone['properties']['change_type'] = 'deleted'
+            delta_zones['features'].append(old_zone)
+    
+    return delta_zones
+
+
+def compute_and_save_forbidden_zones_delta(old_zones, new_zones):
+    try:
+        delta_zones = compute_forbidden_zones_delta(old_zones, new_zones)
+        
+        with open(FORBIDDEN_ZONES_DELTA_PATH, 'w', encoding='utf-8') as f:
+            json.dump(delta_zones, f, ensure_ascii=False, indent=4)
+    except Exception as e:
+        print(f"Error computing and saving forbidden zones delta: {e}")
+        
+        
+def generate_forbidden_zones_string(forbidden_zones):
+    """
+    Генерирует строку запрещенных зон из JSON данных.
+
+    Args:
+        forbidden_zones (dict): JSON данные запрещенных зон.
+
+    Returns:
+        str: Строка запрещенных зон.
+    """
+    result_str = f'$ForbiddenZones {len(forbidden_zones["features"])}'
+    for zone in forbidden_zones['features']:
+        name = zone['properties']['name']
+        coordinates = zone['geometry']['coordinates'][0]
+        result_str += f'&{name}&{len(coordinates)}&{"&".join(list(map(lambda e: str(e[0]) + "_" + str(e[1]), coordinates)))}'
+    return result_str

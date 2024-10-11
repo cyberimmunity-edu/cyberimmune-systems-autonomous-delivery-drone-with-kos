@@ -39,5 +39,8 @@ void bytesToString(uint8_t* source, uint32_t sourceSize, char* destination, uint
 int isStopSymbol(char character);
 int parseInt(char*& string, int32_t& value, uint32_t numAfterPoint);
 int parseCommands(char* str);
+int parseAreas(char* str);
+int parseAreasDelta(char* str);
+void coordToString(char* string, uint8_t len, int32_t coord);
 
 void buzz();
