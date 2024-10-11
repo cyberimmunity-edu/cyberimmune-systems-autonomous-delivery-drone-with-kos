@@ -587,21 +587,32 @@ char* getNoFlightAreasHash() {
     return areasHash;
 }
 
-char* extractNoFlightAreasHash(char* hash) {
-    char header[] = "$ForbiddenZonesHash ";
-    char* begin = strstr(hash, header);
-    if (begin)
-        begin += strlen(header);
-    else {
-        logEntry("Response from the server does not contain no-flight areas hash", ENTITY_NAME, LogLevel::LOG_WARNING);
-        return hash;
-    }
-    if (char* end = strstr(begin, "#")) {
-        *end = '\0';
-        if (end - begin == 63) {
-            begin--;
-            *begin = '0';
+void parseNoFlightAreasHash(char* response, char* hash, uint8_t hashLen) {
+    memset(hash, 0, hashLen);
+    if (char* begin = strstr(response, "$ForbiddenZonesHash ")) {
+        begin += strlen("$ForbiddenZonesHash ");
+        if (char* end = strstr(begin, "$")) {
+            int len = end - begin;
+            if (len == 64)
+                strncpy(hash, begin, 64);
+            else if (len == 63) {
+                hash[0] = '0';
+                strncpy(hash + 1, begin, 63);
+            }
         }
     }
-    return begin;
+}
+
+uint32_t parseDelay(char* response) {
+    if (response) {
+        response += strlen("$Delay ");
+        char* end = strstr(response, "#");
+        if (end) {
+            end[0] = '\0';
+            return atoi(response);
+        }
+    }
+
+    logEntry("Failed to parse delay until next session: setting it to 1s", ENTITY_NAME, LogLevel::LOG_WARNING);
+    return 1;
 }
