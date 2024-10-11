@@ -277,7 +277,7 @@ def flight_info_handler(id: str) -> str:
     if not uav_entity:
         return NOT_FOUND
     else:
-        forbidden_zones_hash = get_all_forbidden_zones_handler(id)
+        forbidden_zones_hash = get_forbidden_zones_hash_handler(id)
         delay = f'$Delay {uav_entity.delay}'
         if uav_entity.kill_switch_state:
             status = '$Flight -1'
