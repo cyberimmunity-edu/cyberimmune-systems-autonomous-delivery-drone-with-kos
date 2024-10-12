@@ -79,11 +79,18 @@ int sendSignedMessage(char* method, char* response, char* errorMessage, uint8_t 
     return 1;
 }
 
+/**
+ * \~English Procedure that checks the flight status at the ATM server. Check includes permission to continue flight, changes in
+ * no-flight areas and time until next communication session.
+ * \~Russian Процедура, запрашивающая статус полета от сервера ОРВД. Статус включает в себя разрешение на продолжение полета,
+ * изменения в бесполетных зонах и время до следующей коммуникации с сервером.
+ */
 void serverSession() {
     sleep(sessionDelay);
     char response[1024] = {0};
     while (true) {
         sendSignedMessage("/api/flight_info", response, "session", RETRY_DELAY_SEC);
+        //If connection is failed, flight must be paused
         //Processing status of flight
         if (strstr(response, "$Flight -1$")) {
             logEntry("Emergency stop request is received. Disabling motors", ENTITY_NAME, LogLevel::LOG_INFO);
