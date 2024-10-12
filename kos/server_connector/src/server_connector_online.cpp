@@ -12,12 +12,14 @@
  */
 
 #include "../include/server_connector.h"
+#include <errno.h>
 
 #include <kos_net.h>
 
 /** \cond */
 #define BUFFER_SIZE 1024
 #define CONTENT_SIZE 2048
+#define CONNECTION_TIMEOUT 5
 
 uint16_t serverPort = 8080;
 /** \endcond */
@@ -76,22 +78,40 @@ int requestServer(char* query, char* response, uint32_t responseSize) {
     char request[BUFFER_SIZE] = {0};
     snprintf(request, BUFFER_SIZE, "GET %s HTTP/1.1\r\nHost: %s\r\nConnection: close\r\n\r\n", query, SERVER_IP);
 
-    int socketDesc = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-    if (socketDesc < 0) {
-        logEntry("Failed to create a socket", ENTITY_NAME, LogLevel::LOG_WARNING);
-        return 0;
-    }
-
+    int socketDesc = 0;
+    int connectionAttempts = 0;
     sockaddr_in serverAddress = {0};
     serverAddress.sin_family = AF_INET;
     serverAddress.sin_port = htons(serverPort);
     serverAddress.sin_addr.s_addr = inet_addr(SERVER_IP);
-    if (connect(socketDesc, (struct sockaddr *)&serverAddress, sizeof(serverAddress)) < 0) {
-        char logBuffer[256] = {0};
-        snprintf(logBuffer, 256, "Connection to %s:%d has failed", SERVER_IP, serverPort);
-        logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
-        close(socketDesc);
-        return 0;
+    while (true) {
+        socketDesc = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+        if (socketDesc < 0) {
+            logEntry("Failed to create a socket", ENTITY_NAME, LogLevel::LOG_WARNING);
+            return 0;
+        }
+        if (connect(socketDesc, (struct sockaddr *)&serverAddress, sizeof(serverAddress)) < 0) {
+            close(socketDesc);
+            if (errno == ECONNREFUSED) {
+                if (connectionAttempts >= CONNECTION_TIMEOUT) {
+                    strncpy(response, "TIMEOUT", 8);
+                    return 1;
+                }
+                else {
+                    connectionAttempts++;
+                    sleep(1);
+                }
+            }
+            else {
+                char logBuffer[256] = {0};
+                snprintf(logBuffer, 256, "Connection to %s:%d has failed", SERVER_IP, serverPort);
+                logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
+                close(socketDesc);
+                return 0;
+            }
+        }
+        else
+            break;
     }
 
     if (send(socketDesc, request, sizeof(request), 0) < 0) {

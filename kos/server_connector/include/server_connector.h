@@ -43,13 +43,15 @@ char* getBoardName();
 /**
  * \~English Requests the ATM server and receives a response from it.
  * \param[in] query Request to the ATM server.
- * \param[out] response Response from the ATM server. Only a meaningfuk part of the response is returned.
+ * \param[out] response Response from the ATM server. Only a meaningful part of the response is returned. If connection is timed
+ * out, response will contain "TIMEOUT" string.
  * \param[in] responseSize Size of output response buffer.
- * \return Returns 1 on successful message exchange with the ATM server, 0 otherwise.
+ * \return Returns 1 on successful message exchange with the ATM server or on connection timeout, 0 otherwise.
  * \~Russian Отправляет запрос на сервер ОРВД и получает от него ответ.
  * \param[in] query Запрос к серверу ОРВД.
- * \param[out] response Ответ от сервера ОРВД. Возвращается лишь значимая часть ответа.
+ * \param[out] response Ответ от сервера ОРВД. Возвращается лишь значимая часть ответа. Если истекло время ожидания подключения
+ * к серверу, ответ будет содержать строку "TIMEOUT".
  * \param[in] responseSize Размер буфера, куда записывается ответ от сервера.
- * \return Возвращает 1, если обмен сообщениями с сервером был успешен, иначе -- 0.
+ * \return Возвращает 1, если обмен сообщениями с сервером был успешен или истекло время ожидания подключения к серверу, иначе -- 0.
  */
 int requestServer(char* query, char* response, uint32_t responseSize);
