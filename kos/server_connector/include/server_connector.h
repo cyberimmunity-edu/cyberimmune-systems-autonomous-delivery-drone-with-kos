@@ -55,3 +55,14 @@ char* getBoardName();
  * \return Возвращает 1, если обмен сообщениями с сервером был успешен или истекло время ожидания подключения к серверу, иначе -- 0.
  */
 int requestServer(char* query, char* response, uint32_t responseSize);
+/**
+ * \~English Publish the message via MQTT-protocol.
+ * \param[in] topic Name of topic to publish message to.
+ * \param[in] publication Message to publish.
+ * \return Returns 1 on successful message publish, 0 otherwise.
+ * \~Russian Публикует сообщение по MQTT-протоколу.
+ * \param[in] topic Тема, в которую будет опубликовано сообщение.
+ * \param[in] publication Сообщение, которое будет опубликовано.
+ * \return Возвращает 1, если сообщениями было успешно опубликовано, иначе -- 0.
+ */
+int publish(char* topic, char* publication);

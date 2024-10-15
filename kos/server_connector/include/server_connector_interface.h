@@ -45,6 +45,13 @@ nk_err_t GetBoardIdImpl(struct ServerConnectorInterface *self,
 nk_err_t SendRequestImpl(struct ServerConnectorInterface *self,
                     const ServerConnectorInterface_SendRequest_req *req, const struct nk_arena *reqArena,
                     ServerConnectorInterface_SendRequest_res *res, struct nk_arena *resArena);
+/**
+ * \~English IPC message handler. See \ref sendRequest.
+ * \~Russian Обработчик IPC-сообщения. См. \ref sendRequest.
+ */
+nk_err_t PublishMessageImpl(struct ServerConnectorInterface *self,
+                    const ServerConnectorInterface_PublishMessage_req *req, const struct nk_arena *reqArena,
+                    ServerConnectorInterface_PublishMessage_res *res, struct nk_arena *resArena);
 
 /**
  * \~English Creates an ServerConnectorInterface C++ interface and maps its methods to IPC message handlers.
@@ -52,7 +59,7 @@ nk_err_t SendRequestImpl(struct ServerConnectorInterface *self,
  */
 static struct ServerConnectorInterface *CreateServerConnectorInterfaceImpl(void) {
     static const struct ServerConnectorInterface_ops Ops = {
-        .GetBoardId = GetBoardIdImpl, .SendRequest = SendRequestImpl
+        .GetBoardId = GetBoardIdImpl, .SendRequest = SendRequestImpl, .PublishMessage = PublishMessageImpl
     };
 
     static ServerConnectorInterface obj = {

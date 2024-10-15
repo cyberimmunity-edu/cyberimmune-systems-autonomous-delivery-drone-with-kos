@@ -35,3 +35,14 @@ int getBoardId(char* id);
  * \return Возвращает 1, если обмен сообщениями с сервером был успешен или истекло время ожидания подключения к серверу, иначе -- 0.
  */
 int sendRequest(char* query, char* response, uint32_t responseSize);
+/**
+ * \~English Performs a message publication via MQTT-protocol.
+ * \param[in] topic Name of topic to publish message to.
+ * \param[in] publication Message to publish.
+ * \return Returns 1 on successful message publish, 0 otherwise.
+ * \~Russian Производит публикацию сообщения по MQTT-протоколу.
+ * \param[in] topic Тема, в которую будет опубликовано сообщение.
+ * \param[in] publication Сообщение, которое будет опубликовано.
+ * \return Возвращает 1, если сообщениями было успешно опубликовано, иначе -- 0.
+ */
+int publishMessage(char* topic, char* publication);

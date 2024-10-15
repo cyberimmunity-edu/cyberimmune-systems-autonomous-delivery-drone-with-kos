@@ -24,6 +24,9 @@ endif ()
 if (SERVER)
     find_package (wpa REQUIRED COMPONENTS SUPPLICANT_ENTITY)
     include_directories (${wpa_INCLUDE})
+
+    find_package (mosquitto REQUIRED COMPONENTS CXX_LIB)
+    include_directories (${mosquitto_INCLUDE})
 endif ()
 
 if (NOT SIMULATION)

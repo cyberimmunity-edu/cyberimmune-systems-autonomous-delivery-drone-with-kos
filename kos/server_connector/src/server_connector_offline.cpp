@@ -71,3 +71,7 @@ int requestServer(char* query, char* response, uint32_t responseSize) {
 
     return 1;
 }
+
+int publish(char* topic, char* publication) {
+    return 1;
+}

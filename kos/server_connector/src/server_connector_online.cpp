@@ -15,6 +15,7 @@
 #include <errno.h>
 
 #include <kos_net.h>
+#include <mosquittopp.h>
 
 /** \cond */
 #define BUFFER_SIZE 1024
@@ -22,6 +23,9 @@
 #define CONNECTION_TIMEOUT 5
 
 uint16_t serverPort = 8080;
+uint16_t publishPort = 1883;
+bool publishConnected = false;
+mosqpp::mosquittopp *publisher;
 /** \endcond */
 
 /**
@@ -65,6 +69,9 @@ int initServerConnector() {
         logEntry("Connection to network has failed", ENTITY_NAME, LogLevel::LOG_ERROR);
         return 0;
     }
+
+    mosqpp::lib_init();
+    publisher = new mosqpp::mosquittopp();
 
     if (strlen(BOARD_ID)) {
         setBoardName(BOARD_ID);
@@ -150,4 +157,21 @@ int requestServer(char* query, char* response, uint32_t responseSize) {
     strncpy(response, msg, len);
 
     return 1;
+}
+
+int publish(char* topic, char* publication) {
+    if (!publishConnected) {
+        publishConnected = !publisher->connect(SERVER_IP, publishPort);
+        if (!publishConnected) {
+            logEntry("Connection to MQTT broker has failed", ENTITY_NAME, LogLevel::LOG_WARNING);
+            return 0;
+        }
+    }
+
+    if (publisher && publishConnected && !publisher->publish(NULL, topic, strlen(publication), publication))
+        return 1;
+    else {
+        logEntry("Failed to publish message", ENTITY_NAME, LogLevel::LOG_WARNING);
+        return 0;
+    }
 }

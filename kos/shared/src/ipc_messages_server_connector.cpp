@@ -73,3 +73,32 @@ int sendRequest(char* query, char* response, uint32_t responseSize) {
 
     return 1;
 }
+
+int publishMessage(char* topic, char* publication) {
+    NkKosTransport transport;
+    nk_iid_t riid;
+    initSenderInterface("server_connector_connection", "drone_controller.ServerConnector.interface", transport, riid);
+
+    struct ServerConnectorInterface_proxy proxy;
+    ServerConnectorInterface_proxy_init(&proxy, &transport.base, riid);
+
+    ServerConnectorInterface_PublishMessage_req req;
+    ServerConnectorInterface_PublishMessage_res res;
+    char reqBuffer[ServerConnectorInterface_PublishMessage_req_arena_size];
+    struct nk_arena reqArena = NK_ARENA_INITIALIZER(reqBuffer, reqBuffer + sizeof(reqBuffer));
+    nk_arena_reset(&reqArena);
+
+    nk_uint32_t len = strlen(topic);
+    nk_char_t *msg = nk_arena_alloc(nk_char_t, &reqArena, &(req.topic), len + 1);
+    if ((msg == NULL) || (len > ServerConnectorInterface_PublishMessage_req_arena_size))
+        return 0;
+    strncpy(msg, topic, len);
+
+    len = strlen(publication);
+    msg = nk_arena_alloc(nk_char_t, &reqArena, &(req.publication), len + 1);
+    if ((msg == NULL) || (len > ServerConnectorInterface_PublishMessage_req_arena_size))
+        return 0;
+    strncpy(msg, publication, len);
+
+    return ((ServerConnectorInterface_PublishMessage(&proxy.base, &req, &reqArena, &res, NULL) == rcOk) && res.success);
+}
