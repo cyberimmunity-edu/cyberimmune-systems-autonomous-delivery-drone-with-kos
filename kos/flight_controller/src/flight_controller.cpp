@@ -599,8 +599,14 @@ void parseNoFlightAreasHash(char* response, char* hash, uint8_t hashLen) {
                 hash[0] = '0';
                 strncpy(hash + 1, begin, 63);
             }
+            else
+                logEntry("Failed to parse hash: hash length is incorrect", ENTITY_NAME, LogLevel::LOG_WARNING);
         }
+        else
+            logEntry("Failed to parse hash: end of hash is not found", ENTITY_NAME, LogLevel::LOG_WARNING);
     }
+    else
+        logEntry("Message does not contain hash", ENTITY_NAME, LogLevel::LOG_WARNING);
 }
 
 uint32_t parseDelay(char* response) {
