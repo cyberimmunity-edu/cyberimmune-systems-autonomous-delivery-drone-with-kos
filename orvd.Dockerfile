@@ -7,6 +7,7 @@ RUN apt-get update && \
         apache2 \
         libapache2-mod-wsgi-py3 \
         net-tools \
+        mosquitto \
         python3 \
         python3-pip \
         python3-venv \
@@ -23,7 +24,8 @@ RUN apt-get update && \
         python3-werkzeug \
         python3-jinja2 \
         python3-pytest \
-        python3-flasgger && \
+        python3-flasgger \
+        python3-paho-mqtt        && \
         mkdir -p /var/www/orvd
 
 COPY ./orvd /var/www/orvd
