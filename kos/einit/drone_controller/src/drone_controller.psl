@@ -35,7 +35,6 @@ request {
 
     match dst=drone_controller.CredentialManager interface=drone_controller.CredentialManagerInterface {
         match src=drone_controller.FlightController { grant () }
-        match src=drone_controller.NavigationSystem { grant () }
     }
 
     match dst=drone_controller.NavigationSystem interface=drone_controller.NavigationSystemInterface {
@@ -65,7 +64,6 @@ response {
 
     match src=drone_controller.CredentialManager interface=drone_controller.CredentialManagerInterface {
         match dst=drone_controller.FlightController { grant () }
-        match dst=drone_controller.NavigationSystem { grant () }
     }
 
     match src=drone_controller.NavigationSystem interface=drone_controller.NavigationSystemInterface {
