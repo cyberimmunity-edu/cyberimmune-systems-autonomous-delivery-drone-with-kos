@@ -25,7 +25,7 @@ RUN apt-get update && \
         python3-jinja2 \
         python3-pytest \
         python3-flasgger \
-        python3-paho-mqtt        && \
+        python3-paho-mqtt && \
         mkdir -p /var/www/orvd
 
 COPY ./orvd /var/www/orvd
