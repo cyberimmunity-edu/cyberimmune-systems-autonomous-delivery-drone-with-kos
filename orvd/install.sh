@@ -5,8 +5,8 @@ ufw enable
 ufw allow OpenSSH
 ufw allow Apache
 ufw allow 8080/tcp
-sudo ufw allow 1883
-sudo ufw allow 8883
+ufw allow 1883
+ufw allow 8883
 apt-get -y install python3 \
         python3-pip \
         python3-venv \
@@ -26,6 +26,7 @@ apt-get -y install python3 \
         python3-flasgger \
         python3-paho-mqtt
 
+cp ./default.conf /etc/mosquitto/conf.d/default.conf
 apt-get -y install libapache2-mod-wsgi-py3
 cp -r ./ /var/www/orvd
 cd /var/www/orvd

@@ -28,6 +28,7 @@ RUN apt-get update && \
         python3-paho-mqtt && \
         mkdir -p /var/www/orvd
 
+COPY ./orvd/default.conf /etc/mosquitto/conf.d/default.conf
 COPY ./orvd /var/www/orvd
 COPY ./orvd.conf.docker /etc/apache2/sites-available/orvd.conf
 
