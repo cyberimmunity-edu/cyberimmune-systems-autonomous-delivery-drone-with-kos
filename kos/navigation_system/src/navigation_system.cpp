@@ -45,7 +45,7 @@ void sendCoords() {
         sleep(1);
     }
 
-    char topic[] = "Telemetry";
+    char topic[] = "api/telemetry";
     char publication[1024] = {0};
 
     float dop, speed;
