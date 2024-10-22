@@ -36,7 +36,6 @@ cd /var/www/orvd
 export FLASK_APP=orvd_server.py
 export ADMIN_LOGIN=admin
 export ADMIN_PASSW=passw
-flask db init
 cp ./orvd.conf /etc/apache2/sites-available/orvd.conf
 cp ./ports.conf /etc/apache2/ports.conf
 a2ensite orvd.conf
