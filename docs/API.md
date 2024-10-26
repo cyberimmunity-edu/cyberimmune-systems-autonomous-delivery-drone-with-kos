@@ -23,6 +23,7 @@
   - [ipc_messages_navigation_system()](#ipc_messages_navigation_system)
     - [getCoords()](#int-getcoordsint32_t-latitude-int32_t-longitude-int32_t-altitude)
     - [getGpsInfo()](#int-getgpsinfofloat-dop-int32_t-sats)
+    - [getEstimatedSpeed()](#int-getestimatedspeedfloat-speed)
   - [ipc_messages_periphery_controller](#ipc_messages_periphery_controller)
     - [enableBuzzer()](#int-enablebuzzer)
     - [setKillSwitch()](#int-setkillswitchuint8_t-enable)
@@ -30,16 +31,18 @@
   - [ipc_messages_server_connector](#ipc_messages_server_connector)
     - [getBoardId()](#int-getboardidchar-id)
     - [sendRequest()](#int-sendrequestchar-query-char-response)
+    - [publishMessage()](#int-publishmessagechar-topicchar-publication)
 
 ## Структура полетного контроллера KOS
 
-Компонент безопасности или полётный контроллер состоит из 6 модулей:
+Компонент безопасности или полётный контроллер состоит из 7 модулей:
 
 - autopilot_connector
 - credential_manager
 - navigation_system
 - periphery_controller
 - server_connector
+- logger
 - **flight_controller**
 
 Участникам соревнований предлагается вносить изменения в программный код модуля **flight_controller** (Находится в папке kos/flight_controller). Взаимодействие с остальными модулями выполняется посредством IPC-сообщений; внесение изменений в эти модули не рекомендуется.
@@ -125,6 +128,10 @@ Cодержит сообщения для модуля AutopilotConnector, вы�
 
 Возвращает значение DOP (снижение точности) и число наблюдаемых спутников (sats).
 
+#### `int getEstimatedSpeed(float& speed)`
+
+Возвращает скорость (в м/с), определенную модулем GNSS.
+
 ### `ipc_messages_periphery_controller`
 
 Содержит сообщения для модуля PeripheryController, выполняющего взаимодействие с периферией через GPIO.
@@ -152,3 +159,7 @@ Cодержит сообщения для модуля AutopilotConnector, вы�
 #### `int sendRequest(char* query, char* response)`
 
 Отправляет на сервер запрос, возвращая в response значимое содержание полученного ответа.
+
+#### `int publishMessage(char* topic, char* publication)`
+
+Публикует сообщение с указанной темой посредством протокола MQTT; ответ от сервера ОРВД не ожидается.
