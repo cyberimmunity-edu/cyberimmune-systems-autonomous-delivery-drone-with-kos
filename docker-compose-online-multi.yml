@@ -11,18 +11,18 @@ services:
     working_dir: /home/user/kos
     user: user
     depends_on:
-      - arducopter
+      - ardurover
     networks:
       cyberimmune:
         ipv4_address: 172.28.0.1
 #################################################
-  arducopter:
+  ardurover:
     image: simulator
     build:
       context: .
       dockerfile: ./Dockerfile
-    container_name: arducopter
-    command: /home/user/ardupilot/sitl/arducopter -S --model + --speedup 1 --slave 0  --serial5=tcp:5765:wait --serial6=tcp:5766:wait --serial7=tcp:5767:wait --defaults copter.parm --sim-address=172.28.0.2 --home=-35.3633463,149.1652273,587.05,0 -I0 --sysid 1
+    container_name: ardurover
+    command: /home/user/ardupilot/sitl/ardurover -S --model rover --speedup 1 --slave 0  --serial5=tcp:5765:wait --serial6=tcp:5766:wait --serial7=tcp:5767:wait --defaults rover.parm --sim-address=172.28.0.2 --home=-35.3633463,149.1652273,587.05,0 -I0 --sysid 1
     working_dir: /home/user/ardupilot
     user: user
     restart: always
@@ -40,7 +40,7 @@ services:
     working_dir: /home/user/mavproxy
     user: user
     depends_on:
-      - arducopter
+      - ardurover
     restart: always
     networks:
       cyberimmune:
@@ -70,18 +70,18 @@ services:
     working_dir: /home/user/kos
     user: user
     depends_on:
-      - arducopter1
+      - ardurover1
     networks:
       cyberimmune:
         ipv4_address: 172.28.0.11
 #################################################
-  arducopter1:
+  ardurover1:
     image: simulator
     build:
       context: .
       dockerfile: ./Dockerfile
-    container_name: arducopter1
-    command: /home/user/ardupilot/sitl/arducopter -S --model + --speedup 1 --slave 0  --serial5=tcp:5765:wait --serial6=tcp:5766:wait --serial7=tcp:5767:wait --defaults copter.parm --sim-address=172.28.0.12 --home=53.1019446,107.3774394,846.22,0 -I0 --sysid 2
+    container_name: ardurover1
+    command: /home/user/ardupilot/sitl/ardurover -S --model rover --speedup 1 --slave 0  --serial5=tcp:5765:wait --serial6=tcp:5766:wait --serial7=tcp:5767:wait --defaults rover.parm --sim-address=172.28.0.12 --home=53.1019446,107.3774394,846.22,0 -I0 --sysid 2
     working_dir: /home/user/ardupilot
     user: user
     restart: always
@@ -99,7 +99,7 @@ services:
     working_dir: /home/user/mavproxy
     user: user
     depends_on:
-      - arducopter1
+      - ardurover1
     restart: always
     networks:
       cyberimmune:
@@ -115,18 +115,18 @@ services:
     working_dir: /home/user/kos
     user: user
     depends_on:
-      - arducopter2
+      - ardurover2
     networks:
       cyberimmune:
         ipv4_address: 172.28.0.21
 #################################################
-  arducopter2:
+  ardurover2:
     image: simulator
     build:
       context: .
       dockerfile: ./Dockerfile
-    container_name: arducopter2
-    command: /home/user/ardupilot/sitl/arducopter -S --model + --speedup 1 --slave 0  --serial5=tcp:5765:wait --serial6=tcp:5766:wait --serial7=tcp:5767:wait --defaults copter.parm --sim-address=172.28.0.22 --home=-35.3633463,149.1652273,587.05,0 -I0 --sysid 3
+    container_name: ardurover2
+    command: /home/user/ardupilot/sitl/ardurover -S --model rover --speedup 1 --slave 0  --serial5=tcp:5765:wait --serial6=tcp:5766:wait --serial7=tcp:5767:wait --defaults rover.parm --sim-address=172.28.0.22 --home=-35.3633463,149.1652273,587.05,0 -I0 --sysid 3
     working_dir: /home/user/ardupilot
     user: user
     restart: always
@@ -144,7 +144,7 @@ services:
     working_dir: /home/user/mavproxy
     user: user
     depends_on:
-      - arducopter2
+      - ardurover2
     restart: always
     networks:
       cyberimmune:
