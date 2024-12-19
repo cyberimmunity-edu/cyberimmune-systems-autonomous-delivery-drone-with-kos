@@ -1002,7 +1002,7 @@ def key_ms_exchange():
         description: Идентификатор отправителя миссии.
     responses:
       200:
-        description: Строка с открытым ключом ОРВД (hex, без 0x).
+        description: Строка с открытым ключом СУПА (hex, без 0x).
         example: "$Key: {n} {e}"
       400:
         description: Неверный идентификатор.
@@ -1042,7 +1042,7 @@ def key_kos_exchange():
         description: Параметр e для ключа.
     responses:
       200:
-        description: Строка с открытым ключом ОРВД (hex, без 0x).
+        description: Строка с открытым ключом СУПА (hex, без 0x).
         schema:
           type: string
           example: "$Key: {n} {e}"
