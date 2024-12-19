@@ -58,6 +58,10 @@ int sendRequest(char* query, char* response, uint32_t responseSize) {
     return 1;
 }
 
+int publishMessage(char* topic, char* publication) {
+    return 1;
+}
+
 int getBoardId(char* id) {
     strncpy(id, "00:00:00:00:00:00", 18);
     return 1;

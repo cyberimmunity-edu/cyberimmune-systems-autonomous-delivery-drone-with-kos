@@ -1,8 +1,10 @@
 import os
+import paho.mqtt.client as mqtt
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flasgger import Swagger
+from urllib.parse import parse_qs
 
 db = SQLAlchemy()
 
@@ -21,6 +23,27 @@ def create_app():
     
     from routes import bp as main_bp
     app.register_blueprint(main_bp)
+    
+    MQTT_BROKER = 'localhost'
+    MQTT_PORT = 1883
+    MQTT_TOPIC = 'api/telemetry'
+    mqtt_client = mqtt.Client()
+    def on_connect(client, userdata, flags, rc):
+        client.subscribe(MQTT_TOPIC)
+
+    def on_message(client, userdata, msg):
+        query_string = msg.payload.decode()
+        query_params = parse_qs(query_string)
+        single_value_params = {k: v[0] for k, v in query_params.items()}
+        with app.app_context():
+            regular_request(handler_func=telemetry_handler, **single_value_params)
+
+
+    mqtt_client.on_connect = on_connect
+    mqtt_client.on_message = on_message
+    mqtt_client.connect(MQTT_BROKER, MQTT_PORT, 60)
+    with app.app_context():
+        mqtt_client.loop_start()
     
     return app
 
