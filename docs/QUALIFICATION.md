@@ -24,7 +24,7 @@
 
 Требуется:
 
-1. ознакомиться с [видео демонстрацией цифрового двойника и имитатора ОрВД](https://youtu.be/ytzJ13hsMwg?t=265).
+1. ознакомиться с [видео демонстрацией цифрового двойника и имитатора СУПА](https://youtu.be/ytzJ13hsMwg?t=265).
 2. настроить окружение на базе операционной системы Linux (рекомендуется [Ubuntu 22.04](https://releases.ubuntu.com/jammy/))
 3. сделать fork (в терминологии Git) main ветки проекта [cyberimmunity-edu/cyberimmune-systems-autonomous-delivery-drone-with-kos](https://github.com/cyberimmunity-edu/cyberimmune-systems-autonomous-delivery-drone-with-kos)
 4. запустить цифрового двойника (в режиме offline и online)

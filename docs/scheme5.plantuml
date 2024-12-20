@@ -1,6 +1,6 @@
 @startuml scheme5
 
-package "ОРВД" {
+package "СУПА" {
     HTTP - [Apache2]
     [Apache2] - [Flask app]
     [Flask app] - [SQLite]
@@ -38,8 +38,8 @@ note right of [SITL]
     Симулятор квадрокоптера.
 end note
 
-note right of ОРВД
-    Система организации воздушного движения.
+note right of СУПА
+    Система управления парком автомобилей.
 end note
 
 note right of [MAVProxy]
