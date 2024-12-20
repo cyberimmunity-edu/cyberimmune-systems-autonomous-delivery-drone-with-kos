@@ -23,7 +23,7 @@
  * Then the program enters a loop, where it receives IPC messages from other security module components,
  * performs the requested actions and sends IPC responses. In parallel with the main loop,
  * the other process is executed. If the motors are supplied with the power, than this process constantly
- * asks (2 time per second) the ATM server whether the power supply is allowed. Requests are signed and sent
+ * asks (2 time per second) the VMS server whether the power supply is allowed. Requests are signed and sent
  * through the CredentialManager and ServerConnector components respectively.
  * \~Russian \brief Точка входа в основную программу компонента PeripheryController.
  * \details Сначала производится ожидание инициализации компонента Logger. После этого подготавливаются интерфейсы
@@ -31,7 +31,7 @@
  * Далее программа входит в цикл, в котором получает IPC-сообщения от других компонентов модуля безопасности,
  * исполняет запрашиваемые действия и отправляет IPC-ответы. Параллельно с основным циклом запускается процесс.
  * Этот процесс, в случае если подача питания на двигатели разрешена, регулярно (2 раза в секунду) опрашивает сервер
- * ОРВД, можно ли продолжать подавать питание на двигатели. Подпись и отправка запросов осуществляются через
+ * СУПА, можно ли продолжать подавать питание на двигатели. Подпись и отправка запросов осуществляются через
  * компоненты CredentialManager и ServerConnector соответственно.
  */
 int main(void) {

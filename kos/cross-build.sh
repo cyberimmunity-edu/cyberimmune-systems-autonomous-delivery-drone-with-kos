@@ -41,7 +41,7 @@ function help
     --simulator-ip,
              User-defined IP of SITL
     --server-ip,
-             User-defined IP of the ATM server
+             User-defined IP of the VMS server
     --target,
              Build target: hardware (real), simulation (sim), unit-tests (unit) or pal-tests (pal)
     --mode,

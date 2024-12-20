@@ -1,14 +1,14 @@
 /**
  * \file
  * \~English
- * \brief Declaration of methods for the ATM server communication.
+ * \brief Declaration of methods for the VMS server communication.
  * \details The file contains declaration of methods, that provide
- * interaction between the security module and an ATM server.
+ * interaction between the security module and the VMS server.
  *
  * \~Russian
- * \brief Объявление методов для взаимодействия с сервером ОРВД.
+ * \brief Объявление методов для взаимодействия с сервером СУПА.
  * \details В файле объявлены публичныe методы, необходимые
- * для взаимодействия между модулем безопасности и сервером ОРВД.
+ * для взаимодействия между модулем безопасности и сервером СУПА.
  */
 
 #pragma once
@@ -17,10 +17,10 @@
 
 /**
  * \~English Initializes softwate and hardware components required
- * for the ATM server communication establishment.
+ * for the VMS server communication establishment.
  * \return Returns 1 on successful initialization, 0 otherwise.
  * \~Russian Производит инициализацию программных и аппаратных компонентов, необходимых
- * для установки связи с сервером ОРВД.
+ * для установки связи с сервером СУПА.
  * \return Возвращает 1 при успешной инициализации, 0 -- иначе.
  */
 int initServerConnector();
@@ -41,15 +41,15 @@ void setBoardName(char* id);
 char* getBoardName();
 
 /**
- * \~English Requests the ATM server and receives a response from it.
- * \param[in] query Request to the ATM server.
- * \param[out] response Response from the ATM server. Only a meaningful part of the response is returned. If connection is timed
+ * \~English Requests the VMS server and receives a response from it.
+ * \param[in] query Request to the VMS server.
+ * \param[out] response Response from the VMS server. Only a meaningful part of the response is returned. If connection is timed
  * out, response will contain "TIMEOUT" string.
  * \param[in] responseSize Size of output response buffer.
- * \return Returns 1 on successful message exchange with the ATM server or on connection timeout, 0 otherwise.
- * \~Russian Отправляет запрос на сервер ОРВД и получает от него ответ.
- * \param[in] query Запрос к серверу ОРВД.
- * \param[out] response Ответ от сервера ОРВД. Возвращается лишь значимая часть ответа. Если истекло время ожидания подключения
+ * \return Returns 1 on successful message exchange with the VMS server or on connection timeout, 0 otherwise.
+ * \~Russian Отправляет запрос на сервер СУПА и получает от него ответ.
+ * \param[in] query Запрос к серверу СУПА.
+ * \param[out] response Ответ от сервера СУПА. Возвращается лишь значимая часть ответа. Если истекло время ожидания подключения
  * к серверу, ответ будет содержать строку "TIMEOUT".
  * \param[in] responseSize Размер буфера, куда записывается ответ от сервера.
  * \return Возвращает 1, если обмен сообщениями с сервером был успешен или истекло время ожидания подключения к серверу, иначе -- 0.

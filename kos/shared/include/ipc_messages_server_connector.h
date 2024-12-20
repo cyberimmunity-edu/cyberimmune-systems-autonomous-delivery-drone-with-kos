@@ -21,15 +21,15 @@
  */
 int getBoardId(char* id);
 /**
- * \~English Performs a request-response procedure with the ATM server.
- * \param[in] query Request to the ATM server. Requires only a meaningful signed part of the request.
- * \param[out] response Response from the ATM server. Only a meaningfuд part of the received response is returned. If connection
+ * \~English Performs a request-response procedure with the VMS server.
+ * \param[in] query Request to the VMS server. Requires only a meaningful signed part of the request.
+ * \param[out] response Response from the VMS server. Only a meaningfuд part of the received response is returned. If connection
  * is timed out, response will contain "TIMEOUT" string.
  * \param[in] responseSize Size of output response buffer.
- * \return Returns 1 on successful message exchange with the ATM server or on connection timeout, 0 otherwise.
- * \~Russian Выполняет процедуру отправки запроса -- получения ответа с сервером ОРВД.
- * \param[in] query Запрос к серверу ОРВД. Ожидается только значимая подписанная часть запроса.
- * \param[out] response Ответ от сервера ОРВД. Возвращается лишь значимая часть ответа, полученного от сервера ОРВД. Если
+ * \return Returns 1 on successful message exchange with the VMS server or on connection timeout, 0 otherwise.
+ * \~Russian Выполняет процедуру отправки запроса -- получения ответа с сервером СУПА.
+ * \param[in] query Запрос к серверу СУПА. Ожидается только значимая подписанная часть запроса.
+ * \param[out] response Ответ от сервера СУПА. Возвращается лишь значимая часть ответа, полученного от сервера СУПА. Если
  * истекло время ожидания подключения к серверу, ответ будет содержать строку "TIMEOUT".
  * \param[in] responseSize Размер буфера, куда записывается ответ от сервера.
  * \return Возвращает 1, если обмен сообщениями с сервером был успешен или истекло время ожидания подключения к серверу, иначе -- 0.

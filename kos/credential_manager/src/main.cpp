@@ -20,13 +20,13 @@
  * \~English \brief CredentialManager component main program entry point.
  * \details First, waits for the Logger component to initialize. After that, the saved RSA key
  * of the security module is loaded (if there is no saved key, a new one is generated).
- * Then, through the ServerConnector component, the public parts of the key are exchanged with the ATM server.
- * The public part of the ATM server key is saved. Then the program enters a loop, where it receives
+ * Then, through the ServerConnector component, the public parts of the key are exchanged with the VMS server.
+ * The public part of the VMS server key is saved. Then the program enters a loop, where it receives
  * IPC messages from other security module components, performs the requested actions and sends IPC responses.
  * \~Russian \brief Точка входа в основную программу компонента CredentialManager.
  * \details Сначала производится ожидание инициализации компонента Logger. После этого загружается сохраненный
  * RSA-ключ модуля безопасности (при отсутствии сохраненного ключа генерируется новый). Затем через компонент
- * ServerConnector происходит обмен открытыми частями ключа с сервером ОРВД. Открытая часть ключа сервера ОРВД
+ * ServerConnector происходит обмен открытыми частями ключа с сервером СУПА. Открытая часть ключа сервера СУПА
  * сохраняется. Далее программа входит в цикл, в котором получает IPC-сообщения от других компонентов модуля
  * безопасности, исполняет запрашиваемые действия и отправляет IPC-ответы.
  */
