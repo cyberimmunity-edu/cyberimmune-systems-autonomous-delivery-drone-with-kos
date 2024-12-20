@@ -28,6 +28,7 @@ class Uav(db.Model):
         is_armed: состояние арма
         state: текущее состояние БПЛА
         kill_switch_state: состояние аварийного выключателя
+        delay: время до следующего сеанса связи в секундах
         created_date: дата создания записи
     """
     __tablename__ = 'uav'
@@ -35,6 +36,7 @@ class Uav(db.Model):
     is_armed = db.Column(db.Boolean, default=False)
     state = db.Column(db.String(64))
     kill_switch_state = db.Column(db.Boolean, default=False)
+    delay = db.Column(db.Integer, default=5)
     created_date = db.Column(db.DateTime, default=datetime.datetime.utcnow)
     
     def __repr__(self):

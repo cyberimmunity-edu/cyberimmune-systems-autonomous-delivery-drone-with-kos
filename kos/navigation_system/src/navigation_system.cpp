@@ -45,9 +45,8 @@ void sendCoords() {
         sleep(1);
     }
 
-    char signature[257] = {0};
-    char request[512] = {0};
-    char response[1024] = {0};
+    char topic[] = "api/telemetry";
+    char publication[1024] = {0};
 
     float dop, speed;
     int32_t prevLat, prevLng, lat, lng, alt, azimuth, sats;
@@ -67,14 +66,9 @@ void sendCoords() {
             azimuth = round(atan2(lng - prevLng, lat - prevLat) * 1800000000 / M_PI);
             prevLat = lat;
             prevLng = lng;
-            snprintf(request, 512, "/api/telemetry?id=%s&lat=%d&lon=%d&alt=%d&azimuth=%d&dop=%f&sats=%d&speed=%f", boardId, lat, lng, alt, azimuth, dop, sats, speed);
-            if (!signMessage(request, signature, 257))
-                logEntry("Failed to sign 'coordinate' message at Credential Manager. Trying again in 500ms", ENTITY_NAME, LogLevel::LOG_WARNING);
-            else {
-                snprintf(request, 512, "%s&sig=0x%s", request, signature);
-                if (!sendRequest(request, response, 1024))
-                    logEntry("Failed to send 'coordinate' request through Server Connector. Trying again in 500ms", ENTITY_NAME, LogLevel::LOG_WARNING);
-            }
+            snprintf(publication, 1024, "id=%s&lat=%d&lon=%d&alt=%d&azimuth=%d&dop=%f&sats=%d&speed=%f", boardId, lat, lng, alt, azimuth, dop, sats, speed);
+            if (!publishMessage(topic, publication))
+                logEntry("Failed to publish telemetry message. Trying again in 500ms", ENTITY_NAME, LogLevel::LOG_WARNING);
         }
         usleep(500000);
     }

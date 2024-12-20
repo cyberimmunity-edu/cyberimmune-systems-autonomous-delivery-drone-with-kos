@@ -468,6 +468,7 @@ async function change_active_id(new_id) {
   get_mission();
   get_telemetry();
   get_mission_state();
+  get_delay();
 }
 
 
@@ -507,6 +508,26 @@ function toggleForbiddenZones() {
   }
 }
 
+
+document.getElementById('set_delay').onclick = set_delay;
+
+async function set_delay() {
+  let delay_value = document.getElementById('delay_input').value;
+  if (active_id != null && delay_value != null) {
+    let resp = await fetch(`admin/set_delay?id=${active_id}&delay=${delay_value}&token=${access_token}`);
+    console.log(await resp.text());
+    status_change();
+  }
+}
+
+async function get_delay() {
+  if (active_id != null) {
+    let delay_resp = await fetch(`admin/get_delay?id=${active_id}&token=${access_token}`);
+    let delay_text = await delay_resp.text();
+    document.getElementById("delay").innerHTML = "Delay: " + delay_text;
+  }
+}
+
 setInterval(async function() {
   get_ids();
   if (active_id != null) {
@@ -515,6 +536,7 @@ setInterval(async function() {
     get_mission();
     get_telemetry();
     get_mission_state();
+    get_delay();
   }
   if (forbidden_zones_display) {
     await updateForbiddenZones();

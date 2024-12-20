@@ -195,7 +195,7 @@ set param set SIM_WIND_SPD 25
 
 ## Вопрос 10: Как узнавать точки полётного задания (миссии)?
 
-Вспомогательная структура [MissionCommand](/kos/flight_controller/include/mission.h) хранит все необходимые параметры полётного задания.
+Вспомогательная структура [MissionCommand](/kos/flight_controller/include/flight_controller.h) хранит все необходимые параметры полётного задания.
 
 ## Вопрос 11: В интерфейсе ОРВД не работают кнопки Arm/Disarm и при сборке make online в планнере точки плана не появляются. О чём это говорит?
 

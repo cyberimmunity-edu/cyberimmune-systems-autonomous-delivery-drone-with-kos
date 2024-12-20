@@ -27,7 +27,8 @@
 #define FLY_ACCEPT_PERIOD_US 500000
 
 char boardId[32] = {0};
-std::thread noFlightAreasThread;
+uint32_t sessionDelay;
+std::thread sessionThread;
 /** \endcond */
 
 /**
@@ -78,12 +79,37 @@ int sendSignedMessage(char* method, char* response, char* errorMessage, uint8_t 
     return 1;
 }
 
-void checkNoFlightAreas() {
+/**
+ * \~English Procedure that checks the flight status at the ATM server. Check includes permission to continue flight, changes in
+ * no-flight areas and time until next communication session.
+ * \~Russian Процедура, запрашивающая статус полета от сервера ОРВД. Статус включает в себя разрешение на продолжение полета,
+ * изменения в бесполетных зонах и время до следующей коммуникации с сервером.
+ */
+void serverSession() {
+    sleep(sessionDelay);
     char response[1024] = {0};
     while (true) {
-        sendSignedMessage("/api/forbidden_zones_hash", response, "no-flight areas", RETRY_DELAY_SEC);
-        char* receivedHash = extractNoFlightAreasHash(response);
+        sendSignedMessage("/api/flight_info", response, "session", RETRY_DELAY_SEC);
+        //If connection is failed, flight must be paused
+        //Processing status of flight
+        if (strstr(response, "$Flight -1$")) {
+            logEntry("Emergency stop request is received. Disabling motors", ENTITY_NAME, LogLevel::LOG_INFO);
+            if (!enableBuzzer())
+                logEntry("Failed to enable buzzer", ENTITY_NAME, LogLevel::LOG_WARNING);
+            while (!setKillSwitch(false)) {
+                logEntry("Failed to forbid motor usage. Trying again in 1s", ENTITY_NAME, LogLevel::LOG_WARNING);
+                sleep(1);
+            }
+        }
+        //The response has two other possible options:
+        //  "$Flight 1$" that requires to pause flight and remain landed
+        //  "$Flight 0$" that requires to resume flight and keep flying
+        //Implementation is required to be done
+
+        //Processing no-flight areas updates
+        char receivedHash[65] = {0};
         char* calculatedHash = getNoFlightAreasHash();
+        parseNoFlightAreasHash(response, receivedHash, 65);
         if (strcmp(receivedHash, calculatedHash)) {
             logEntry("No-flight areas on the server were updated", ENTITY_NAME, LogLevel::LOG_INFO);
             char hash[65] = {0};
@@ -102,7 +128,11 @@ void checkNoFlightAreas() {
             }
             printNoFlightAreas();
         }
-        sleep(1);
+
+        //Processing delay until next session
+        sessionDelay = parseDelay(strstr(response, "$Delay "));
+
+        sleep(sessionDelay);
     }
 }
 
@@ -184,8 +214,6 @@ int main(void) {
             && loadNoFlightAreas(responseBuffer)) {
             logEntry("Successfully received no-flight areas from the server", ENTITY_NAME, LogLevel::LOG_INFO);
             printNoFlightAreas();
-            //Start thread to ask server for no-flight areas updates.
-            noFlightAreasThread = std::thread(checkNoFlightAreas);
             break;
         }
         sleep(RETRY_REQUEST_DELAY_SEC);
@@ -205,7 +233,7 @@ int main(void) {
         //When autopilot asked for arm, we need to receive permission from ORVD
         sendSignedMessage("/api/arm", responseBuffer, "arm", RETRY_DELAY_SEC);
 
-        if (strstr(responseBuffer, "$Arm: 0#") != NULL) {
+        if (strstr(responseBuffer, "$Arm 0$")) {
             //If arm was permitted, we enable motors
             logEntry("Arm is permitted", ENTITY_NAME, LogLevel::LOG_INFO);
             while (!setKillSwitch(true)) {
@@ -215,9 +243,13 @@ int main(void) {
             }
             if (!permitArm())
                 logEntry("Failed to permit arm through Autopilot Connector", ENTITY_NAME, LogLevel::LOG_WARNING);
+            //Get time until next session
+            sessionDelay = parseDelay(strstr(responseBuffer, "$Delay "));
+            //Start ORVD connection thread
+            sessionThread = std::thread(serverSession);
             break;
         }
-        else if (strstr(responseBuffer, "$Arm: 1#") != NULL) {
+        else if (strstr(responseBuffer, "$Arm 1$")) {
             logEntry("Arm is forbidden", ENTITY_NAME, LogLevel::LOG_INFO);
             if (!forbidArm())
                 logEntry("Failed to forbid arm through Autopilot Connector", ENTITY_NAME, LogLevel::LOG_WARNING);
@@ -229,7 +261,6 @@ int main(void) {
 
     //If we get here, the drone is able to arm and start the mission
     //The flight is need to be controlled from now on
-    //Also we need to check on ORVD, whether the flight is still allowed or it is need to be paused
 
     while (true)
         sleep(1000);

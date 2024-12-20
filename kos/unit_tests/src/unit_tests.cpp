@@ -407,25 +407,47 @@ TEST(FlighController, UpdateNoFlightAreas) {
     EXPECT_STRNE(getMockLog(), "Empty log");
 }
 
-TEST(FlighController, ExtractNoFlightAreasHash) {
-    char hashGood[] = "$ForbiddenZonesHash bdbac12490e31f4d0b3b5ee45a37dea125a35510b100e48d79e143eb3f419205#";
+TEST(FlighController, ParseNoFlightAreasHash) {
+    char hashGoodFst[65] = {0};
     logEntry("Empty log", "", LOG_INFO);
-    EXPECT_STREQ(extractNoFlightAreasHash(hashGood), "bdbac12490e31f4d0b3b5ee45a37dea125a35510b100e48d79e143eb3f419205");
+    parseNoFlightAreasHash("$ForbiddenZonesHash bdbac12490e31f4d0b3b5ee45a37dea125a35510b100e48d79e143eb3f419205$", hashGoodFst, 65);
+    EXPECT_STREQ(hashGoodFst, "bdbac12490e31f4d0b3b5ee45a37dea125a35510b100e48d79e143eb3f419205");
     EXPECT_STREQ(getMockLog(), "Empty log");
 
-    char hashGoodAlt[] = "$ForbiddenZonesHash dbac12490e31f4d0b3b5ee45a37dea125a35510b100e48d79e143eb3f419205#";
+    char hashGoodSnd[65] = {0};
     logEntry("Empty log", "", LOG_INFO);
-    EXPECT_STREQ(extractNoFlightAreasHash(hashGoodAlt), "0dbac12490e31f4d0b3b5ee45a37dea125a35510b100e48d79e143eb3f419205");
+    parseNoFlightAreasHash("$ForbiddenZonesHash dbac12490e31f4d0b3b5ee45a37dea125a35510b100e48d79e143eb3f419205$", hashGoodSnd, 65);
+    EXPECT_STREQ(hashGoodSnd, "0dbac12490e31f4d0b3b5ee45a37dea125a35510b100e48d79e143eb3f419205");
     EXPECT_STREQ(getMockLog(), "Empty log");
 
-    char hashEmpty[] = "Response: $-1#";
+    char hashEmpty[65] = {0};
     logEntry("Empty log", "", LOG_INFO);
-    EXPECT_STREQ(extractNoFlightAreasHash(hashEmpty), hashEmpty);
+    parseNoFlightAreasHash("Response: $-1#", hashEmpty, 65);
+    EXPECT_STREQ(hashEmpty, "");
     EXPECT_STRNE(getMockLog(), "Empty log");
 
-    char hashNoHead[] = "bdbac12490e31f4d0b3b5ee45a37dea125a35510b100e48d79e143eb3f419205#";
+    char hashNoHead[65] = {0};
     logEntry("Empty log", "", LOG_INFO);
-    EXPECT_STREQ(extractNoFlightAreasHash(hashNoHead), hashNoHead);
+    parseNoFlightAreasHash("bdbac12490e31f4d0b3b5ee45a37dea125a35510b100e48d79e143eb3f419205$", hashNoHead, 65);
+    EXPECT_STREQ(hashNoHead, "");
+    EXPECT_STRNE(getMockLog(), "Empty log");
+
+    char hashNoTail[65] = {0};
+    logEntry("Empty log", "", LOG_INFO);
+    parseNoFlightAreasHash("$ForbiddenZonesHash bdbac12490e31f4d0b3b5ee45a37dea125a35510b100e48d79e143eb3f419205#", hashNoTail, 65);
+    EXPECT_STREQ(hashNoTail, "");
+    EXPECT_STRNE(getMockLog(), "Empty log");
+
+    char hashLong[65] = {0};
+    logEntry("Empty log", "", LOG_INFO);
+    parseNoFlightAreasHash("$ForbiddenZonesHash bdbac12490e31f4d0b3b5ee45a37dea125a35510b100e48d79e143eb3f419205123456$", hashLong, 65);
+    EXPECT_STREQ(hashLong, "");
+    EXPECT_STRNE(getMockLog(), "Empty log");
+
+    char hashShort[65] = {0};
+    logEntry("Empty log", "", LOG_INFO);
+    parseNoFlightAreasHash("$ForbiddenZonesHash bdbac12490e31f4d0b3b5ee45a37dea125a35510b100e48d79e143eb3f", hashShort, 65);
+    EXPECT_STREQ(hashShort, "");
     EXPECT_STRNE(getMockLog(), "Empty log");
 }
 
