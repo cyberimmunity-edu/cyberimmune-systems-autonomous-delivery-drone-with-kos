@@ -17,6 +17,7 @@
 
 #include "../../shared/include/ipc_messages_logger.h"
 #include <stdint.h>
+#include <unistd.h>
 
 /** \cond */
 #define AUTOPILOT_COMMAND_MESSAGE_HEAD_SIZE 4
@@ -149,6 +150,18 @@ int initConnection();
  * \return Возвращает 1 при успешном получении сообщения, 0 -- иначе.
  */
 int getAutopilotCommand(uint8_t& command);
+/**
+ * \~English Sends raw bytes to the autopilot.
+ * \param[in] bytes Pointer to byte array.
+ * \param[in] size Size of byte array to send.
+ * \return Returns 1 on successful send, 0 otherwise.
+ * \~Russian Отправляет массив байтов автопилоту.
+ * \param[in] bytes Указатель на массив байтов.
+ * \param[in] size Размер отправляемого массива.
+ * \return Возвращает 1 при успешном получении сообщения, 0 -- иначе.
+ */
+int sendAutopilotBytes(uint8_t* bytes, ssize_t size);
+
 /**
  * \~English Sends a message to the autopilot. A version without additional data sent.
  * \param[in] command Sent message type.

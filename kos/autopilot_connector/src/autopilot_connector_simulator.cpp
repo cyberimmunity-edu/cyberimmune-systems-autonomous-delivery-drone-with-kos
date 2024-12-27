@@ -82,28 +82,8 @@ int getAutopilotCommand(uint8_t& command) {
     return 1;
 }
 
-int sendAutopilotCommand(AutopilotCommand command) {
-    AutopilotCommandMessage message = AutopilotCommandMessage(command);
-
-    write(autopilotSocket, &message, sizeof(AutopilotCommandMessage));
-
-    return 1;
-}
-
-int sendAutopilotCommand(AutopilotCommand command, int32_t value) {
-    sendAutopilotCommand(command);
-
-    write(autopilotSocket, &value, sizeof(int32_t));
-
-    return 1;
-}
-
-int sendAutopilotCommand(AutopilotCommand command, int32_t valueFirst, int32_t valueSecond, int32_t valueThird) {
-    sendAutopilotCommand(command);
-
-    write(autopilotSocket, &valueFirst, sizeof(int32_t));
-    write(autopilotSocket, &valueSecond, sizeof(int32_t));
-    write(autopilotSocket, &valueThird, sizeof(int32_t));
+int sendAutopilotBytes(uint8_t* bytes, ssize_t size) {
+    write(autopilotSocket, &bytes, size);
 
     return 1;
 }
