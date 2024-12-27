@@ -52,3 +52,14 @@ int sendAutopilotCommand(AutopilotCommand command, int32_t valueFirst, int32_t v
 
     return sendAutopilotBytes(bytes, size);
 }
+
+int sendAutopilotCommand(AutopilotCommand command, uint8_t* rawBytes, int32_t byteSize) {
+    ssize_t size = sizeof(AutopilotCommandMessage) + byteSize;
+    uint8_t bytes[size] = {0};
+
+    AutopilotCommandMessage message = AutopilotCommandMessage(command);
+    memcpy(bytes, &message, sizeof(AutopilotCommandMessage));
+    memcpy(bytes + sizeof(AutopilotCommandMessage), rawBytes, byteSize);
+
+    return sendAutopilotBytes(bytes, size);
+}

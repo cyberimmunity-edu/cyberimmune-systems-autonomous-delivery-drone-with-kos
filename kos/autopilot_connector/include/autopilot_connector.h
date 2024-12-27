@@ -78,7 +78,12 @@ enum AutopilotCommand : uint8_t {
      * \~English A requirement to change current flight altitude. Transmitted from the security module to the autopilot during a paused flight.
      * \~Russian Требование на изменение высоты полета. Передается от модуля безопасности в автопилот при активном полете.
      */
-    ChangeAltitude = 0xA1
+    ChangeAltitude = 0xA1,
+    /**
+     * \~English A requirement to set passed mission.
+     * \~Russian Требование изменения миссии на переданную.
+     */
+    SetMission = 0x42
 };
 
 /**
@@ -206,3 +211,17 @@ int sendAutopilotCommand(AutopilotCommand command, int32_t value);
  * требуемой точки назначения.
  */
 int sendAutopilotCommand(AutopilotCommand command, int32_t valueFirst, int32_t valueSecond, int32_t valueThird);
+/**
+ * \~English Sends a message to the autopilot. A version with raw bytes.
+ * \param[in] command Sent message type.
+ * \param[in] rawBytes Raw byte array.
+ * \param[in] byteSize Size of byte array.
+ * \note Is expected to send SetMission command and a new mission as raw bytes.
+ * \~Russian Отправляет автопилоту сообщение. Вариант с массивом байтов.
+ * \param[in] command Тип отправляемого сообщения.
+ * \param[in] rawBytes Массив необработанных байтов.
+ * \param[in] byteSize Размер байтового массива.
+ * \return Возвращает 1 при успешной отправке сообщения, 0 -- иначе.
+ * \note Предполагается для отправки команды SetMission и новой миссии, закодированной в байтах.
+ */
+int sendAutopilotCommand(AutopilotCommand command, uint8_t* rawBytes, int32_t byteSize);

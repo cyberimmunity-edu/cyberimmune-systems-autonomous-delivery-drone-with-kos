@@ -1,5 +1,7 @@
 package drone_controller.AutopilotConnectorInterface
 
+const UInt16 MaxMissionLength = 1024;
+
 interface {
     WaitForArmRequest(out UInt8 success);
     PermitArm(out UInt8 success);
@@ -9,4 +11,5 @@ interface {
     ChangeSpeed(in SInt32 speed, out UInt8 success);
     ChangeAltitude(in SInt32 altitude, out UInt8 success);
     ChangeWaypoint(in SInt32 latitude, in SInt32 longitude, in SInt32 altitude, out UInt8 success);
+    SetMission(in array<UInt8, MaxMissionLength> mission, in UInt32 size, out UInt8 success);
 }

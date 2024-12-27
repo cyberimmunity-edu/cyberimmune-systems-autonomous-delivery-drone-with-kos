@@ -7,6 +7,8 @@
 #include "../include/autopilot_connector.h"
 #include "../include/autopilot_connector_interface.h"
 
+#include <string.h>
+
 nk_err_t WaitForArmRequestImpl(struct AutopilotConnectorInterface *self,
                     const AutopilotConnectorInterface_WaitForArmRequest_req *req, const struct nk_arena *reqArena,
                     AutopilotConnectorInterface_WaitForArmRequest_res *res, struct nk_arena *resArena) {
@@ -68,6 +70,24 @@ nk_err_t ChangeWaypointImpl(struct AutopilotConnectorInterface *self,
                     const AutopilotConnectorInterface_ChangeWaypoint_req *req, const struct nk_arena *reqArena,
                     AutopilotConnectorInterface_ChangeWaypoint_res *res, struct nk_arena *resArena) {
     res->success = sendAutopilotCommand(AutopilotCommand::ChangeWaypoint, req->latitude, req->longitude, req->altitude);
+
+    return NK_EOK;
+}
+
+nk_err_t SetMissionImpl(struct AutopilotConnectorInterface *self,
+                    const AutopilotConnectorInterface_SetMission_req *req, const struct nk_arena *reqArena,
+                    AutopilotConnectorInterface_SetMission_res *res, struct nk_arena *resArena) {
+    uint8_t bytes[AutopilotConnectorInterface_MaxMissionLength] = {0};
+
+    nk_uint32_t len = 0;
+    nk_uint8_t *msg = nk_arena_get(nk_uint8_t, reqArena, (nk_ptr_t*)(&(req->mission)), &len);
+    if (msg == NULL)
+        return NK_EBADMSG;
+    else if (len > AutopilotConnectorInterface_MaxMissionLength)
+        return NK_ENOMEM;
+    memcpy(bytes, msg, len);
+
+    res->success = sendAutopilotCommand(AutopilotCommand::SetMission, bytes, req->size);
 
     return NK_EOK;
 }
