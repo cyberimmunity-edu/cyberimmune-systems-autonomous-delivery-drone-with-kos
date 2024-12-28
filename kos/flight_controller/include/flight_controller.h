@@ -274,6 +274,21 @@ struct NoFlightArea {
  */
 int loadMission(char* mission);
 /**
+ * \~English Converts an array of commands to a string, that can be recognised by the ATM server.
+ * \param[in, out] string String, where the converted commands will be stored.
+ * \param[in] len Length of string to write converted commands.
+ * \param[in] commands Array of commands to convert.
+ * \param[in] num Number of commands to convert
+ * \return Returns 1 on successful conversion, 0 otherwise.
+ * \~Russian Преобразует массив команд в строку, распознаваемую сервером ОРВД.
+ * \param[in, out] string Строка, куда будут записаны конвертированные команды.
+ * \param[in] len Длина строки для записи результата.
+ * \param[in] commands Массив команд, которые будут конвертированы.
+ * \param[in] num Количество конвертируемых команд.
+ * \return Возвращает 1 при успешном преобразовании, иначе -- 0.
+ */
+int commandsToString(char* string, int32_t len, MissionCommand* commands, int32_t num);
+/**
  * \~English Logs an existing mission and at the same time prints it to the console.
  * \~Russian Записывает имеющуюся миссию в лог и одновременно выводит ее в консоль.
  */

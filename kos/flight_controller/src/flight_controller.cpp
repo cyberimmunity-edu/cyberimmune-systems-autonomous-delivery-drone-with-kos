@@ -124,7 +124,7 @@ int parseCommands(char* str) {
     for (uint32_t i = 0; ; i++)
         if (str[i] == '#')
             break;
-        else if (str[i] == 'H' || str[i] == 'T' || str[i] == 'W' || str[i] == 'L' || str[i] == 'S')
+        else if (str[i] == 'H' || str[i] == 'T' || str[i] == 'W' || str[i] == 'L' || str[i] == 'S' || str[i] == 'D')
             commandNum++;
         else if (str[i] == '\0') {
             logEntry("Cannot parse commands: no correct ending", ENTITY_NAME, LogLevel::LOG_WARNING);
@@ -438,6 +438,46 @@ int loadMission(char* mission) {
     start += strlen(header);
 
     return parseCommands(start);
+}
+
+int commandsToString(char* string, int32_t len, MissionCommand* commands, int32_t num) {
+    int currentLen = 0;
+    for (int i = 0; i < num; i++) {
+        int commandLen = 0;
+        char command[256] = {0};
+        switch (commands[i].type) {
+        case CommandType::HOME:
+            commandLen = snprintf(command, 256, "H%d_%d_%d", commands[i].content.waypoint.latitude,
+                commands[i].content.waypoint.longitude, commands[i].content.waypoint.altitude);
+            break;
+        case CommandType::TAKEOFF:
+            commandLen = snprintf(command, 256, "T%d", commands[i].content.takeoff.altitude);
+            break;
+        case CommandType::WAYPOINT:
+            commandLen = snprintf(command, 256, "W%d_%d_%d", commands[i].content.waypoint.latitude,
+                commands[i].content.waypoint.longitude, commands[i].content.waypoint.altitude);
+            break;
+        case CommandType::LAND:
+            commandLen = snprintf(command, 256, "L%d_%d_%d", commands[i].content.waypoint.latitude,
+                commands[i].content.waypoint.longitude, commands[i].content.waypoint.altitude);
+            break;
+        case CommandType::SET_SERVO:
+            commandLen = snprintf(command, 256, "S%d_%d", commands[i].content.servo.number, commands[i].content.servo.pwm);
+            break;
+        case CommandType::DELAY:
+            commandLen = snprintf(command, 256, "D%d", commands[i].content.delay.delay);
+            break;
+        default:
+            snprintf(command, 256, "Unknown command type '%d'", commands[i].type);
+            logEntry(command, ENTITY_NAME, LogLevel::LOG_WARNING);
+            return 0;
+        }
+        if (i)
+            snprintf(string, len, "%s*%s", string, command);
+        else
+            strncpy(string, command, len);
+    }
+    return 1;
 }
 
 void printMission() {
