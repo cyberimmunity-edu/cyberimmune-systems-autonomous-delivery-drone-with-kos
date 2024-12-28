@@ -50,8 +50,6 @@ entities:
   connections:
   - target: kl.VfsNet
     id: kl.VfsNet
-  - target: drone_controller.CredentialManager
-    id: credential_manager_connection
   - target: drone_controller.ServerConnector
     id: server_connector_connection
   - target: drone_controller.Logger
@@ -67,10 +65,6 @@ entities:
   connections:
   - target: kl.VfsNet
     id: kl.VfsNet
-  - target: drone_controller.CredentialManager
-    id: credential_manager_connection
-  - target: drone_controller.ServerConnector
-    id: server_connector_connection
   - target: drone_controller.Logger
     id: logger_connection
 @INIT_PeripheryController_ENTITY_CONNECTIONS@

@@ -26,12 +26,12 @@ int initServerConnector() {
 }
 
 int requestServer(char* query, char* response, uint32_t responseSize) {
-    if (strstr(query, "/api/kill_switch?") != NULL) {
-        if (responseSize < 16) {
+    if (strstr(query, "/api/flight_info?") != NULL) {
+        if (responseSize < 103) {
             logEntry("Size of response does not fit given buffer", ENTITY_NAME, LogLevel::LOG_WARNING);
             return 0;
         }
-        strncpy(response, "$KillSwitch: 1#", 16);
+        strncpy(response, "$Flight 0$ForbiddenZonesHash bdbac12490e31f4d0b3b5ee45a37dea125a35510b100e48d79e143eb3f419205$Delay 1#", 103);
     }
     else if (strstr(query, "/api/auth?") != NULL) {
         if (responseSize < 10) {
@@ -52,14 +52,14 @@ int requestServer(char* query, char* response, uint32_t responseSize) {
             logEntry("Size of response does not fit given buffer", ENTITY_NAME, LogLevel::LOG_WARNING);
             return 0;
         }
-        strncpy(response, "$Approve: 0#", 13);
+        strncpy(response, "$Approve 0#", 13);
     }
     else if ((strstr(query, "/api/arm?") != NULL) || (strstr(query, "/api/fly_accept?") != NULL)) {
-        if (responseSize < 9) {
+        if (responseSize < 16) {
             logEntry("Size of response does not fit given buffer", ENTITY_NAME, LogLevel::LOG_WARNING);
             return 0;
         }
-        strncpy(response, "$Arm: 0#", 9);
+        strncpy(response, "$Arm 0$Delay 1#", 16);
     }
     else if (strstr(query, "/api/get_all_forbidden_zones?") != NULL) {
         if (responseSize < 191) {
@@ -67,13 +67,6 @@ int requestServer(char* query, char* response, uint32_t responseSize) {
             return 0;
         }
         strncpy(response, "$ForbiddenZones 1&test_area&7&53.1021169_107.377713&53.1022184_107.3779973&53.1022023_107.3783299&53.1020767_107.3784882&53.1019962_107.3782709&53.1019189_107.3779812&53.1019656_107.3777157#", 191);
-    }
-    else if (strstr(query, "/api/forbidden_zones_hash?") != NULL) {
-        if (responseSize < 86) {
-            logEntry("Size of response does not fit given buffer", ENTITY_NAME, LogLevel::LOG_WARNING);
-            return 0;
-        }
-        strncpy(response, "$ForbiddenZonesHash bdbac12490e31f4d0b3b5ee45a37dea125a35510b100e48d79e143eb3f419205#", 86);
     }
     else {
         if (responseSize < 3) {
@@ -83,5 +76,9 @@ int requestServer(char* query, char* response, uint32_t responseSize) {
         strncpy(response, "$#", 3);
     }
 
+    return 1;
+}
+
+int publish(char* topic, char* publication) {
     return 1;
 }

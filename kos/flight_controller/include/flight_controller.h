@@ -350,10 +350,23 @@ NoFlightArea* getNoFlightAreas(int &num);
 char* getNoFlightAreasHash();
 /**
  * \~English Extracts hash from the string received from the ATM server.
- * \param[in] hash String from the ATM server. Expected form is "$ForbiddenZonesHash hash#".
- * \return Returns pointer to the received hash string.
+ * \param[in] response String from the ATM server. Substring "$ForbiddenZonesHash hash$" is expected.
+ * \param[out] hash String to write hash.
+ * \param[in] hashLen Length of the string to write hash
  * \~Russian Извлекает хэш из стркои, полученной от сервера ОРВД.
- * \param[in] hash Строка, пришедшая от сервера ОРВД. Ожидается в виде "$ForbiddenZonesHash хэш#".
- * \return Возвращает указатель на строку с полученным хэшем.
+ * \param[in] response Строка, пришедшая от сервера ОРВД. Ожидается наличие подстроки "$ForbiddenZonesHash хэш$".
+ * \param[out] hash Строка, куда будет записан хэш.
+ * \param[in] hashLen Длина строки, куда будет записан хэш.
  */
-char* extractNoFlightAreasHash(char* hash);
+void parseNoFlightAreasHash(char* response, char* hash, uint8_t hashLen);
+
+/**
+ * \~English Extracts hash from the string received from the ATM server.
+ * \param[in] response String from the ATM server. Substring "$Delay delay#" is expected.
+ * \return Returns delay until next communication session in seconds.
+ * \param[in] hashLen Length of the string to write hash
+ * \~Russian Извлекает задержку до следующего сеанса связи из стркои, полученной от сервера ОРВД.
+ * \param[in] response Строка, пришедшая от сервера ОРВД. Ожидается наличие подстроки "$Delay задержка#".
+ * \return Возвращает задержку до следующего сеанса связи в секундах.
+ */
+uint32_t parseDelay(char* response);

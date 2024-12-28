@@ -27,7 +27,8 @@
 #define FLY_ACCEPT_PERIOD_US 500000
 
 char boardId[32] = {0};
-std::thread noFlightAreasThread;
+uint32_t sessionDelay;
+std::thread sessionThread;
 /** \endcond */
 
 /**
@@ -79,9 +80,66 @@ int sendSignedMessage(char* method, char* response, char* errorMessage, uint8_t 
 }
 
 /**
+ * \~English Procedure that checks the flight status at the ATM server. Check includes permission to continue flight, changes in
+ * no-flight areas and time until next communication session.
+ * \~Russian Процедура, запрашивающая статус полета от сервера ОРВД. Статус включает в себя разрешение на продолжение полета,
+ * изменения в бесполетных зонах и время до следующей коммуникации с сервером.
+ */
+void serverSession() {
+    sleep(sessionDelay);
+    char response[1024] = {0};
+    while (true) {
+        sendSignedMessage("/api/flight_info", response, "session", RETRY_DELAY_SEC);
+        //If connection is failed, flight must be paused
+        //Processing status of flight
+        if (strstr(response, "$Flight -1$")) {
+            logEntry("Emergency stop request is received. Disabling motors", ENTITY_NAME, LogLevel::LOG_INFO);
+            if (!enableBuzzer())
+                logEntry("Failed to enable buzzer", ENTITY_NAME, LogLevel::LOG_WARNING);
+            while (!setKillSwitch(false)) {
+                logEntry("Failed to forbid motor usage. Trying again in 1s", ENTITY_NAME, LogLevel::LOG_WARNING);
+                sleep(1);
+            }
+        }
+        //The response has two other possible options:
+        //  "$Flight 1$" that requires to pause flight and remain landed
+        //  "$Flight 0$" that requires to resume flight and keep flying
+        //Implementation is required to be done
+
+        //Processing no-flight areas updates
+        char receivedHash[65] = {0};
+        char* calculatedHash = getNoFlightAreasHash();
+        parseNoFlightAreasHash(response, receivedHash, 65);
+        if (strcmp(receivedHash, calculatedHash)) {
+            logEntry("No-flight areas on the server were updated", ENTITY_NAME, LogLevel::LOG_INFO);
+            char hash[65] = {0};
+            strcpy(hash, receivedHash);
+            sendSignedMessage("/api/get_forbidden_zones_delta", response, "no-flight areas", RETRY_DELAY_SEC);
+            int successful = updateNoFlightAreas(response);
+            if (successful) {
+                calculatedHash = getNoFlightAreasHash();
+                successful = !strcmp(hash, calculatedHash);
+            }
+            if (!successful) {
+                logEntry("Completely redownloading no-flight areas", ENTITY_NAME, LogLevel::LOG_INFO);
+                deleteNoFlightAreas();
+                sendSignedMessage("/api/get_all_forbidden_zones", response, "no-flight areas", RETRY_DELAY_SEC);
+                loadNoFlightAreas(response);
+            }
+            printNoFlightAreas();
+        }
+
+        //Processing delay until next session
+        sessionDelay = parseDelay(strstr(response, "$Delay "));
+
+        sleep(sessionDelay);
+    }
+}
+
+/**
  * \~English Auxiliary procedure. Asks the ATM server to approve new mission and parses its response.
  * \param[in] mission New mission in string format.
- * \param[out] result ATM server response: 1 if mission approved, 0 -- otherwise.
+ * \param[out] result ATM server response: 1 if mission approved, 0 otherwise.
  * \return Returns 1 on successful send, 0 otherwise.
  * \~Russian Вспомогательная процедура. Просит у сервера ОРВД одобрения новой миссии и обрабатывает ответ.
  * \param[in] mission Новая миссия в виде строки.
@@ -113,9 +171,9 @@ int askForMissionApproval(char* mission, int& result) {
         return 0;
     }
 
-    if (strstr(response, "$Approve: 0#") != NULL)
+    if (strstr(response, "$Approve 0#") != NULL)
         result = 1;
-    else if (strstr(response, "$Approve: 1#") != NULL)
+    else if (strstr(response, "$Approve 1#") != NULL)
         result = 0;
     else {
         logEntry("Failed to parse server response on New Mission request", ENTITY_NAME, LogLevel::LOG_WARNING);
@@ -123,34 +181,6 @@ int askForMissionApproval(char* mission, int& result) {
     }
 
     return 1;
-}
-
-void checkNoFlightAreas() {
-    char response[1024] = {0};
-    while (true) {
-        sendSignedMessage("/api/forbidden_zones_hash", response, "no-flight areas", RETRY_DELAY_SEC);
-        char* receivedHash = extractNoFlightAreasHash(response);
-        char* calculatedHash = getNoFlightAreasHash();
-        if (strcmp(receivedHash, calculatedHash)) {
-            logEntry("No-flight areas on the server were updated", ENTITY_NAME, LogLevel::LOG_INFO);
-            char hash[65] = {0};
-            strcpy(hash, receivedHash);
-            sendSignedMessage("/api/get_forbidden_zones_delta", response, "no-flight areas", RETRY_DELAY_SEC);
-            int successful = updateNoFlightAreas(response);
-            if (successful) {
-                calculatedHash = getNoFlightAreasHash();
-                successful = !strcmp(hash, calculatedHash);
-            }
-            if (!successful) {
-                logEntry("Completely redownloading no-flight areas", ENTITY_NAME, LogLevel::LOG_INFO);
-                deleteNoFlightAreas();
-                sendSignedMessage("/api/get_all_forbidden_zones", response, "no-flight areas", RETRY_DELAY_SEC);
-                loadNoFlightAreas(response);
-            }
-            printNoFlightAreas();
-        }
-        sleep(1);
-    }
 }
 
 /**
@@ -231,8 +261,6 @@ int main(void) {
             && loadNoFlightAreas(responseBuffer)) {
             logEntry("Successfully received no-flight areas from the server", ENTITY_NAME, LogLevel::LOG_INFO);
             printNoFlightAreas();
-            //Start thread to ask server for no-flight areas updates.
-            noFlightAreasThread = std::thread(checkNoFlightAreas);
             break;
         }
         sleep(RETRY_REQUEST_DELAY_SEC);
@@ -252,7 +280,7 @@ int main(void) {
         //When autopilot asked for arm, we need to receive permission from ORVD
         sendSignedMessage("/api/arm", responseBuffer, "arm", RETRY_DELAY_SEC);
 
-        if (strstr(responseBuffer, "$Arm: 0#") != NULL) {
+        if (strstr(responseBuffer, "$Arm 0$")) {
             //If arm was permitted, we enable motors
             logEntry("Arm is permitted", ENTITY_NAME, LogLevel::LOG_INFO);
             while (!setKillSwitch(true)) {
@@ -262,9 +290,13 @@ int main(void) {
             }
             if (!permitArm())
                 logEntry("Failed to permit arm through Autopilot Connector", ENTITY_NAME, LogLevel::LOG_WARNING);
+            //Get time until next session
+            sessionDelay = parseDelay(strstr(responseBuffer, "$Delay "));
+            //Start ORVD connection thread
+            sessionThread = std::thread(serverSession);
             break;
         }
-        else if (strstr(responseBuffer, "$Arm: 1#") != NULL) {
+        else if (strstr(responseBuffer, "$Arm 1$")) {
             logEntry("Arm is forbidden", ENTITY_NAME, LogLevel::LOG_INFO);
             if (!forbidArm())
                 logEntry("Failed to forbid arm through Autopilot Connector", ENTITY_NAME, LogLevel::LOG_WARNING);
@@ -276,7 +308,6 @@ int main(void) {
 
     //If we get here, the drone is able to arm and start the mission
     //The flight is need to be controlled from now on
-    //Also we need to check on ORVD, whether the flight is still allowed or it is need to be paused
 
     while (true)
         sleep(1000);
