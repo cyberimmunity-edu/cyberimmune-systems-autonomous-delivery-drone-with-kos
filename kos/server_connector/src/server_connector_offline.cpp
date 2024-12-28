@@ -47,6 +47,13 @@ int requestServer(char* query, char* response, uint32_t responseSize) {
         }
         strncpy(response, "$FlightMission H53.1019446_107.3774394_846.22&T5.0&W53.1020863_107.3774180_5.0&W53.1021926_107.3775065_5.0&W53.1023102_107.3776701_5.0&W53.1023682_107.3779464_5.0&W53.1023923_107.3782736_5.0&W53.1023279_107.3786089_5.0&W53.1021991_107.3787698_5.0&D2.0&S5.0_1200.0&W53.1020284_107.3788181_5.0&W53.1018818_107.3786679_5.0&W53.1018206_107.3782790_5.0&W53.1017900_107.3778149_5.0&W53.1018480_107.3775575_5.0&W53.1019446_107.3774394_5.0&L53.1019446_107.3774394_846.22#", 464);
     }
+    else if (strstr(query, "/api/nmission?") != NULL) {
+        if (responseSize < 13) {
+            logEntry("Size of response does not fit given buffer", ENTITY_NAME, LogLevel::LOG_WARNING);
+            return 0;
+        }
+        strncpy(response, "$Approve: 0#", 13);
+    }
     else if ((strstr(query, "/api/arm?") != NULL) || (strstr(query, "/api/fly_accept?") != NULL)) {
         if (responseSize < 9) {
             logEntry("Size of response does not fit given buffer", ENTITY_NAME, LogLevel::LOG_WARNING);
