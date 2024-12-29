@@ -83,7 +83,7 @@ int getAutopilotCommand(uint8_t& command) {
 }
 
 int sendAutopilotBytes(uint8_t* bytes, ssize_t size) {
-    write(autopilotSocket, &bytes, size);
+    write(autopilotSocket, bytes, size);
 
     return 1;
 }

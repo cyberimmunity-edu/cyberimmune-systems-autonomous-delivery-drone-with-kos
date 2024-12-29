@@ -80,7 +80,7 @@ nk_err_t SetMissionImpl(struct AutopilotConnectorInterface *self,
     uint8_t bytes[AutopilotConnectorInterface_MaxMissionLength] = {0};
 
     nk_uint32_t len = 0;
-    nk_uint8_t *msg = nk_arena_get(nk_uint8_t, reqArena, (nk_ptr_t*)(&(req->mission)), &len);
+    nk_ptr_t* msg = nk_arena_get(nk_ptr_t, reqArena, &(req->mission), &len);
     if (msg == NULL)
         return NK_EBADMSG;
     else if (len > AutopilotConnectorInterface_MaxMissionLength)
