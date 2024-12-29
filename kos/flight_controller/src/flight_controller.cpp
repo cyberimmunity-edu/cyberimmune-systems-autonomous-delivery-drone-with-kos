@@ -440,46 +440,6 @@ int loadMission(char* mission) {
     return parseCommands(start);
 }
 
-int commandsToString(char* string, int32_t len, MissionCommand* commands, int32_t num) {
-    int currentLen = 0;
-    for (int i = 0; i < num; i++) {
-        int commandLen = 0;
-        char command[256] = {0};
-        switch (commands[i].type) {
-        case CommandType::HOME:
-            commandLen = snprintf(command, 256, "H%d_%d_%d", commands[i].content.waypoint.latitude,
-                commands[i].content.waypoint.longitude, commands[i].content.waypoint.altitude);
-            break;
-        case CommandType::TAKEOFF:
-            commandLen = snprintf(command, 256, "T%d", commands[i].content.takeoff.altitude);
-            break;
-        case CommandType::WAYPOINT:
-            commandLen = snprintf(command, 256, "W%d_%d_%d", commands[i].content.waypoint.latitude,
-                commands[i].content.waypoint.longitude, commands[i].content.waypoint.altitude);
-            break;
-        case CommandType::LAND:
-            commandLen = snprintf(command, 256, "L%d_%d_%d", commands[i].content.waypoint.latitude,
-                commands[i].content.waypoint.longitude, commands[i].content.waypoint.altitude);
-            break;
-        case CommandType::SET_SERVO:
-            commandLen = snprintf(command, 256, "S%d_%d", commands[i].content.servo.number, commands[i].content.servo.pwm);
-            break;
-        case CommandType::DELAY:
-            commandLen = snprintf(command, 256, "D%d", commands[i].content.delay.delay);
-            break;
-        default:
-            snprintf(command, 256, "Unknown command type '%d'", commands[i].type);
-            logEntry(command, ENTITY_NAME, LogLevel::LOG_WARNING);
-            return 0;
-        }
-        if (i)
-            snprintf(string, len, "%s*%s", string, command);
-        else
-            strncpy(string, command, len);
-    }
-    return 1;
-}
-
 void printMission() {
     if (!commandNum) {
         logEntry("No available mission", ENTITY_NAME, LogLevel::LOG_INFO);
@@ -526,6 +486,145 @@ void printMission() {
 MissionCommand* getMissionCommands(int &num) {
     num = commandNum;
     return commands;
+}
+
+int missionToString(MissionCommand* commands, uint8_t num, char* string, uint32_t len) {
+    for (int i = 0; i < num; i++) {
+        int commandLen = 0;
+        char command[256] = {0};
+        switch (commands[i].type) {
+        case CommandType::HOME:
+            commandLen = snprintf(command, 256, "H%d_%d_%d", commands[i].content.waypoint.latitude,
+                commands[i].content.waypoint.longitude, commands[i].content.waypoint.altitude);
+            break;
+        case CommandType::TAKEOFF:
+            commandLen = snprintf(command, 256, "T%d", commands[i].content.takeoff.altitude);
+            break;
+        case CommandType::WAYPOINT:
+            commandLen = snprintf(command, 256, "W%d_%d_%d", commands[i].content.waypoint.latitude,
+                commands[i].content.waypoint.longitude, commands[i].content.waypoint.altitude);
+            break;
+        case CommandType::LAND:
+            commandLen = snprintf(command, 256, "L%d_%d_%d", commands[i].content.waypoint.latitude,
+                commands[i].content.waypoint.longitude, commands[i].content.waypoint.altitude);
+            break;
+        case CommandType::SET_SERVO:
+            commandLen = snprintf(command, 256, "S%d_%d", commands[i].content.servo.number, commands[i].content.servo.pwm);
+            break;
+        case CommandType::DELAY:
+            commandLen = snprintf(command, 256, "D%d", commands[i].content.delay.delay);
+            break;
+        default:
+            snprintf(command, 256, "Unknown command type '%d'", commands[i].type);
+            logEntry(command, ENTITY_NAME, LogLevel::LOG_WARNING);
+            return 0;
+        }
+        if (i)
+            snprintf(string, len, "%s*%s", string, command);
+        else
+            strncpy(string, command, len);
+    }
+    return 1;
+}
+
+int missionToBytes(MissionCommand* commands, uint8_t num, uint8_t* bytes) {
+    memcpy(bytes, &num, sizeof(uint8_t));
+    int shift = sizeof(uint8_t);
+    for (int i = 0; i < num; i++) {
+        char command;
+        switch (commands[i].type) {
+        case CommandType::HOME:
+            command = 'H';
+            break;
+        case CommandType::TAKEOFF:
+            command = 'T';
+            break;
+        case CommandType::WAYPOINT:
+            command = 'W';
+            break;
+        case CommandType::LAND:
+            command = 'L';
+            break;
+        case CommandType::SET_SERVO:
+            command = 'S';
+            break;
+        case CommandType::DELAY:
+            command = 'D';
+            break;
+        default: {
+            char logBuffer[128] = {0};
+            snprintf(logBuffer, 128, "Unknown command type '%d'", commands[i].type);
+            logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
+            return 0;
+        }
+        }
+        memcpy(bytes + shift, &command, sizeof(uint8_t));
+        shift += sizeof(uint8_t);
+
+        switch (commands[i].type) {
+        case CommandType::HOME:
+        case CommandType::WAYPOINT:
+        case CommandType::LAND:
+            memcpy(bytes + shift, &(commands[i].content.waypoint.latitude), sizeof(int32_t));
+            shift += sizeof(int32_t);
+            memcpy(bytes + shift, &(commands[i].content.waypoint.longitude), sizeof(int32_t));
+            shift += sizeof(int32_t);
+            memcpy(bytes + shift, &(commands[i].content.waypoint.altitude), sizeof(int32_t));
+            shift += sizeof(int32_t);
+            break;
+        case CommandType::TAKEOFF:
+            memcpy(bytes + shift, &(commands[i].content.takeoff.altitude), sizeof(int32_t));
+            shift += sizeof(int32_t);
+            break;
+        case CommandType::SET_SERVO: {
+            uint8_t channel = commands[i].content.servo.number;
+            uint16_t pwm = commands[i].content.servo.pwm;
+            memcpy(bytes + shift, &channel, sizeof(uint8_t));
+            shift += sizeof(uint8_t);
+            memcpy(bytes + shift, &pwm, sizeof(uint16_t));
+            shift += sizeof(uint16_t);
+            break;
+        }
+        case CommandType::DELAY: {
+            float delay = commands[i].content.delay.delay;
+            memcpy(bytes + shift, &delay, sizeof(float));
+            shift += sizeof(float);
+            break;
+        }
+        }
+    }
+
+    return 1;
+}
+
+uint32_t getMissionBytesSize(MissionCommand* commands, uint8_t num) {
+    uint32_t byteSize = sizeof(uint8_t);
+    for (int i = 0; i < num; i++) {
+        byteSize += sizeof(char);
+        switch (commands[i].type) {
+        case CommandType::HOME:
+        case CommandType::WAYPOINT:
+        case CommandType::LAND:
+            byteSize += 3 * sizeof(int32_t);
+            break;
+        case CommandType::TAKEOFF:
+            byteSize += sizeof(int32_t);
+            break;
+        case CommandType::SET_SERVO:
+            byteSize += sizeof(uint8_t) + sizeof(uint16_t);
+            break;
+        case CommandType::DELAY:
+            byteSize += sizeof(float);
+            break;
+        default: {
+            char logBuffer[128] = {0};
+            snprintf(logBuffer, 128, "Unknown command type '%d'", commands[i].type);
+            logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
+            return 0;
+        }
+        }
+    }
+    return byteSize;
 }
 
 int loadNoFlightAreas(char* areas) {
