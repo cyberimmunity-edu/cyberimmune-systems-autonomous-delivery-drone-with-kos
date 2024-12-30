@@ -1,3 +1,6 @@
+[submodule "modules/uavcan"]
+	path = modules/uavcan
+	url = https://github.com/DroneCAN/libuavcan.git
 [submodule "modules/waf"]
 	path = modules/waf
 	url = https://github.com/ArduPilot/waf.git
@@ -13,6 +16,9 @@
 [submodule "modules/ChibiOS"]
 	path = modules/ChibiOS
 	url = https://github.com/ArduPilot/ChibiOS.git
+[submodule "modules/gsoap"]
+	path = modules/gsoap
+	url = https://github.com/ArduPilot/gsoap
 [submodule "modules/DroneCAN/DSDL"]
 	path = modules/DroneCAN/DSDL
 	url = https://github.com/DroneCAN/DSDL.git
@@ -28,9 +34,3 @@
 [submodule "modules/DroneCAN/libcanard"]
 	path = modules/DroneCAN/libcanard
 	url = https://github.com/DroneCAN/libcanard
-[submodule "modules/Micro-XRCE-DDS-Client"]
-	path = modules/Micro-XRCE-DDS-Client
-	url = https://github.com/ardupilot/Micro-XRCE-DDS-Client.git
-[submodule "modules/Micro-CDR"]
-	path = modules/Micro-CDR
-	url = https://github.com/ardupilot/Micro-CDR.git
