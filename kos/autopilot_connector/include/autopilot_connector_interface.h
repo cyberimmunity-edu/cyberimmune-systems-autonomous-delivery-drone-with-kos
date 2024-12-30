@@ -87,6 +87,13 @@ nk_err_t ChangeAltitudeImpl(struct AutopilotConnectorInterface *self,
 nk_err_t ChangeWaypointImpl(struct AutopilotConnectorInterface *self,
                     const AutopilotConnectorInterface_ChangeWaypoint_req *req, const struct nk_arena *reqArena,
                     AutopilotConnectorInterface_ChangeWaypoint_res *res, struct nk_arena *resArena);
+/**
+ * \~English IPC message handler. See \ref setMission.
+ * \~Russian Обработчик IPC-сообщения. См. \ref setMission.
+ */
+nk_err_t SetMissionImpl(struct AutopilotConnectorInterface *self,
+                    const AutopilotConnectorInterface_SetMission_req *req, const struct nk_arena *reqArena,
+                    AutopilotConnectorInterface_SetMission_res *res, struct nk_arena *resArena);
 
 /**
  * \~English Creates an AutopilotConnectorInterface C++ interface and maps its methods to IPC message handlers.
@@ -96,7 +103,8 @@ static struct AutopilotConnectorInterface *CreateAutopilotConnectorInterfaceImpl
     static const struct AutopilotConnectorInterface_ops Ops = {
         .WaitForArmRequest = WaitForArmRequestImpl, .PermitArm = PermitArmImpl, .ForbidArm = ForbidArmImpl,
         .PauseFlight = PauseFlightImpl, .ResumeFlight = ResumeFlightImpl,
-        .ChangeSpeed = ChangeSpeedImpl, .ChangeAltitude = ChangeAltitudeImpl, .ChangeWaypoint = ChangeWaypointImpl
+        .ChangeSpeed = ChangeSpeedImpl, .ChangeAltitude = ChangeAltitudeImpl, .ChangeWaypoint = ChangeWaypointImpl,
+        .SetMission = SetMissionImpl
     };
 
     static AutopilotConnectorInterface obj = {

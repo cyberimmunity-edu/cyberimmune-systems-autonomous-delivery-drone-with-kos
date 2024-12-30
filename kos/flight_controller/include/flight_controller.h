@@ -289,6 +289,46 @@ void printMission();
 MissionCommand* getMissionCommands(int &num);
 
 /**
+ * \~English Converts an array of commands to a string, that can be recognised by the ATM server.
+ * \param[in] commands Array of commands to convert.
+ * \param[in] num Number of commands to convert.
+ * \param[in, out] string String, where the converted commands will be stored.
+ * \param[in] len Length of string to write converted commands.
+ * \return Returns 1 on successful conversion, 0 otherwise.
+ * \~Russian Преобразует массив команд в строку, распознаваемую сервером ОРВД.
+ * \param[in] commands Массив команд, которые будут конвертированы.
+ * \param[in] num Количество конвертируемых команд.
+ * \param[in, out] string Строка, куда будут записаны конвертированные команды.
+ * \param[in] len Длина строки для записи результата.
+ * \return Возвращает 1 при успешном преобразовании, иначе -- 0.
+ */
+int missionToString(MissionCommand* commands, uint8_t num, char* string, uint32_t len);
+/**
+ * \~English Converts an array of commands to a byte array, that can be recognised by the autopilot firmware.
+ * \param[in] commands Array of commands to convert.
+ * \param[in] num Number of commands to convert.
+ * \param[out] bytes Byte array, where the converted commands will be stored.
+ * \return Returns 1 on successful conversion, 0 otherwise.
+ * \~Russian Преобразует массив команд в массив байтов, распознаваемый прошивкой автопилота.
+ * \param[in] commands Массив команд, которые будут конвертированы.
+ * \param[in] num Количество конвертируемых команд.
+ * \param[out] bytes Массив байтов, куда будут записаны конвертированные команды.
+ * \return Возвращает 1 при успешном преобразовании, иначе -- 0.
+ */
+int missionToBytes(MissionCommand* commands, uint8_t num, uint8_t* bytes);
+/**
+ * \~English Calculates a size of array to store mission in raw bytes format.
+ * \param[in] commands Array of mission commands.
+ * \param[in] num Number of mission commands.
+ * \return Returns the size required to store the mission.
+ * \~Russian Вычисляет размер массива для хранения миссии в виде массива необработанных байтов.
+ * \param[in] commands Массив команд миссии.
+ * \param[in] num Количество команд миссии.
+ * \return Возвращает размер массива, требуемого длоя хранения миссии.
+ */
+uint32_t getMissionBytesSize(MissionCommand* commands, uint8_t num);
+
+/**
  * \~English Converts a no-flight areas string received from the ATM server into an array of areas of \ref NoFlightArea type.
  * \param[in] areas String from the ATM server. Expected form is "$ForbiddenZones areas#".
  * \return Returns 1 on successful conversion, 0 otherwise.
