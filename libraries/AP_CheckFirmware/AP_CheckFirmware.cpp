@@ -192,10 +192,7 @@ check_fw_result_t check_good_firmware(void)
         // allows for booting of a signed firmware with an unsigned
         // bootloader, which allows for bootstrapping a system up from
         // unsigned to signed
-        const auto ret2 = check_good_firmware_signed();
-        if (ret2 == check_fw_result_t::CHECK_FW_OK) {
-            return check_fw_result_t::CHECK_FW_OK;
-        }
+        return check_good_firmware_signed();
     }
     return ret;
 #endif

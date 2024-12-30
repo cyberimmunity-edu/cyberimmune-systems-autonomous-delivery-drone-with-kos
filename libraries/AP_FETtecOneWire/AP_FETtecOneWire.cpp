@@ -95,6 +95,7 @@ void AP_FETtecOneWire::init_uart()
     }
     _uart->set_flow_control(AP_HAL::UARTDriver::FLOW_CONTROL_DISABLE);
     _uart->set_unbuffered_writes(true);
+    _uart->set_blocking_writes(false);
 
     uint32_t uart_baud { FULL_DUPLEX_BAUDRATE };
 #if HAL_AP_FETTEC_HALF_DUPLEX
@@ -154,7 +155,7 @@ void AP_FETtecOneWire::init()
     }
     _invalid_mask = false;  // mask is good
 
-    GCS_SEND_TEXT(MAV_SEVERITY_INFO, "FETtec: allocated %u motors", _esc_count);
+    gcs().send_text(MAV_SEVERITY_INFO, "FETtec: allocated %u motors", _esc_count);
 
     // We expect to be able to send a fast-throttle command in each loop.
     // 8  bits - OneWire Header

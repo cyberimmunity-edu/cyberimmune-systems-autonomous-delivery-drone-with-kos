@@ -4,9 +4,6 @@
 #include <AP_HAL/Semaphores.h>
 #include <AP_Param/AP_Param.h>
 
-#include "AP_Arming_config.h"
-#include "AP_InertialSensor/AP_InertialSensor_config.h"
-
 class AP_Arming {
 public:
 
@@ -39,7 +36,6 @@ public:
         ARMING_CHECK_AUX_AUTH    = (1U << 17),
         ARMING_CHECK_VISION      = (1U << 18),
         ARMING_CHECK_FFT         = (1U << 19),
-        ARMING_CHECK_OSD         = (1U << 20),
     };
 
     enum class Method {
@@ -77,8 +73,6 @@ public:
         TOYMODELANDFORCE = 31, // only disarm uses this...
         LANDING = 32, // only disarm uses this...
         DEADRECKON_FAILSAFE = 33, // only disarm uses this...
-        BLACKBOX = 34,
-        DDS = 35,
         UNKNOWN = 100,
     };
 
@@ -120,12 +114,10 @@ public:
 
     RudderArming get_rudder_arming_type() const { return (RudderArming)_rudder_arming.get(); }
 
-#if AP_ARMING_AUX_AUTH_ENABLED
     // auxiliary authorisation methods
     bool get_aux_auth_id(uint8_t& auth_id);
     void set_aux_auth_passed(uint8_t auth_id);
     void set_aux_auth_failed(uint8_t auth_id, const char* fail_msg);
-#endif
 
     static const struct AP_Param::GroupInfo        var_info[];
 
@@ -145,9 +137,6 @@ public:
         return (_arming_options & uint32_t(option)) != 0;
     }
 
-    static bool method_is_GCS(Method method) {
-        return (method == Method::MAVLINK || method == Method::DDS);
-    }
 protected:
 
     // Parameters
@@ -157,7 +146,6 @@ protected:
     AP_Int8                 _rudder_arming;
     AP_Int32                _required_mission_items;
     AP_Int32                _arming_options;
-    AP_Int16                magfield_error_threshold;
 
     // internal members
     bool                    armed;
@@ -170,9 +158,7 @@ protected:
 
     bool logging_checks(bool report);
 
-#if AP_INERTIALSENSOR_ENABLED
     virtual bool ins_checks(bool report);
-#endif
 
     bool compass_checks(bool report);
 
@@ -214,25 +200,19 @@ protected:
 
     bool mount_checks(bool display_failure) const;
 
-#if AP_ARMING_AUX_AUTH_ENABLED
     bool aux_auth_checks(bool display_failure);
-#endif
 
     bool generator_checks(bool report) const;
 
     bool opendroneid_checks(bool display_failure);
     
     bool serial_protocol_checks(bool display_failure);
-    
-    bool estop_checks(bool display_failure);
 
     virtual bool system_checks(bool report);
 
     bool can_checks(bool report);
 
     bool fettec_checks(bool display_failure) const;
-
-    bool kdecan_checks(bool display_failure) const;
 
     virtual bool proximity_checks(bool report) const;
 
@@ -258,10 +238,8 @@ private:
 
     static AP_Arming *_singleton;
 
-#if AP_INERTIALSENSOR_ENABLED
     bool ins_accels_consistent(const class AP_InertialSensor &ins);
     bool ins_gyros_consistent(const class AP_InertialSensor &ins);
-#endif
 
     // check if we should keep logging after disarming
     void check_forced_logging(const AP_Arming::Method method);
@@ -277,7 +255,6 @@ private:
         MIS_ITEM_CHECK_MAX
     };
 
-#if AP_ARMING_AUX_AUTH_ENABLED
     // auxiliary authorisation
     static const uint8_t aux_auth_count_max = 3;    // maximum number of auxiliary authorisers
     static const uint8_t aux_auth_str_len = 42;     // maximum length of failure message (50-8 for "PreArm: ")
@@ -291,7 +268,6 @@ private:
     char* aux_auth_fail_msg;    // buffer for holding failure messages
     bool aux_auth_error;        // true if too many auxiliary authorisers
     HAL_Semaphore aux_auth_sem; // semaphore for accessing the aux_auth_state and aux_auth_fail_msg
-#endif
 
     // method that was last used for arm/disarm; invalid unless the
     // vehicle has been disarmed at least once.

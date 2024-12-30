@@ -6,10 +6,12 @@
 
 #if AP_CAMERA_ENABLED
 
+#include <AP_Common/Location.h>
+#include <AP_Logger/LogStructure.h>
 #include <AP_Param/AP_Param.h>
 #include <GCS_MAVLink/GCS_MAVLink.h>
 #include "AP_Camera_Params.h"
-#include "AP_Camera_shareddefs.h"
+#include "AP_Mount/AP_Mount_config.h"
 
 #define AP_CAMERA_MAX_INSTANCES             2       // maximum number of camera backends
 
@@ -19,9 +21,6 @@ class AP_Camera_Servo;
 class AP_Camera_Relay;
 class AP_Camera_SoloGimbal;
 class AP_Camera_Mount;
-class AP_Camera_MAVLink;
-class AP_Camera_MAVLinkCamV2;
-class AP_Camera_Scripting;
 
 /// @class	Camera
 /// @brief	Object managing a Photo or video camera
@@ -34,8 +33,6 @@ class AP_Camera {
     friend class AP_Camera_SoloGimbal;
     friend class AP_Camera_Mount;
     friend class AP_Camera_MAVLink;
-    friend class AP_Camera_MAVLinkCamV2;
-    friend class AP_Camera_Scripting;
 
 public:
 
@@ -66,12 +63,6 @@ public:
 #if AP_CAMERA_MAVLINK_ENABLED
         MAVLINK = 5,        // MAVLink enabled camera
 #endif
-#if AP_CAMERA_MAVLINKCAMV2_ENABLED
-        MAVLINK_CAMV2 = 6,  // MAVLink camera v2
-#endif
-#if AP_CAMERA_SCRIPTING_ENABLED
-        SCRIPTING = 7,  // Scripting backend
-#endif
     };
 
     // detect and initialise backends
@@ -80,20 +71,10 @@ public:
     // update - to be called periodically at 50Hz
     void update();
 
-    // handle MAVLink messages from the camera
+    // MAVLink methods
     void handle_message(mavlink_channel_t chan, const mavlink_message_t &msg);
-
-    // handle MAVLink command from GCS to control the camera
     MAV_RESULT handle_command_long(const mavlink_command_long_t &packet);
-
-    // send camera feedback message to GCS
-    void send_feedback(mavlink_channel_t chan);
-
-    // send camera information message to GCS
-    void send_camera_information(mavlink_channel_t chan);
-
-    // send camera settings message to GCS
-    void send_camera_settings(mavlink_channel_t chan);
+    void send_feedback(mavlink_channel_t chan) const;
 
     // configure camera
     void configure(float shooting_mode, float shutter_speed, float aperture, float ISO, float exposure_type, float cmd_id, float engine_cutoff_time);
@@ -115,58 +96,27 @@ public:
     void take_picture();
     void take_picture(uint8_t instance);
 
-    // take multiple pictures, time_interval between two consecutive pictures is in miliseconds
-    // total_num is number of pictures to be taken, -1 means capture forever
-    void take_multiple_pictures(uint32_t time_interval_ms, int16_t total_num);
-
     // start/stop recording video
     // start_recording should be true to start recording, false to stop recording
     bool record_video(bool start_recording);
     bool record_video(uint8_t instance, bool start_recording);
 
-    // set zoom specified as a rate or percentage
-    bool set_zoom(ZoomType zoom_type, float zoom_value);
-    bool set_zoom(uint8_t instance, ZoomType zoom_type, float zoom_value);
+    // zoom in, out or hold
+    // zoom out = -1, hold = 0, zoom in = 1
+    bool set_zoom_step(int8_t zoom_step);
+    bool set_zoom_step(uint8_t instance, int8_t zoom_step);
 
-    // set focus specified as rate, percentage or auto
+    // focus in, out or hold
     // focus in = -1, focus hold = 0, focus out = 1
-    SetFocusResult set_focus(FocusType focus_type, float focus_value);
-    SetFocusResult set_focus(uint8_t instance, FocusType focus_type, float focus_value);
+    bool set_manual_focus_step(int8_t focus_step);
+    bool set_manual_focus_step(uint8_t instance, int8_t focus_step);
 
-    // set tracking to none, point or rectangle (see TrackingType enum)
-    // if POINT only p1 is used, if RECTANGLE then p1 is top-left, p2 is bottom-right
-    // p1,p2 are in range 0 to 1.  0 is left or top, 1 is right or bottom
-    bool set_tracking(TrackingType tracking_type, const Vector2f& p1, const Vector2f& p2);
-    bool set_tracking(uint8_t instance, TrackingType tracking_type, const Vector2f& p1, const Vector2f& p2);
-
-    // set camera lens as a value from 0 to 5
-    bool set_lens(uint8_t lens);
-    bool set_lens(uint8_t instance, uint8_t lens);
+    // auto focus
+    bool set_auto_focus();
+    bool set_auto_focus(uint8_t instance);
 
     // set if vehicle is in AUTO mode
     void set_is_auto_mode(bool enable) { _is_in_auto_mode = enable; }
-
-#if AP_CAMERA_SCRIPTING_ENABLED
-    // structure and accessors for use by scripting backends
-    typedef struct {
-        uint16_t take_pic_incr; // incremented each time camera is requested to take a picture
-        bool recording_video;   // true when recording video
-        uint8_t zoom_type;      // see ZoomType enum (1:Rate or 2:Pct)
-        float zoom_value;       // percentage or zoom out = -1, hold = 0, zoom in = 1
-        uint8_t focus_type;     // see FocusType enum (1:Rate, 2:Pct, 4:Auto)
-        float focus_value;      // If Rate, focus in = -1, focus hold = 0, focus out = 1.  If PCT 0 to 100
-        uint8_t tracking_type;  // see TrackingType enum (0:NONE, 1:POINT, 2:RECTANGLE)
-        Vector2f tracking_p1;   // center or top-left tracking point. x left-right, y is top-bottom. range is 0 to 1
-        Vector2f tracking_p2;   // bottom-right tracking point. x left-right, y is top-bottom. range is 0 to 1
-    } camera_state_t;
-
-    // accessor to allow scripting backend to retrieve state
-    // returns true on success and cam_state is filled in
-    bool get_state(uint8_t instance, camera_state_t& cam_state);
-#endif
-
-    // allow threads to lock against AHRS update
-    HAL_Semaphore &get_semaphore() { return _rsem; }
 
     // parameter var table
     static const struct AP_Param::GroupInfo var_info[];
@@ -194,12 +144,11 @@ private:
     AP_Int16 _max_roll;         // Maximum acceptable roll angle when trigging camera
 
     // check instance number is valid
-    AP_Camera_Backend *get_instance(uint8_t instance) const;
+    AP_Camera_Backend *get_instance(uint8_t instance);
 
     // perform any required parameter conversion
     void convert_params();
 
-    HAL_Semaphore _rsem;                // semaphore for multi-thread access
     AP_Camera_Backend *primary;         // primary camera backed
     bool _is_in_auto_mode;              // true if in AUTO mode
     uint32_t log_camera_bit;            // logging bit (from LOG_BITMASK) to enable camera logging

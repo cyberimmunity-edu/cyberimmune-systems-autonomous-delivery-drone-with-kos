@@ -69,11 +69,14 @@
 #include <AC_Sprayer/AC_Sprayer.h>          // Crop sprayer library
 #include <AP_ADSB/AP_ADSB.h>                // ADS-B RF based collision avoidance module library
 #include <AP_Proximity/AP_Proximity.h>      // ArduPilot proximity sensor library
-#include <AC_PrecLand/AC_PrecLand_config.h>
 #include <AP_OpticalFlow/AP_OpticalFlow.h>
 #include <AP_Winch/AP_Winch_config.h>
 
-#include "KOS_module.h"
+#include <KOS_FlightController/KOS_Interaction.h>
+#include <KOS_FlightController/KOS_CommandExecutor.h>
+#if AP_SIM_ENABLED
+#include <KOS_FlightController/KOS_HardwareSimulation.h>
+#endif
 
 // Configuration
 #include "defines.h"
@@ -102,13 +105,8 @@
 #include "AP_Rally.h"           // Rally point library
 #include "AP_Arming.h"
 
-#include <AP_ExternalControl/AP_ExternalControl_config.h>
-#if AP_EXTERNAL_CONTROL_ENABLED
-#include "AP_ExternalControl_Copter.h"
-#endif
-
-#include <AP_Beacon/AP_Beacon_config.h>
-#if AP_BEACON_ENABLED
+// libraries which are dependent on #defines in defines.h and/or config.h
+#if BEACON_ENABLED == ENABLED
  #include <AP_Beacon/AP_Beacon.h>
 #endif
 
@@ -123,7 +121,7 @@
 #if AP_GRIPPER_ENABLED
  # include <AP_Gripper/AP_Gripper.h>
 #endif
-#if AC_PRECLAND_ENABLED
+#if PRECISION_LANDING == ENABLED
  # include <AC_PrecLand/AC_PrecLand.h>
  # include <AC_PrecLand/AC_PrecLand_StateMachine.h>
 #endif
@@ -200,9 +198,6 @@ public:
     friend class AP_AdvancedFailsafe_Copter;
 #endif
     friend class AP_Arming_Copter;
-#if AP_EXTERNAL_CONTROL_ENABLED
-    friend class AP_ExternalControl_Copter;
-#endif
     friend class ToyMode;
     friend class RC_Channel_Copter;
     friend class RC_Channels_Copter;
@@ -236,8 +231,8 @@ public:
     friend class ModeZigZag;
     friend class ModeAutorotate;
     friend class ModeTurtle;
-    friend class AP_ExternalControl_Copter;
-    friend class KOSCommModule;
+
+    friend class KOS_CommandExecutor;
 
     Copter(void);
 
@@ -259,9 +254,13 @@ private:
     RC_Channel *channel_throttle;
     RC_Channel *channel_yaw;
 
-    AP_Logger logger;
+	KOS_InteractionModule kos_interaction;
+    KOS_CommandExecutor kos_command_executor;
+#if AP_SIM_ENABLED
+    KOS_HardwareSimulation kos_hardware_simulation;
+#endif
 
-    KOSCommModule KOS;
+    AP_Logger logger;
 
     // flight modes convenience array
     AP_Int8 *flight_modes;
@@ -332,12 +331,6 @@ private:
 #if AP_OPTICALFLOW_ENABLED
     AP_OpticalFlow optflow;
 #endif
-
-    // external control library
-#if AP_EXTERNAL_CONTROL_ENABLED
-    AP_ExternalControl_Copter external_control;
-#endif
-
 
     // system time in milliseconds of last recorded yaw reset from ekf
     uint32_t ekfYawReset_ms;
@@ -550,7 +543,7 @@ private:
 #endif
 
     // Precision Landing
-#if AC_PRECLAND_ENABLED
+#if PRECISION_LANDING == ENABLED
     AC_PrecLand precland;
     AC_PrecLand_StateMachine precland_statemachine;
 #endif
@@ -700,8 +693,6 @@ private:
     // returns true if the EKF failsafe has triggered
     bool has_ekf_failsafed() const override;
 #endif // AP_SCRIPTING_ENABLED
-    bool is_landing() const override;
-    bool is_taking_off() const override;
     void rc_loop();
     void throttle_loop();
     void update_batt_compass(void);
@@ -873,12 +864,8 @@ private:
     // called when an attempt to change into a mode is unsuccessful:
     void mode_change_failed(const Mode *mode, const char *reason);
     uint8_t get_mode() const override { return (uint8_t)flightmode->mode_number(); }
-    bool current_mode_requires_mission() const override;
     void update_flight_mode();
     void notify_flight_mode();
-
-    // Check if this mode can be entered from the GCS
-    bool gcs_mode_enabled(const Mode::Number mode_num);
 
     // mode_land.cpp
     void set_mode_land_with_pause(ModeReason reason);
@@ -918,6 +905,7 @@ private:
     void default_dead_zones();
     void init_rc_in();
     void init_rc_out();
+    void enable_motor_output();
     void read_radio();
     void set_throttle_and_failsafe(uint16_t throttle_pwm);
     void set_throttle_zero_flag(int16_t throttle_control);

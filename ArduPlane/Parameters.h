@@ -43,7 +43,7 @@ public:
         //
         k_param_format_version = 0,
         k_param_software_type, // unused;
-        k_param_num_resets, // unused
+        k_param_num_resets,
         k_param_NavEKF2,
         k_param_g2,
         k_param_avoidance_adsb,
@@ -356,7 +356,6 @@ public:
         k_param_fence,         // vehicle fence - unused
         k_param_acro_yaw_rate,
         k_param_takeoff_throttle_max_t,
-        k_param_autotune_options,
     };
 
     AP_Int16 format_version;
@@ -435,6 +434,7 @@ public:
     AP_Float mixing_gain;
     AP_Int16 mixing_offset;
     AP_Int16 dspoiler_rud_rate;
+    AP_Int16 num_resets;
     AP_Int32 log_bitmask;
     AP_Int32 RTL_altitude_cm;
     AP_Int16 pitch_trim_cd;
@@ -551,7 +551,7 @@ public:
     AC_PID guidedHeading{5000.0,  0.0,   0.0, 0 ,  10.0,   5.0,  5.0 ,  5.0  , 0.2};
 #endif
 
-#if AP_SCRIPTING_ENABLED && AP_FOLLOW_ENABLED
+#if AP_SCRIPTING_ENABLED
     AP_Follow follow;
 #endif
 

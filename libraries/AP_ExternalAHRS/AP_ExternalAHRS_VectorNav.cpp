@@ -18,10 +18,6 @@
 
 #define ALLOW_DOUBLE_MATH_FUNCTIONS
 
-#include "AP_ExternalAHRS_config.h"
-
-#if AP_EXTERNAL_AHRS_VECTORNAV_ENABLED
-
 #include "AP_ExternalAHRS_VectorNav.h"
 #include <AP_Math/AP_Math.h>
 #include <AP_Math/crc.h>
@@ -31,10 +27,11 @@
 #include <AP_InertialSensor/AP_InertialSensor.h>
 #include <GCS_MAVLink/GCS.h>
 #include <AP_Logger/AP_Logger.h>
-#include <AP_SerialManager/AP_SerialManager.h>
 #include <AP_Common/NMEA.h>
 #include <stdio.h>
 #include <AP_BoardConfig/AP_BoardConfig.h>
+
+#if HAL_EXTERNAL_AHRS_ENABLED
 
 extern const AP_HAL::HAL &hal;
 
@@ -582,10 +579,8 @@ void AP_ExternalAHRS_VectorNav::process_packet2(const uint8_t *b)
                                 Location::AltFrame::ABSOLUTE};
         state.have_origin = true;
     }
-    uint8_t instance;
-    if (AP::gps().get_first_external_instance(instance)) {
-        AP::gps().handle_external(gps, instance);
-    }
+
+    AP::gps().handle_external(gps);
 }
 
 /*
@@ -824,4 +819,5 @@ void AP_ExternalAHRS_VectorNav::send_status_report(GCS_MAVLINK &link) const
                                        mag_var, 0, 0);
 }
 
-#endif  // AP_EXTERNAL_AHRS_VECTORNAV_ENABLED
+#endif  // HAL_EXTERNAL_AHRS_ENABLED
+

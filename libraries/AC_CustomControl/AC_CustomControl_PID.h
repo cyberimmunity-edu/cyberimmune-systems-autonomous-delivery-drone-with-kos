@@ -26,7 +26,6 @@ public:
 
 protected:
     // put controller related variable here
-    float _dt;
 
     // angle P controller  objects
     AC_P                _p_angle_roll2;

@@ -3,13 +3,17 @@
  */
 #pragma once
 
-#include "AP_Airspeed_config.h"
+#include <AP_HAL/AP_HAL.h>
+#include <AP_HAL/AP_HAL_Boards.h>
+#include <AP_MSP/msp.h>
+
+#ifndef AP_AIRSPEED_MSP_ENABLED
+#define AP_AIRSPEED_MSP_ENABLED HAL_MSP_SENSORS_ENABLED
+#endif
 
 #if AP_AIRSPEED_MSP_ENABLED
 
 #include "AP_Airspeed_Backend.h"
-
-#include <AP_MSP/msp.h>
 
 class AP_Airspeed_MSP : public AP_Airspeed_Backend
 {

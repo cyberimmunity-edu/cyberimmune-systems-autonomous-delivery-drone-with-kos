@@ -122,7 +122,7 @@ public:
     public:
         // we just poll fd, no signaling is done
         void signal(uint32_t evt_mask) override { return; }
-        bool wait(uint16_t duration_us, AP_HAL::EventHandle* evt_handle) override;
+        bool wait(uint64_t duration, AP_HAL::EventHandle* evt_handle) override;
     };
 
 private:
@@ -174,8 +174,15 @@ private:
     std::unordered_multiset<uint32_t> _pending_loopback_ids;
     std::vector<can_filter> _hw_filters_container;
 
-    struct bus_stats : public AP_HAL::CANIface::bus_stats_t {
+    struct {
+        uint32_t tx_requests;
+        uint32_t tx_full;
         uint32_t tx_confirmed;
+        uint32_t tx_write_fail;
+        uint32_t tx_success;
+        uint32_t tx_timedout;
+        uint32_t rx_received;
+        uint32_t rx_errors;
         uint32_t num_downs;
         uint32_t num_rx_poll_req;
         uint32_t num_tx_poll_req;

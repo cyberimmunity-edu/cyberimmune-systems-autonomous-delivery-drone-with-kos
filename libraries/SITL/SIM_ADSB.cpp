@@ -16,11 +16,9 @@
   ADSB simulator class for MAVLink ADSB peripheral
 */
 
-#include "SIM_config.h"
+#include "SIM_ADSB.h"
 
 #if HAL_SIM_ADSB_ENABLED
-
-#include "SIM_ADSB.h"
 
 #include "SITL.h"
 

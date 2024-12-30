@@ -26,7 +26,6 @@
 #include "SIM_IntelligentEnergy24.h"
 #include "SIM_Ship.h"
 #include "SIM_GPS.h"
-#include "SIM_DroneCANDevice.h"
 
 namespace SITL {
 
@@ -218,16 +217,6 @@ public:
     AP_Int8  rc_fail;     // fail RC input
     AP_Int8  rc_chancount; // channel count
     AP_Int8  float_exception; // enable floating point exception checks
-    AP_Int32 can_servo_mask; // mask of servos/escs coming from CAN
-
-#if HAL_NUM_CAN_IFACES
-    enum class CANTransport : uint8_t {
-      MulticastUDP = 0,
-      SocketCAN = 1
-    };
-    AP_Enum<CANTransport> can_transport[HAL_NUM_CAN_IFACES];
-#endif
-
     AP_Int8  flow_enable; // enable simulated optflow
     AP_Int16 flow_rate; // optflow data rate (Hz)
     AP_Int8  flow_delay; // optflow data delay
@@ -246,7 +235,6 @@ public:
     AP_Int16 loop_rate_hz;
     AP_Int16 loop_time_jitter_us;
     AP_Int32 on_hardware_output_enable_mask;  // mask of output channels passed through to actual hardware
-    AP_Int16 on_hardware_relay_enable_mask;   // mask of relays passed through to actual hardware
 
     AP_Float uart_byte_loss_pct;
 
@@ -403,6 +391,19 @@ public:
         AP_Float hdg; // 0 to 360
     } opos;
 
+    AP_Int8 _safety_switch_state;
+
+    AP_HAL::Util::safety_state safety_switch_state() const {
+        return (AP_HAL::Util::safety_state)_safety_switch_state.get();
+    }
+    void force_safety_off() {
+        _safety_switch_state.set((uint8_t)AP_HAL::Util::SAFETY_ARMED);
+    }
+    bool force_safety_on() {
+        _safety_switch_state.set((uint8_t)AP_HAL::Util::SAFETY_DISARMED);
+        return true;
+    }
+
     uint16_t irlock_port;
 
     time_t start_time_UTC;
@@ -447,9 +448,6 @@ public:
     RichenPower richenpower_sim;
     IntelligentEnergy24 ie24_sim;
     FETtecOneWireESC fetteconewireesc_sim;
-#if AP_TEST_DRONECAN_DRIVERS
-    DroneCANDevice dronecan_sim;
-#endif
 
     // ESC telemetry
     AP_Int8 esc_telem;

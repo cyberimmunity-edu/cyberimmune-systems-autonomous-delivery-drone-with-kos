@@ -15,8 +15,7 @@
 #pragma once
 
 #include <AP_Rally/AP_Rally.h>
-
-#if HAL_RALLY_ENABLED
+#include <AP_AHRS/AP_AHRS.h>
 
 class AP_Rally_Rover : public AP_Rally
 {
@@ -29,5 +28,3 @@ public:
 private:
     bool is_valid(const Location &rally_point) const override;
 };
-
-#endif  // HAL_RALLY_ENABLED

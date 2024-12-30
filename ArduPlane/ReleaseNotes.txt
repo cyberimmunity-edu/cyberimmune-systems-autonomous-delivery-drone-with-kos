@@ -1,3 +1,83 @@
+Release 4.4.4-beta1 5th December 2023
+-------------------------------------
+
+Changes from 4.4.3:
+
+- CubeOrange Sim-on-hardware compilation fix
+- RADIX2HD supports external I2C compasses
+- SpeedyBeeF405v4 support
+- DroneCAN battery monitor with cell monitor SoC reporting fix
+- ProfiLED output fixed in both Notify and Scripting
+- NTF_LED_TYPES parameter description fixed (was missing IS31FL3195)
+- Scripting bug that could cause crash if parameters were added in flight
+- STAT_BOOTCNT param fix (was not updating in some cases)
+- don't query hobbywing DroneCAN ESC IDs while armed
+- clamp empy version to prevent build errors
+
+Release 4.4.3 14th November 2023
+--------------------------------
+
+Changes from 4.4.2:
+
+ - fixed setup of ICM45486 IMU on CubeOrangePlus-BG edition
+ - disable AFSR on IxM42xxx IMUs to prevent gyro bias for "stuck" gyros
+ - fixed AK09916 compass being non-responsive
+ - implement GPS_DRV_OPTION for using ellipsoid height in more GPS drivers
+ - fixed SIYI AP_Mount parsing bug
+ - configuration fixes for BETAFTP-F405 boards
+ - fixed origin versus home relative bug in quadplane landing and guided takeoff
+ - correct mavlink response for no airspeed sensor on preflight calibration
+ - protect against notch filtering with uninitialised RPM source in ESC telemetry
+ - allow lua scripts to populate full ESC telemetry data
+ - added YJUAV_A6SE_H743 support
+ - fixed uBlox M10 GPS support on boards with 1M flash
+
+Release 4.4.2 23th October 2023
+-------------------------------
+
+Changes from 4.4.1
+
+- BETAFPV-F405 support
+- MambaF405v2 battery and serial setup corrected
+- mRo Control Zero OEM H7 bdshot support
+- SpeedyBee-F405-Wing gets VTX power control
+- SpeedyBee-F405-Mini support
+- T-Motor H743 Mini support
+- EKF3 supports baroless boards
+- INA battery monitor supports config of shunt resistor used (see BATTx_SHUNT)
+- BMI088 IMU error value handling fixed to avoid occasional negative spike
+- Dev environment CI autotest stability improvements
+- OSD correct DisplayPort BF MSP symbols
+- OSD option to correct direction arrows for BF font set
+- Sensor status reporting to GCS fixed for baroless boards
+- added opendroneid option to auto-store IDs in persistent flash
+- fixed TECS bug that could cause inability to climb or descend
+- fixed race condition when starting TECS controlled mode
+- fixed RTL with rally point and terrain follow
+- protect against invalid data in SBUS for first 4 channels
+- added build type to VER message
+- allow moving baseline rover at 3Hz
+- use RC deadzones in stick mixing
+
+
+Release 4.4.1 26th September 2023
+---------------------------------
+
+No changes from beta2
+
+Release 4.4.1-beta2 12th September 2023
+--------------------------------------
+
+Changes from 4.4.1-beta1
+
+- Airbotf4 features minimised to build for 4.4
+- ChibiOS clock fix for 480Mhz H7 boards (affected FDCAN)
+- H750 external flash optimisations for to lower CPU load
+- MambaF405Mini fixes to match manufacturer's recommended wiring
+- RADIX2 HD support
+- RPI hardware version check fix
+- YJUAV_A6SE support
+
 Release 4.4.1-beta1 5th September 2023
 --------------------------------------
 
@@ -128,51 +208,6 @@ The full list of changes is:
  - don't reject airspeed using EKF innovation if dead-reckoning
  - fixed USB pass-thru on 2nd USB endpoint
 
-Release 4.3.7 31st May 2023
----------------------------
-
-This stable release is for the 4.3.x stable series and is being done
-because of a serious bug that has been found with RC input on boards
-that use an IOMCU for RC input (boards with a separate set of 8 "main"
-outputs from "aux" outputs).
-
-The bug was that when RC input is lost and the receiver is one that
-uses "no pulses" for loss of RC input then there is a chance that when
-the RC link is regained that ArduPilot will not regain RC control and
-will continue in RC failsafe.
-
-The bug is an old one, first introduced in the 4.0.6 release in
-September 2020. The bug does not occur often which is why it has been
-such a long time before it was noticed. We would like to thank CUAV
-for noticing and reporting the bug!
-
-This release also has some other changes, some of which are to sync
-with the Copter 4.3.6 release (which will go to 4.3.7 with this RC
-input bug fix) and some are other bugs found since the 4.3.5 plane
-release.
-
-This release skips the 4.3.6 number to sync with copter.
-
-The full list of changes is:
-
- - fixed a fault in the INS batch sampler code if you change the INS_LOG_BAT_CNT parameter without rebooting
- - fixed the RC input on IOMCU bug explained above
- - fixed a bug in ICE engine control if you do a "delay engine start" mission command while flying
- - added MCU voltage monitoring for the H757 microcontroller (eg. CubeOrangePlus)
- - servo gimbal mount yaw handling fix (only affects 3-axis servo gimbals)
- - PiccoloCAN fix for ESC voltage and current scaling
- - Gremsy gimbal fix when attached to autopilot's serial3 (or higher)
- - added CubeOrangePlus-bdshot build
- - fixed a bug in handling bad UART data in the megasquirt serial EFI driver
- - added -g option for configuring with debug symbols without full debug (helped with RCIN bug diagnosis)
- - fixed airmode switch for QACRO and QSTABILIZE modes
- - fixed a rare memory corruption bug in the STM32H757
- - fixed an EKF3 bug in accel bias calculations
- - adjust EKF3 accel bias process noise for greater robustness
- - cope with compassmot impacting GSF yaw numerical stability
-
-
-Please test and report any issues!
 
 Release 4.4.0 beta1
 -------------------

@@ -105,9 +105,6 @@ protected:
     // return the AFS mapped control mode
     virtual enum control_mode afs_mode(void) = 0;
 
-    //to force entering auto mode when datalink loss 
-    virtual void set_mode_auto(void) = 0;
-
     enum state _state;
 
     AP_Int8 _enable;
@@ -165,15 +162,6 @@ private:
 
     // update maximum range check
     void max_range_update();
-
-    AP_Int16 options;
-    enum class Option {
-        CONTINUE_AFTER_RECOVERED = (1U<<0),
-        GCS_FS_ALL_AUTONOMOUS_MODES = (1U<<1),
-    };
-    bool option_is_set(Option option) const {
-        return (options.get() & int16_t(option)) != 0;
-    }
 };
 
 namespace AP {

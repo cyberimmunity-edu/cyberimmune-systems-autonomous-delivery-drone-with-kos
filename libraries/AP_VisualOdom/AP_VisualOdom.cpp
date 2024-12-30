@@ -13,15 +13,15 @@
    along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "AP_VisualOdom_config.h"
+#include "AP_VisualOdom.h"
 
 #if HAL_VISUALODOM_ENABLED
 
-#include "AP_VisualOdom.h"
 #include "AP_VisualOdom_Backend.h"
 #include "AP_VisualOdom_MAV.h"
 #include "AP_VisualOdom_IntelT265.h"
 #include <AP_AHRS/AP_AHRS.h>
+#include <AP_Logger/AP_Logger.h>
 
 extern const AP_HAL::HAL &hal;
 
@@ -128,17 +128,13 @@ void AP_VisualOdom::init()
     case VisualOdom_Type::None:
         // do nothing
         break;
-#if AP_VISUALODOM_MAV_ENABLED
     case VisualOdom_Type::MAV:
         _driver = new AP_VisualOdom_MAV(*this);
         break;
-#endif
-#if AP_VISUALODOM_INTELT265_ENABLED
     case VisualOdom_Type::IntelT265:
     case VisualOdom_Type::VOXL:
         _driver = new AP_VisualOdom_IntelT265(*this);
         break;
-#endif
     }
 }
 
@@ -179,7 +175,7 @@ void AP_VisualOdom::handle_vision_position_delta_msg(const mavlink_message_t &ms
 
 // general purpose method to consume position estimate data and send to EKF
 // distances in meters, roll, pitch and yaw are in radians
-void AP_VisualOdom::handle_pose_estimate(uint64_t remote_time_us, uint32_t time_ms, float x, float y, float z, float roll, float pitch, float yaw, float posErr, float angErr, uint8_t reset_counter)
+void AP_VisualOdom::handle_vision_position_estimate(uint64_t remote_time_us, uint32_t time_ms, float x, float y, float z, float roll, float pitch, float yaw, float posErr, float angErr, uint8_t reset_counter)
 {
     // exit immediately if not enabled
     if (!enabled()) {
@@ -191,12 +187,12 @@ void AP_VisualOdom::handle_pose_estimate(uint64_t remote_time_us, uint32_t time_
         // convert attitude to quaternion and call backend
         Quaternion attitude;
         attitude.from_euler(roll, pitch, yaw);
-        _driver->handle_pose_estimate(remote_time_us, time_ms, x, y, z, attitude, posErr, angErr, reset_counter);
+        _driver->handle_vision_position_estimate(remote_time_us, time_ms, x, y, z, attitude, posErr, angErr, reset_counter);
     }
 }
 
 // general purpose method to consume position estimate data and send to EKF
-void AP_VisualOdom::handle_pose_estimate(uint64_t remote_time_us, uint32_t time_ms, float x, float y, float z, const Quaternion &attitude, float posErr, float angErr, uint8_t reset_counter)
+void AP_VisualOdom::handle_vision_position_estimate(uint64_t remote_time_us, uint32_t time_ms, float x, float y, float z, const Quaternion &attitude, float posErr, float angErr, uint8_t reset_counter)
 {
     // exit immediately if not enabled
     if (!enabled()) {
@@ -205,7 +201,7 @@ void AP_VisualOdom::handle_pose_estimate(uint64_t remote_time_us, uint32_t time_
 
     // call backend
     if (_driver != nullptr) {
-        _driver->handle_pose_estimate(remote_time_us, time_ms, x, y, z, attitude, posErr, angErr, reset_counter);
+        _driver->handle_vision_position_estimate(remote_time_us, time_ms, x, y, z, attitude, posErr, angErr, reset_counter);
     }
 }
 
@@ -258,15 +254,15 @@ bool AP_VisualOdom::pre_arm_check(char *failure_msg, uint8_t failure_msg_len) co
         return true;
     }
 
-    // if no backend we must have failed to create because out of memory
-    if (_driver == nullptr) {
-        hal.util->snprintf(failure_msg, failure_msg_len, "out of memory");
-        return false;
-    }
-
     // check healthy
     if (!healthy()) {
         hal.util->snprintf(failure_msg, failure_msg_len, "not healthy");
+        return false;
+    }
+
+    // if no backend we must have failed to create because out of memory
+    if (_driver == nullptr) {
+        hal.util->snprintf(failure_msg, failure_msg_len, "out of memory");
         return false;
     }
 

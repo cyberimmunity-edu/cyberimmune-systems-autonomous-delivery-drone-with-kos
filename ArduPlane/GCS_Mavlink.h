@@ -17,15 +17,13 @@ protected:
 
     uint32_t telem_delay() const override;
 
-#if AP_MAVLINK_MISSION_SET_CURRENT_ENABLED
     void handle_mission_set_current(AP_Mission &mission, const mavlink_message_t &msg) override;
-#endif
 
     bool sysid_enforce() const override;
 
     MAV_RESULT handle_command_preflight_calibration(const mavlink_command_long_t &packet, const mavlink_message_t &msg) override;
-    MAV_RESULT handle_command_int_packet(const mavlink_command_int_t &packet, const mavlink_message_t &msg) override;
-    MAV_RESULT handle_command_long_packet(const mavlink_command_long_t &packet, const mavlink_message_t &msg) override;
+    MAV_RESULT handle_command_int_packet(const mavlink_command_int_t &packet) override;
+    MAV_RESULT handle_command_long_packet(const mavlink_command_long_t &packet) override;
     MAV_RESULT handle_command_do_set_mission_current(const mavlink_command_long_t &packet) override;
 
     void send_position_target_global_int() override;
@@ -54,7 +52,7 @@ private:
     void handle_change_alt_request(AP_Mission::Mission_Command &cmd) override;
     MAV_RESULT handle_command_int_do_reposition(const mavlink_command_int_t &packet);
     MAV_RESULT handle_command_int_guided_slew_commands(const mavlink_command_int_t &packet);
-    MAV_RESULT handle_command_DO_CHANGE_SPEED(const mavlink_command_int_t &packet);
+
 
     bool try_send_message(enum ap_message id) override;
     void packetReceived(const mavlink_status_t &status, const mavlink_message_t &msg) override;

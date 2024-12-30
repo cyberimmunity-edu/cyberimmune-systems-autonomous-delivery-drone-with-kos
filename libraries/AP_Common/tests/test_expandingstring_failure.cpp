@@ -47,12 +47,11 @@ public:
     const size_t _size;
 
     uint32_t available() override { return 0; }
-    bool read(uint8_t &b) override { return false; }
+    int16_t read() override { return -1; }
     uint32_t txspace() override { return 0; }
     bool discard_input() override { return false; }
 };
 
-void print_vprintf(AP_HAL::BetterStream *s, const char *fmt, va_list ap);
 void print_vprintf(AP_HAL::BetterStream *s, const char *fmt, va_list ap) {
     BufferPrinter* p = static_cast<BufferPrinter*>(s);
     if (count < 2) {

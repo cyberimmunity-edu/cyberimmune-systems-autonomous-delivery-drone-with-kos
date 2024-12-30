@@ -29,24 +29,6 @@ bool Plane::auto_takeoff_check(void)
     }
 
     takeoff_state.last_check_ms = now;
-    
-    //check if waiting for rudder neutral after rudder arm
-    if (plane.arming.last_arm_method() == AP_Arming::Method::RUDDER &&
-        !seen_neutral_rudder) {
-        // we were armed with rudder but have not seen rudder neutral yet
-        takeoff_state.waiting_for_rudder_neutral = true;
-        // warn if we have been waiting a long time
-        if (now - takeoff_state.rudder_takeoff_warn_ms > TAKEOFF_RUDDER_WARNING_TIMEOUT) {
-            gcs().send_text(MAV_SEVERITY_WARNING, "Takeoff waiting for rudder release");
-            takeoff_state.rudder_takeoff_warn_ms = now;
-        }
-        // since we are still waiting, dont takeoff
-        return false;
-    } else {
-       // we did not arm by rudder or rudder has returned to neutral
-       // make sure we dont indicate we are in the waiting state with servo position indicator
-       takeoff_state.waiting_for_rudder_neutral = false;
-    }  
 
     // Check for bad GPS
     if (gps.status() < AP_GPS::GPS_OK_FIX_3D) {
@@ -54,7 +36,7 @@ bool Plane::auto_takeoff_check(void)
         return false;
     }
 
-    bool do_takeoff_attitude_check = !(flight_option_enabled(FlightOptions::DISABLE_TOFF_ATTITUDE_CHK));
+    bool do_takeoff_attitude_check = !(g2.flight_options & FlightOptions::DISABLE_TOFF_ATTITUDE_CHK);
 #if HAL_QUADPLANE_ENABLED
     // disable attitude check on tailsitters
     do_takeoff_attitude_check = !quadplane.tailsitter.enabled();
@@ -262,7 +244,7 @@ int16_t Plane::get_takeoff_pitch_min_cd(void)
  */
 int8_t Plane::takeoff_tail_hold(void)
 {
-    bool in_takeoff = ((plane.flight_stage == AP_FixedWing::FlightStage::TAKEOFF) ||
+    bool in_takeoff = ((control_mode == &mode_auto && !auto_state.takeoff_complete) ||
                        (control_mode == &mode_fbwa && auto_state.fbwa_tdrag_takeoff_mode));
     if (!in_takeoff) {
         // not in takeoff

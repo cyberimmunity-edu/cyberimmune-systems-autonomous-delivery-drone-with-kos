@@ -22,9 +22,6 @@
 
 extern const AP_HAL::HAL& hal;
 
-/* assert that const vals are float, not double. so 100.0 means 100.0f */
-static_assert(sizeof(1e6) == sizeof(float), "Compilation needs to use single-precision constants");
-
 /*
   Return true if value is between lower and upper bound inclusive.
   False otherwise.
@@ -77,16 +74,14 @@ bool hex_to_uint8(uint8_t a, uint8_t &res)
 /*
   strncpy without the warning for not leaving room for nul termination
  */
-size_t strncpy_noterm(char *dest, const char *src, size_t n)
+void strncpy_noterm(char *dest, const char *src, size_t n)
 {
     size_t len = strnlen(src, n);
-    size_t ret = len; // return value is length of src
     if (len < n) {
         // include nul term if it fits
         len++;
     }
     memcpy(dest, src, len);
-    return ret;
 }
 
 /**

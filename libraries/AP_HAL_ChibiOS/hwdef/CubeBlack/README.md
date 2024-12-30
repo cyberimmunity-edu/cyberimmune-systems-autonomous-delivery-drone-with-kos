@@ -1,8 +1,12 @@
 # CubeBlack Flight Controller
 
-The CubePilot CubeBlack flight controller is sold by a range of resellers
+The Hex CubeBlack flight controller is sold by a range of resellers
 listed on the
-[CubePilot website](http://cubepilot.org)
+[ProfiCNC website](http://www.proficnc.com/content/13-pixhawk2)
+
+The full schematics of the board are available here:
+
+  https://github.com/ArduPilot/Schematics/tree/master/ProfiCNC/The-Cube
 
 ## Features
 
@@ -21,7 +25,7 @@ listed on the
  - builtin RGB LED
  - external safety Switch
  - voltage monitoring for servo rail and Vcc
- - two dedicated power input ports for external power bricks
+ - dedicated power input port for external power brick
  - external USB connectors (micro USB and JST GH)
 
 ## Pinout
@@ -359,53 +363,6 @@ pin closest to the cube (pin 3).
    </tbody>
    </table>
 
-### FMU and IO SWD
-
-When the case is removed there are two SWD connectors, one for FMU and
-the other for IOMCU. The IO SWD connector is the one closer to the
-servo rail. The GND pin of both connectors is the one furthest from
-the servo rail.
-
-   <table border="1" class="docutils">
-   <tbody>
-   <tr>
-   <th>Pin</th>
-   <th>Signal</th>
-   <th>Volt</th>
-   </tr>
-   <tr>
-   <td>1</td>
-   <td>VCC</td>
-   <td>+5V</td>
-   </tr>
-   <tr>
-   <td>2</td>
-   <td>TX</td>
-   <td>+3.3</td>
-   </tr>
-   <tr>
-   <td>3</td>
-   <td>RX</td>
-   <td>+3.3</td>
-   </tr>
-   <tr>
-   <td>4</td>
-   <td>SWDIO</td>
-   <td>+3.3</td>
-   </tr>
-   <tr>
-   <td>5</td>
-   <td>SWCLK</td>
-   <td>+3.3</td>
-   </tr>
-   <tr>
-   <td>6</td>
-   <td>GND</td>
-   <td>GND</td>
-   </tr>
-   </tbody>
-   </table>
-
 
 ### CAN1&2
 
@@ -595,9 +552,9 @@ The CubeBlack has 7 analog inputs
 
  - ADC Pin2 -> Battery Voltage
  - ADC Pin3 -> Battery Current Sensor
- - ADC Pin13 -> Battery2 Voltage
- - ADC Pin14 -> Battery2 Current Sensor
  - ADC Pin4 -> Vdd 5V supply sense
+ - ADC Pin13 -> ADC 3.3V Port pin1
+ - ADC Pin14 -> ADC 3.3V Port pin2
  - ADC Pin15 -> ADC 6.6V port
  - ADC Pin103 -> RSSI voltage monitoring
 
@@ -614,4 +571,4 @@ compatible ground station.
 
 ## Acknowledgements
 
-Thanks to [CubePilot](http://cubepilot.org) for images
+Thanks to [ProfiCNC](http://proficnc.com) for images

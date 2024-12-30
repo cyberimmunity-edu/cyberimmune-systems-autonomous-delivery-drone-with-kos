@@ -52,8 +52,8 @@ void GCS_MAVLINK_Blimp::send_position_target_global_int()
     }
     static constexpr uint16_t POSITION_TARGET_TYPEMASK_LAST_BYTE = 0xF000;
     static constexpr uint16_t TYPE_MASK = POSITION_TARGET_TYPEMASK_VX_IGNORE | POSITION_TARGET_TYPEMASK_VY_IGNORE | POSITION_TARGET_TYPEMASK_VZ_IGNORE |
-                                          POSITION_TARGET_TYPEMASK_AX_IGNORE | POSITION_TARGET_TYPEMASK_AY_IGNORE | POSITION_TARGET_TYPEMASK_AZ_IGNORE |
-                                          POSITION_TARGET_TYPEMASK_YAW_IGNORE | POSITION_TARGET_TYPEMASK_YAW_RATE_IGNORE | POSITION_TARGET_TYPEMASK_LAST_BYTE;
+            POSITION_TARGET_TYPEMASK_AX_IGNORE | POSITION_TARGET_TYPEMASK_AY_IGNORE | POSITION_TARGET_TYPEMASK_AZ_IGNORE |
+            POSITION_TARGET_TYPEMASK_YAW_IGNORE | POSITION_TARGET_TYPEMASK_YAW_RATE_IGNORE | POSITION_TARGET_TYPEMASK_LAST_BYTE;
 
     mavlink_msg_position_target_global_int_send(
         chan,
@@ -102,11 +102,11 @@ int16_t GCS_MAVLINK_Blimp::vfr_hud_throttle() const
  */
 void GCS_MAVLINK_Blimp::send_pid_tuning()
 {
-    if (blimp.control_mode == Mode::Number::MANUAL || blimp.control_mode == Mode::Number::LAND) {
+    if(blimp.control_mode == Mode::Number::MANUAL || blimp.control_mode == Mode::Number::LAND) {
         //No PIDs are used in Manual or Land mode.
         return;
     }
-
+    
     static const int8_t axes[] = {
         PID_SEND::VELX,
         PID_SEND::VELY,
@@ -466,17 +466,30 @@ MAV_RESULT GCS_MAVLINK_Blimp::handle_command_int_do_reposition(const mavlink_com
     return MAV_RESULT_ACCEPTED;
 }
 
-MAV_RESULT GCS_MAVLINK_Blimp::handle_command_int_packet(const mavlink_command_int_t &packet, const mavlink_message_t &msg)
+MAV_RESULT GCS_MAVLINK_Blimp::handle_command_int_packet(const mavlink_command_int_t &packet)
 {
     switch (packet.command) {
+    case MAV_CMD_DO_FOLLOW:
+        return MAV_RESULT_UNSUPPORTED;
+
     case MAV_CMD_DO_REPOSITION:
         return handle_command_int_do_reposition(packet);
     default:
-        return GCS_MAVLINK::handle_command_int_packet(packet, msg);
+        return GCS_MAVLINK::handle_command_int_packet(packet);
     }
 }
 
-MAV_RESULT GCS_MAVLINK_Blimp::handle_command_long_packet(const mavlink_command_long_t &packet, const mavlink_message_t &msg)
+MAV_RESULT GCS_MAVLINK_Blimp::handle_command_mount(const mavlink_command_long_t &packet)
+{
+    // if the mount doesn't do pan control then yaw the entire vehicle instead:
+    switch (packet.command) {
+    default:
+        break;
+    }
+    return GCS_MAVLINK::handle_command_mount(packet);
+}
+
+MAV_RESULT GCS_MAVLINK_Blimp::handle_command_long_packet(const mavlink_command_long_t &packet)
 {
     switch (packet.command) {
 
@@ -502,7 +515,7 @@ MAV_RESULT GCS_MAVLINK_Blimp::handle_command_long_packet(const mavlink_command_l
         return MAV_RESULT_FAILED;
 
     default:
-        return GCS_MAVLINK::handle_command_long_packet(packet, msg);
+        return GCS_MAVLINK::handle_command_long_packet(packet);
     }
 }
 

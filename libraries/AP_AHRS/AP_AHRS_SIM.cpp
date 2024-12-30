@@ -80,7 +80,7 @@ Vector2f AP_AHRS_SIM::groundspeed_vector(void)
     return Vector2f(fdm.speedN, fdm.speedE);
 }
 
-bool AP_AHRS_SIM::get_vert_pos_rate_D(float &velocity) const
+bool AP_AHRS_SIM::get_vert_pos_rate(float &velocity) const
 {
     if (_sitl == nullptr) {
         return false;
@@ -181,7 +181,6 @@ bool AP_AHRS_SIM::get_mag_offsets(uint8_t mag_idx, Vector3f &magOffsets) const
 
 void AP_AHRS_SIM::send_ekf_status_report(GCS_MAVLINK &link) const
 {
-#if HAL_GCS_ENABLED
     // send status report with everything looking good
     const uint16_t flags =
         EKF_ATTITUDE | /* Set if EKF's attitude estimate is good. | */
@@ -195,7 +194,6 @@ void AP_AHRS_SIM::send_ekf_status_report(GCS_MAVLINK &link) const
         EKF_PRED_POS_HORIZ_REL | /* Set if EKF's predicted horizontal position (relative) estimate is good. | */
         EKF_PRED_POS_HORIZ_ABS; /* Set if EKF's predicted horizontal position (absolute) estimate is good. | */
     mavlink_msg_ekf_status_report_send(link.get_chan(), flags, 0, 0, 0, 0, 0, 0);
-#endif // HAL_GCS_ENABLED
 }
 
 bool AP_AHRS_SIM::get_origin(Location &ret) const

@@ -63,7 +63,7 @@ TEST(Location, LatLngWrapping)
         int32_t expected_lat;
         int32_t expected_lng;
     } tests[] {
-        {519634000, 1797560000, Vector2f{0, 100000}, 519634000, -1787860777}
+        {519634000, 1797560000, Vector2f{0, 100000}, 519634000, -1787860775}
     };
 
     for (auto &test : tests) {
@@ -98,7 +98,7 @@ TEST(Location, LocOffsetDouble)
                -353632620, 1491652373,
                Vector2d{4682795.4576701336, 5953662.7673837934},
                Vector2d{4682797.1904749088, 5953664.1586009059},
-               Vector2d{1.7365739,1.4261966},
+               Vector2d{1.7365739867091179,1.2050807},
     };
 
     for (auto &test : tests) {
@@ -111,19 +111,6 @@ TEST(Location, LocOffsetDouble)
         EXPECT_FLOAT_EQ(diff.x, test.expected_pos_change.x);
         EXPECT_FLOAT_EQ(diff.y, test.expected_pos_change.y);
     }
-}
-
-TEST(Location, LocOffset3DDouble)
-{
-    Location loc {
-        -353632620, 1491652373, 60000, Location::AltFrame::ABSOLUTE
-    };
-    // this is ned, so our latitude should change, and our new
-    // location should be above the original:
-    loc.offset(Vector3d{1000, 0, -10});
-    EXPECT_EQ(loc.lat, -353542788);
-    EXPECT_EQ(loc.lng, 1491652373);
-    EXPECT_EQ(loc.alt, 61000);
 }
 
 TEST(Location, Tests)
@@ -295,10 +282,8 @@ TEST(Location, Distance)
     EXPECT_VECTOR2F_EQ(Vector3f(0, 0, 0), test_home.get_distance_NED(test_home));
     EXPECT_VECTOR2F_EQ(Vector3f(-11.131885, 0, 0), test_home.get_distance_NED(test_home2));
     Location test_loc = test_home;
-    test_loc.offset(-11.131886, 0);
-    EXPECT_TRUE(test_loc.same_latlon_as(test_home2));
-    test_loc = test_home;
     test_loc.offset(-11.131885, 0);
+    EXPECT_TRUE(test_loc.same_latlon_as(test_home2));
     test_loc.offset_bearing(0, 11.131885);
     EXPECT_TRUE(test_loc.same_latlon_as(test_home));
 

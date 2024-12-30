@@ -32,9 +32,6 @@ bool Mode::enter()
 
     // cancel inverted flight
     plane.auto_state.inverted_flight = false;
-    
-    // cancel waiting for rudder neutral
-    plane.takeoff_state.waiting_for_rudder_neutral = false;
 
     // don't cross-track when starting a mission
     plane.auto_state.next_wp_crosstrack = false;
@@ -89,12 +86,13 @@ bool Mode::enter()
 
     // initialize speed variable used in AUTO and GUIDED for DO_CHANGE_SPEED commands
     plane.new_airspeed_cm = -1;
-    
-    // clear postponed long failsafe if mode change (from GCS) occurs before recall of long failsafe
-    plane.long_failsafe_pending = false;
 
 #if HAL_QUADPLANE_ENABLED
     quadplane.mode_enter();
+#endif
+
+#if AP_TERRAIN_AVAILABLE
+    plane.target_altitude.terrain_following_pending = false;
 #endif
 
     bool enter_result = _enter();
@@ -203,41 +201,4 @@ bool Mode::_pre_arm_checks(size_t buflen, char *buffer) const
     }
 #endif
     return true;
-}
-
-void Mode::run()
-{
-    // Direct stick mixing functionality has been removed, so as not to remove all stick mixing from the user completely
-    // the old direct option is now used to enable fbw mixing, this is easier than doing a param conversion.
-    if ((plane.g.stick_mixing == StickMixing::FBW) || (plane.g.stick_mixing == StickMixing::DIRECT_REMOVED)) {
-        plane.stabilize_stick_mixing_fbw();
-    }
-    plane.stabilize_roll();
-    plane.stabilize_pitch();
-    plane.stabilize_yaw();
-}
-
-// Reset rate and steering controllers
-void Mode::reset_controllers()
-{
-    // reset integrators
-    plane.rollController.reset_I();
-    plane.pitchController.reset_I();
-    plane.yawController.reset_I();
-
-    // reset steering controls
-    plane.steer_state.locked_course = false;
-    plane.steer_state.locked_course_err = 0;
-}
-
-bool Mode::is_taking_off() const
-{
-    return (plane.flight_stage == AP_FixedWing::FlightStage::TAKEOFF);
-}
-
-// Helper to output to both k_rudder and k_steering servo functions
-void Mode::output_rudder_and_steering(float val)
-{
-    SRV_Channels::set_output_scaled(SRV_Channel::k_rudder, val);
-    SRV_Channels::set_output_scaled(SRV_Channel::k_steering, val);
 }

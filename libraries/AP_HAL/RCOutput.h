@@ -139,15 +139,17 @@ public:
       microseconds, and represent minimum and maximum PWM values which
       will be used to convert channel writes into a percentage
      */
-    void set_esc_scaling(uint16_t min_pwm, uint16_t max_pwm) {
-        _esc_pwm_min = min_pwm;
-        _esc_pwm_max = max_pwm;
-    }
+    virtual void     set_esc_scaling(uint16_t min_pwm, uint16_t max_pwm) {}
 
+    /*
+      return ESC scaling value from set_esc_scaling()
+     */
+    virtual bool     get_esc_scaling(uint16_t &min_pwm, uint16_t &max_pwm) { return false; }
+    
     /*
       returns the pwm value scaled to [-1;1] regrading to set_esc_scaling ranges range without constraints.
      */
-    float scale_esc_to_unity(uint16_t pwm) const;
+    virtual float    scale_esc_to_unity(uint16_t pwm) { return 0; }
 
     /*
       return the erpm and error rate for a channel if available
@@ -245,8 +247,6 @@ public:
       DSHOT_3D_OFF = 9,
       DSHOT_3D_ON = 10,
       DSHOT_SAVE = 12,
-      DSHOT_EXTENDED_TELEMETRY_ENABLE = 13,
-      DSHOT_EXTENDED_TELEMETRY_DISABLE = 14,
       DSHOT_NORMAL = 20,
       DSHOT_REVERSE = 21,
       // The following options are only available on BLHeli32
@@ -265,18 +265,10 @@ public:
     enum DshotEscType {
       DSHOT_ESC_NONE = 0,
       DSHOT_ESC_BLHELI = 1,
-      DSHOT_ESC_BLHELI_S = 2,
-      DSHOT_ESC_BLHELI_EDT = 3,
-      DSHOT_ESC_BLHELI_EDT_S = 4
+      DSHOT_ESC_BLHELI_S = 2
     };
 
     virtual void    set_output_mode(uint32_t mask, enum output_mode mode) {}
-
-    virtual enum output_mode get_output_mode(uint32_t& mask) {
-      mask = 0;
-      return MODE_PWM_NORMAL;
-    }
-
 
     /*
      * get output mode banner to inform user of how outputs are configured
@@ -316,12 +308,6 @@ public:
     virtual void set_dshot_rate(uint8_t dshot_rate, uint16_t loop_rate_hz) {}
 
     /*
-      Set the dshot period in us, only for use by the IOMCU
-     */
-    virtual void set_dshot_period(uint32_t period_us, uint8_t dshot_rate) {}
-    virtual uint32_t get_dshot_period_us() const { return 0; }
-
-    /*
       Set the dshot ESC type
      */
     virtual void set_dshot_esc_type(DshotEscType esc_type) {}
@@ -350,12 +336,12 @@ public:
       setup serial led output data for a given output channel
       and led number. A led number of -1 means all LEDs. LED 0 is the first LED
      */
-    virtual void set_serial_led_rgb_data(const uint16_t chan, int8_t led, uint8_t red, uint8_t green, uint8_t blue) {}
-    
+    virtual bool set_serial_led_rgb_data(const uint16_t chan, int8_t led, uint8_t red, uint8_t green, uint8_t blue) { return false; }
+
     /*
       trigger send of serial led
      */
-    virtual void serial_led_send(const uint16_t chan) {}
+    virtual bool serial_led_send(const uint16_t chan) { return false; }
 
     virtual void timer_info(ExpandingString &str) {}
 
@@ -382,7 +368,7 @@ public:
      * Options are (ticks, percentage):
      * 20/7/14, 35/70
      * 11/4/8, 36/72
-     * 8/3/6, 37/75 <-- this is the preferred duty cycle and has some support on the interwebs
+     * 8/3/6, 37/75
      */
     // bitwidths: 8/3/6 == 37%/75%
     static constexpr uint32_t DSHOT_BIT_WIDTH_TICKS_DEFAULT = 8;
@@ -404,6 +390,7 @@ public:
     // neopixel does not use pulse widths at all
     static constexpr uint32_t PROFI_BIT_0_TICKS = 7;
     static constexpr uint32_t PROFI_BIT_1_TICKS = 14;
+    static constexpr uint32_t PROFI_BIT_WIDTH_TICKS = 20;
 
     // suitably long LED output period to support high LED counts
     static constexpr uint32_t LED_OUTPUT_PERIOD_US = 10000;
@@ -413,7 +400,4 @@ protected:
     // helper functions for implementation of get_output_mode_banner
     void append_to_banner(char banner_msg[], uint8_t banner_msg_len, output_mode out_mode, uint8_t low_ch, uint8_t high_ch) const;
     const char* get_output_mode_string(enum output_mode out_mode) const;
-
-    uint16_t _esc_pwm_min;
-    uint16_t _esc_pwm_max;
 };

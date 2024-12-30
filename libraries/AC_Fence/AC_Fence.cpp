@@ -52,8 +52,8 @@ const AP_Param::GroupInfo AC_Fence::var_info[] = {
     // @Param: TYPE
     // @DisplayName: Fence Type
     // @Description: Enabled fence types held as bitmask
-    // @Bitmask{Rover}: 1:Circle Centered on Home,2:Inclusion/Exclusion Circles+Polygons
-    // @Bitmask{Copter, Plane, Sub}: 0:Max altitude,1:Circle Centered on Home,2:Inclusion/Exclusion Circles+Polygons,3:Min altitude
+    // @Bitmask{Rover}: 1:Circle,2:Polygon
+    // @Bitmask{Copter, Plane, Sub}: 0:Max altitude,1:Circle,2:Polygon,3:Min altitude
     // @User: Standard
     AP_GROUPINFO("TYPE",        1,  AC_Fence,   _enabled_fences,  AC_FENCE_TYPE_DEFAULT),
 
@@ -137,8 +137,8 @@ const AP_Param::GroupInfo AC_Fence::var_info[] = {
 
     // @Param{Plane}: OPTIONS
     // @DisplayName: Fence options
-    // @Description: 0:Disable mode change following fence action until fence breach is cleared. When bit 1 is set the allowable flight areas is the union of all polygon and circle fence areas instead of the intersection, which means a fence breach occurs only if you are outside all of the fence areas.
-    // @Bitmask: 0:Disable mode change following fence action until fence breach is cleared, 1:Allow union of inclusion areas
+    // @Description: 0:Disable mode change following fence action until fence breach is cleared
+    // @Bitmask: 0:Disable mode change following fence action until fence breach is cleared
     // @User: Standard
     AP_GROUPINFO_FRAME("OPTIONS", 11, AC_Fence, _options, static_cast<uint16_t>(OPTIONS::DISABLE_MODE_CHANGE), AP_PARAM_FRAME_PLANE),
 
@@ -638,7 +638,7 @@ void AC_Fence::record_breach(uint8_t fence_type)
         // emit a message indicated we're newly-breached, but not too often
         if (now - _last_breach_notify_sent_ms > 1000) {
             _last_breach_notify_sent_ms = now;
-            GCS_SEND_MESSAGE(MSG_FENCE_STATUS);
+            gcs().send_message(MSG_FENCE_STATUS);
         }
     }
 

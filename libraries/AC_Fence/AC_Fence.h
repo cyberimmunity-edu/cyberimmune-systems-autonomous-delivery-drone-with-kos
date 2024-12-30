@@ -32,7 +32,6 @@
 class AC_Fence
 {
 public:
-    friend class AC_PolyFence_loader;
 
     enum class AutoEnable
     {
@@ -147,14 +146,10 @@ public:
     const AC_PolyFence_loader &polyfence() const;
 
     enum class OPTIONS {
-        DISABLE_MODE_CHANGE = 1U << 0,
-        INCLUSION_UNION = 1U << 1,
+        DISABLE_MODE_CHANGE = 1 << 0,
     };
-    static bool option_enabled(OPTIONS opt, const AP_Int16 &options) {
-        return (options.get() & int16_t(opt)) != 0;
-    }
     bool option_enabled(OPTIONS opt) const {
-        return option_enabled(opt, _options);
+        return (_options.get() & int16_t(opt)) != 0;
     }
 
     static const struct AP_Param::GroupInfo var_info[];
@@ -224,7 +219,7 @@ private:
     uint32_t        _manual_recovery_start_ms;  // system time in milliseconds that pilot re-took manual control
 
 
-    AC_PolyFence_loader _poly_loader{_total, _options}; // polygon fence
+    AC_PolyFence_loader _poly_loader{_total}; // polygon fence
 };
 
 namespace AP {

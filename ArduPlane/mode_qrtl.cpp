@@ -17,7 +17,8 @@ bool ModeQRTL::_enter()
     int32_t RTL_alt_abs_cm = plane.home.alt + quadplane.qrtl_alt*100UL;
     if (quadplane.motors->get_desired_spool_state() == AP_Motors::DesiredSpoolState::THROTTLE_UNLIMITED) {
         // VTOL motors are active, either in VTOL flight or assisted flight
-        Location destination = plane.calc_best_rally_or_home_location(plane.current_loc, RTL_alt_abs_cm);
+        Location destination = plane.rally.calc_best_rally_or_home_location(plane.current_loc, RTL_alt_abs_cm);
+
         const float dist = plane.current_loc.get_distance(destination);
         const float radius = get_VTOL_return_radius();
 
@@ -86,13 +87,6 @@ void ModeQRTL::update()
  */
 void ModeQRTL::run()
 {
-    const uint32_t now = AP_HAL::millis();
-    if (quadplane.tailsitter.in_vtol_transition(now)) {
-        // Tailsitters in FW pull up phase of VTOL transition run FW controllers
-        Mode::run();
-        return;
-    }
-
     switch (submode) {
         case SubMode::climb: {
             // request zero velocity
@@ -128,7 +122,7 @@ void ModeQRTL::run()
                 plane.prev_WP_loc = plane.current_loc;
 
                 int32_t RTL_alt_abs_cm = plane.home.alt + quadplane.qrtl_alt*100UL;
-                Location destination = plane.calc_best_rally_or_home_location(plane.current_loc, RTL_alt_abs_cm);
+                Location destination = plane.rally.calc_best_rally_or_home_location(plane.current_loc, RTL_alt_abs_cm);
                 const float dist = plane.current_loc.get_distance(destination);
                 const float radius = get_VTOL_return_radius();
                 if (dist < radius) {
@@ -172,10 +166,6 @@ void ModeQRTL::run()
             break;
         }
     }
-
-    // Stabilize with fixed wing surfaces
-    plane.stabilize_roll();
-    plane.stabilize_pitch();
 }
 
 /*
@@ -195,7 +185,7 @@ void ModeQRTL::update_target_altitude()
       initially approach at RTL_ALT_CM, then drop down to QRTL_ALT based on maximum sink rate from TECS,
       giving time to lose speed before we transition
      */
-    const float radius = MAX(fabsf(float(plane.aparm.loiter_radius)), fabsf(float(plane.g.rtl_radius)));
+    const float radius = MAX(fabsf(plane.aparm.loiter_radius), fabsf(plane.g.rtl_radius));
     const float rtl_alt_delta = MAX(0, plane.g.RTL_altitude_cm*0.01 - plane.quadplane.qrtl_alt);
     const float sink_time = rtl_alt_delta / MAX(0.6*plane.TECS_controller.get_max_sinkrate(), 1);
     const float sink_dist = plane.aparm.airspeed_cruise_cm * 0.01 * sink_time;
@@ -220,7 +210,7 @@ bool ModeQRTL::allows_throttle_nudging() const
 // Return the radius from destination at which pure VTOL flight should be used, no transition to FW
 float ModeQRTL::get_VTOL_return_radius() const
 {
-    return MAX(fabsf(float(plane.aparm.loiter_radius)), fabsf(float(plane.g.rtl_radius))) * 1.5;
+    return MAX(fabsf(plane.aparm.loiter_radius), fabsf(plane.g.rtl_radius)) * 1.5;
 }
 
 #endif

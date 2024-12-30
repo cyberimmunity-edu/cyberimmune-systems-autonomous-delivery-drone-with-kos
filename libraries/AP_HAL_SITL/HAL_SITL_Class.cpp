@@ -29,7 +29,6 @@
 #include <AP_HAL_Empty/AP_HAL_Empty_Private.h>
 #include <AP_InternalError/AP_InternalError.h>
 #include <AP_Logger/AP_Logger.h>
-#include <AP_RCProtocol/AP_RCProtocol_config.h>
 
 using namespace HALSITL;
 
@@ -38,13 +37,15 @@ HAL_SITL& hal_sitl = (HAL_SITL&)AP_HAL::get_HAL();
 static Storage sitlStorage;
 static SITL_State sitlState;
 static Scheduler sitlScheduler(&sitlState);
-#if AP_RCPROTOCOL_ENABLED
-static RCInput sitlRCInput(&sitlState);
-#else
-static Empty::RCInput  sitlRCInput;
-#endif
+#if !defined(HAL_BUILD_AP_PERIPH)
+static RCInput  sitlRCInput(&sitlState);
 static RCOutput sitlRCOutput(&sitlState);
 static GPIO sitlGPIO(&sitlState);
+#else
+static Empty::RCInput  sitlRCInput;
+static Empty::RCOutput sitlRCOutput;
+static Empty::GPIO sitlGPIO;
+#endif
 static AnalogIn sitlAnalogIn(&sitlState);
 static DSP dspDriver;
 
@@ -77,7 +78,7 @@ static Util utilInstance(&sitlState);
 static HALSITL::CANIface* canDrivers[HAL_NUM_CAN_IFACES];
 #endif
 
-static Empty::WSPIDeviceManager wspi_mgr_instance;
+static Empty::QSPIDeviceManager qspi_mgr_instance;
 
 HAL_SITL::HAL_SITL() :
     AP_HAL::HAL(
@@ -93,7 +94,7 @@ HAL_SITL::HAL_SITL() :
         &sitlUart9Driver,   /* uartJ */
         &i2c_mgr_instance,
         &spi_mgr_instance,  /* spi */
-        &wspi_mgr_instance,
+        &qspi_mgr_instance,
         &sitlAnalogIn,      /* analogin */
         &sitlStorage, /* storage */
         &sitlUart0Driver,   /* console */

@@ -14,7 +14,6 @@
  */
 #pragma once
 #include <AP_Param/AP_Param.h>
-#include "AP_RPM_config.h"
 
 class AP_RPM_Params {
 
@@ -30,9 +29,6 @@ public:
     AP_Float minimum;
     AP_Float quality_min;
     AP_Int32 esc_mask;
-#if AP_RPM_ESC_TELEM_OUTBOUND_ENABLED
-    AP_Int8  esc_telem_outbound_index;
-#endif
 
     static const struct AP_Param::GroupInfo var_info[];
 

@@ -13,22 +13,21 @@
    along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "AP_VisualOdom_config.h"
-
-#if AP_VISUALODOM_INTELT265_ENABLED
-
 #include "AP_VisualOdom_IntelT265.h"
+
+#if HAL_VISUALODOM_ENABLED
 
 #include <AP_HAL/AP_HAL.h>
 #include <AP_AHRS/AP_AHRS.h>
 #include <GCS_MAVLink/GCS.h>
+#include <AP_Logger/AP_Logger.h>
 
 #define VISUALODOM_RESET_IGNORE_DURATION_MS 1000    // sensor data is ignored for 1sec after a position reset
 
 extern const AP_HAL::HAL& hal;
 
-// consume vision pose estimate data and send to EKF. distances in meters
-void AP_VisualOdom_IntelT265::handle_pose_estimate(uint64_t remote_time_us, uint32_t time_ms, float x, float y, float z, const Quaternion &attitude, float posErr, float angErr, uint8_t reset_counter)
+// consume vision position estimate data and send to EKF. distances in meters
+void AP_VisualOdom_IntelT265::handle_vision_position_estimate(uint64_t remote_time_us, uint32_t time_ms, float x, float y, float z, const Quaternion &attitude, float posErr, float angErr, uint8_t reset_counter)
 {
     const float scale_factor = _frontend.get_pos_scale();
     Vector3f pos{x * scale_factor, y * scale_factor, z * scale_factor};
@@ -345,4 +344,4 @@ void AP_VisualOdom_IntelT265::handle_voxl_camera_reset_jump(const Vector3f &sens
     _voxl_reset_counter_last = reset_counter;
 }
 
-#endif  // AP_VISUALODOM_INTELT265_ENABLED
+#endif

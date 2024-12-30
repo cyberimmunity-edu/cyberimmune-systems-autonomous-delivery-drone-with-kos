@@ -49,6 +49,22 @@ Location::Location(const Vector3f &ekf_offset_neu, AltFrame frame)
     }
 }
 
+Location::Location(const Vector3d &ekf_offset_neu, AltFrame frame)
+{
+    zero();
+
+    // store alt and alt frame
+    set_alt_cm(ekf_offset_neu.z, frame);
+
+    // calculate lat, lon
+    Location ekf_origin;
+    if (AP::ahrs().get_origin(ekf_origin)) {
+        lat = ekf_origin.lat;
+        lng = ekf_origin.lng;
+        offset(ekf_offset_neu.x * 0.01, ekf_offset_neu.y * 0.01);
+    }
+}
+
 void Location::set_alt_cm(int32_t alt_cm, AltFrame frame)
 {
     alt = alt_cm;
@@ -290,14 +306,6 @@ void Location::offset(ftype ofs_north, ftype ofs_east)
     offset_latlng(lat, lng, ofs_north, ofs_east);
 }
 
-// extrapolate latitude/longitude given distances (in meters) north
-// and east. Note that this is metres, *even for the altitude*.
-void Location::offset(const Vector3p &ofs_ned)
-{
-    offset_latlng(lat, lng, ofs_ned.x, ofs_ned.y);
-    alt += -ofs_ned.z * 100;  // m -> cm
-}
-
 /*
  *  extrapolate latitude/longitude given bearing and distance
  * Note that this function is accurate to about 1mm at a distance of
@@ -383,20 +391,6 @@ ftype Location::get_bearing(const Location &loc2) const
 bool Location::same_latlon_as(const Location &loc2) const
 {
     return (lat == loc2.lat) && (lng == loc2.lng);
-}
-
-bool Location::same_alt_as(const Location &loc2) const
-{
-    // fast path if the altitude frame is the same
-    if (this->get_alt_frame() == loc2.get_alt_frame()) {
-        return this->alt == loc2.alt;
-    }
-
-    ftype alt_diff;
-    bool have_diff = this->get_alt_distance(loc2, alt_diff);
-
-    const ftype tolerance = FLT_EPSILON;
-    return have_diff && (fabsF(alt_diff) < tolerance);
 }
 
 // return true when lat and lng are within range

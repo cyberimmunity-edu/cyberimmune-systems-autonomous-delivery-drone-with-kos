@@ -86,11 +86,8 @@ AP_GPS_NOVA::read(void)
     }
 
     bool ret = false;
-    for (uint16_t i=0; i<8192; i++) {
-        uint8_t temp;
-        if (!port->read(temp)) {
-            break;
-        }
+    while (port->available() > 0) {
+        uint8_t temp = port->read();
 #if AP_GPS_DEBUG_LOGGING_ENABLED
         log_data(&temp, 1);
 #endif
@@ -208,9 +205,9 @@ AP_GPS_NOVA::process_message(void)
 
         state.location.lat = (int32_t) (bestposu.lat * (double)1e7);
         state.location.lng = (int32_t) (bestposu.lng * (double)1e7);
-        state.location.alt = (int32_t) (bestposu.hgt * 100);
         state.have_undulation = true;
         state.undulation = bestposu.undulation;
+        set_alt_amsl_cm(state, bestposu.hgt * 100);
 
         state.num_sats = bestposu.svsused;
 

@@ -1,6 +1,11 @@
 #pragma once
 
-#include "AP_Airspeed_config.h"
+#include <AP_HAL/AP_HAL_Boards.h>
+
+// note additional vehicle restrictions are made in the .cpp file!
+#ifndef AP_AIRSPEED_NMEA_ENABLED
+#define AP_AIRSPEED_NMEA_ENABLED AP_AIRSPEED_BACKEND_DEFAULT_ENABLED
+#endif
 
 #if AP_AIRSPEED_NMEA_ENABLED
 
@@ -10,8 +15,7 @@
 class AP_Airspeed_NMEA : public AP_Airspeed_Backend
 {
 public:
-
-    using AP_Airspeed_Backend::AP_Airspeed_Backend;
+    AP_Airspeed_NMEA(AP_Airspeed &frontend, uint8_t _instance);
 
     // probe and initialise the sensor
     bool init(void) override;

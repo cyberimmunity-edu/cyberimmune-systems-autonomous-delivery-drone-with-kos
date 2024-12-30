@@ -34,9 +34,6 @@ public:
     void set_current(float current_amps);
     float get_voltage(void) const;
 
-    // return battery temperature in Kelvin:
-    float get_temperature(void) const { return temperature.kelvin; }
-
 private:
     float capacity_Ah;
     float resistance;
@@ -44,11 +41,6 @@ private:
     float voltage_set;
     float remaining_Ah;
     uint64_t last_us;
-
-    struct {
-        float kelvin = 273;
-        uint64_t last_update_micros;
-    } temperature;
 
     // 10Hz filter for battery voltage
     LowPassFilterFloat voltage_filter{10};

@@ -5,11 +5,7 @@
 
 # Compiler options here.
 ifeq ($(USE_OPT),)
-  USE_OPT = -fomit-frame-pointer -falign-functions=16
-endif
-
-ifeq ($(ENABLE_DEBUG_SYMBOLS), yes)
-  USE_OPT += -g
+  USE_OPT = -g -fomit-frame-pointer -falign-functions=16
 endif
 
 # C specific options here (added to USE_OPT).
@@ -68,10 +64,6 @@ ifeq ($(USE_FATFS),yes)
 include $(CHIBIOS)/os/various/fatfs_bindings/fatfs.mk
 endif
 
-ifeq ($(USE_LWIP),yes)
-include $(CHIBIOS)/os/various/lwip_bindings/lwip.mk
-endif
-
 #
 # Build global options
 ##############################################################################
@@ -117,7 +109,7 @@ include $(CHIBIOS)/$(CHIBIOS_PLATFORM_MK)
 include $(CHIBIOS)/os/hal/osal/rt-nil/osal.mk
 # RTOS files (optional).
 include $(CHIBIOS)/os/rt/rt.mk
-include $(CHIBIOS)/os/common/ports/ARMv7-M/compilers/GCC/mk/port.mk
+include $(CHIBIOS)/os/common/ports/ARMCMx/compilers/GCC/mk/port_v7m.mk
 # Other files (optional).
 #include $(CHIBIOS)/test/rt/test.mk
 include $(CHIBIOS)/os/hal/lib/streams/streams.mk
@@ -143,15 +135,6 @@ CSRC += $(HWDEF)/common/stubs.c \
        $(HWDEF)/common/stm32_util.c \
        $(HWDEF)/common/bouncebuffer.c \
        $(HWDEF)/common/watchdog.c
-
-ifeq ($(USE_USB_MSD),yes)
-CSRC += $(CHIBIOS)/os/various/scsi_bindings/lib_scsi.c \
-        $(CHIBIOS)/os/hal/src/hal_usb_msd.c
-endif
-
-ifeq ($(USE_LWIP),yes)
-CSRC += $(CHIBIOS)/os/various/evtimer.c
-endif
 
 #	   $(TESTSRC) \
 #	   test.c
@@ -196,11 +179,6 @@ INCDIR = $(CHIBIOS)/os/license \
 ifneq ($(CRASHCATCHER),)
 INCDIR += $(CRASHCATCHER)/include
 endif
-
-ifeq ($(USE_USB_MSD),yes)
-INCDIR += $(CHIBIOS)/os/various/scsi_bindings
-endif
-
 #
 # Project, sources and paths
 ##############################################################################

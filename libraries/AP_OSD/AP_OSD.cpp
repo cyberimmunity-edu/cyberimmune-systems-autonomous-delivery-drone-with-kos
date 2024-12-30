@@ -232,15 +232,6 @@ const AP_Param::GroupInfo AP_OSD::var_info[] = {
     AP_SUBGROUPINFO2(screen[2], "3_", 29, AP_OSD, AP_OSD_Screen),
     AP_SUBGROUPINFO2(screen[3], "4_", 30, AP_OSD, AP_OSD_Screen),
 #endif
-
-    // @Param: _TYPE2
-    // @DisplayName: OSD type 2
-    // @Description: OSD type 2. TXONLY makes the OSD parameter selection available to other modules even if there is no native OSD support on the board, for instance CRSF.
-    // @Values: 0:None,1:MAX7456,2:SITL,3:MSP,4:TXONLY,5:MSP_DISPLAYPORT
-    // @User: Standard
-    // @RebootRequired: True
-    AP_GROUPINFO("_TYPE2", 32, AP_OSD, osd_type2, 0),
-
     AP_GROUPEND
 };
 
@@ -272,29 +263,7 @@ AP_OSD::AP_OSD()
 
 void AP_OSD::init()
 {
-    const AP_OSD::osd_types types[OSD_MAX_INSTANCES] = {
-        osd_types(osd_type.get()),
-        osd_types(osd_type2.get())
-    };
-    for (uint8_t instance = 0; instance < OSD_MAX_INSTANCES; instance++) {
-        if (init_backend(types[instance], instance)) {
-            _backend_count++;
-        }
-    }
-    if (_backend_count > 0) {
-        hal.scheduler->thread_create(FUNCTOR_BIND_MEMBER(&AP_OSD::osd_thread, void), "OSD", 1280, AP_HAL::Scheduler::PRIORITY_IO, 1);
-    }
-}
-
-bool AP_OSD::init_backend(const AP_OSD::osd_types type, const uint8_t instance)
-{
-    // check if we can run this backend instance in parallel with backend instance 0
-    if (instance > 0) {
-        if (_backends[0] && !_backends[0]->is_compatible_with_backend_type(type)) {
-            return false;
-        }
-    }
-    switch (type) {
+    switch (osd_types(osd_type.get())) {
     case OSD_NONE:
     case OSD_TXONLY:
     default:
@@ -307,9 +276,9 @@ bool AP_OSD::init_backend(const AP_OSD::osd_types type, const uint8_t instance)
             break;
         }
 #if HAL_WITH_OSD_BITMAP
-        _backends[instance] = AP_OSD_MAX7456::probe(*this, std::move(spi_dev));
+        backend = AP_OSD_MAX7456::probe(*this, std::move(spi_dev));
 #endif
-        if (_backends[instance] == nullptr) {
+        if (backend == nullptr) {
             break;
         }
         DEV_PRINTF("Started MAX7456 OSD\n");
@@ -319,8 +288,8 @@ bool AP_OSD::init_backend(const AP_OSD::osd_types type, const uint8_t instance)
 
 #ifdef WITH_SITL_OSD
     case OSD_SITL: {
-        _backends[instance] = AP_OSD_SITL::probe(*this);
-        if (_backends[instance] == nullptr) {
+        backend = AP_OSD_SITL::probe(*this);
+        if (backend == nullptr) {
             break;
         }
         DEV_PRINTF("Started SITL OSD\n");
@@ -328,8 +297,8 @@ bool AP_OSD::init_backend(const AP_OSD::osd_types type, const uint8_t instance)
     }
 #endif
     case OSD_MSP: {
-        _backends[instance] = AP_OSD_MSP::probe(*this);
-        if (_backends[instance] == nullptr) {
+        backend = AP_OSD_MSP::probe(*this);
+        if (backend == nullptr) {
             break;
         }
         DEV_PRINTF("Started MSP OSD\n");
@@ -337,8 +306,8 @@ bool AP_OSD::init_backend(const AP_OSD::osd_types type, const uint8_t instance)
     }
 #if HAL_WITH_MSP_DISPLAYPORT
     case OSD_MSP_DISPLAYPORT: {
-        _backends[instance] = AP_OSD_MSP_DisplayPort::probe(*this);
-        if (_backends[instance] == nullptr) {
+        backend = AP_OSD_MSP_DisplayPort::probe(*this);
+        if (backend == nullptr) {
             break;
         }
         DEV_PRINTF("Started MSP DisplayPort OSD\n");
@@ -347,12 +316,12 @@ bool AP_OSD::init_backend(const AP_OSD::osd_types type, const uint8_t instance)
 #endif
     }
 #if OSD_ENABLED
-    if (_backends[instance] != nullptr) {
+    if (backend != nullptr) {
         // populate the fonts lookup table
-        _backends[instance]->init_symbol_set(AP_OSD_AbstractScreen::symbols_lookup_table, AP_OSD_NUM_SYMBOLS);
-        return true;
+        backend->init_symbol_set(AP_OSD_AbstractScreen::symbols_lookup_table, AP_OSD_NUM_SYMBOLS);
+        // create thread as higher priority than IO for all backends
+        hal.scheduler->thread_create(FUNCTOR_BIND_MEMBER(&AP_OSD::osd_thread, void), "OSD", 1280, AP_HAL::Scheduler::PRIORITY_IO, 1);
     }
-    return false;
 #endif
 }
 
@@ -360,36 +329,30 @@ bool AP_OSD::init_backend(const AP_OSD::osd_types type, const uint8_t instance)
 void AP_OSD::osd_thread()
 {
     // initialize thread specific code once
-    for (uint8_t instance = 0; instance < _backend_count; instance++) {
-        _backends[instance]->osd_thread_run_once();
-    }
-
+    backend->osd_thread_run_once();
 
     while (true) {
         hal.scheduler->delay(100);
-        if (!_disable) {
-            update_stats();
-            update_current_screen();
-        }
         update_osd();
     }
 }
 
 void AP_OSD::update_osd()
 {
-    for (uint8_t instance = 0; instance < _backend_count; instance++) {
-        _backends[instance]->clear();
+    backend->clear();
 
-        if (!_disable) {
-            get_screen(current_screen).set_backend(_backends[instance]);
-            // skip drawing for MSP OSD backends to save some resources
-            if (_backends[instance]->get_backend_type() != OSD_MSP) {
-                get_screen(current_screen).draw();
-            }
+    if (!_disable) {
+        update_stats();
+        update_current_screen();
+
+        get_screen(current_screen).set_backend(backend);
+        // skip drawing for MSP OSD backends to save some resources
+        if (osd_types(osd_type.get()) != OSD_MSP) {
+            get_screen(current_screen).draw();
         }
-
-        _backends[instance]->flush();
     }
+
+    backend->flush();
 }
 
 //update maximums and totals
@@ -582,28 +545,6 @@ void AP_OSD::set_nav_info(NavInfo &navinfo)
     // do this without a lock for now
     nav_info = navinfo;
 }
-
-// pre_arm_check - returns true if all pre-takeoff checks have completed successfully
-bool AP_OSD::pre_arm_check(char *failure_msg, const uint8_t failure_msg_len) const
-{
-#if OSD_PARAM_ENABLED
-    // currently in the OSD menu, do not allow arming
-    if (!is_readonly_screen()) {
-        hal.util->snprintf(failure_msg, failure_msg_len, "In OSD menu");
-        return false;
-    }
-#endif  
-
-    //check if second backend was requested by user but not instantiated
-    if (osd_type.get() != OSD_NONE && _backend_count == 1 && osd_type2.get() != OSD_NONE) {
-        hal.util->snprintf(failure_msg, failure_msg_len, "OSD_TYPE2 not compatible with first OSD");
-        return false; 
-    }
-
-    // if we got this far everything must be ok
-    return true;
-}
-
 #endif // OSD_ENABLED
 
 // handle OSD parameter configuration

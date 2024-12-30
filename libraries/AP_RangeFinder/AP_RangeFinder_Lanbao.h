@@ -1,11 +1,13 @@
 #pragma once
 
-#include "AP_RangeFinder_config.h"
-
-#if AP_RANGEFINDER_LANBAO_ENABLED
-
 #include "AP_RangeFinder.h"
 #include "AP_RangeFinder_Backend_Serial.h"
+
+#ifndef AP_RANGEFINDER_LANBAO_ENABLED
+#define AP_RANGEFINDER_LANBAO_ENABLED AP_RANGEFINDER_BACKEND_DEFAULT_ENABLED
+#endif
+
+#if AP_RANGEFINDER_LANBAO_ENABLED
 
 class AP_RangeFinder_Lanbao : public AP_RangeFinder_Backend_Serial
 {

@@ -30,9 +30,8 @@
 #include <AP_Common/NMEA.h>
 #include <stdio.h>
 #include <time.h>
-#include <AP_AHRS/AP_AHRS_config.h>
 
-#if AP_AHRS_ENABLED
+#if !defined(HAL_BUILD_AP_PERIPH) || defined(HAL_PERIPH_ENABLE_AHRS)
 #include <AP_AHRS/AP_AHRS.h>
 #endif
 
@@ -114,7 +113,7 @@ void AP_NMEA_Output::update()
     const auto &gps = AP::gps();
     const AP_GPS::GPS_Status gps_status = gps.status();
 
-#if AP_AHRS_ENABLED
+#if !defined(HAL_BUILD_AP_PERIPH) || defined(HAL_PERIPH_ENABLE_AHRS)
     auto &ahrs = AP::ahrs();
     // NOTE: ahrs.get_location() always returns true after having GPS position once because it will be dead-reckoning
     const bool pos_valid = ahrs.get_location(loc);
@@ -218,7 +217,7 @@ void AP_NMEA_Output::update()
         snprintf(dstring, sizeof(dstring), "%02u%02u%02u", tm->tm_mday, tm->tm_mon+1, tm->tm_year % 100);
 
         // get speed
-#if AP_AHRS_ENABLED
+#if !defined(HAL_BUILD_AP_PERIPH) || defined(HAL_PERIPH_ENABLE_AHRS)
         const Vector2f speed = ahrs.groundspeed_vector();
         const float speed_knots = speed.length() * M_PER_SEC_TO_KNOTS;
         const float heading = wrap_360(degrees(atan2f(speed.x, speed.y)));
@@ -243,7 +242,7 @@ void AP_NMEA_Output::update()
 
     uint16_t pashr_length = 0;
     char pashr[100];
-#if AP_AHRS_ENABLED
+#if !defined(HAL_BUILD_AP_PERIPH) || defined(HAL_PERIPH_ENABLE_AHRS)
     if ((_message_enable_bitmask.get() & static_cast<int16_t>(Enabled_Messages::PASHR)) != 0) {
         // get roll, pitch, yaw
         const float roll_deg = wrap_180(degrees(ahrs.get_roll()));

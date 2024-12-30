@@ -133,7 +133,7 @@ void GCS_MAVLINK_Plane::send_attitude() const
     float p = ahrs.pitch;
     float y = ahrs.yaw;
 
-    if (!(plane.flight_option_enabled(FlightOptions::GCS_REMOVE_TRIM_PITCH_CD))) {
+    if (!(plane.g2.flight_options & FlightOptions::GCS_REMOVE_TRIM_PITCH_CD)) {
         p -= radians(plane.g.pitch_trim_cd * 0.01f);
     }
 
@@ -711,7 +711,7 @@ void GCS_MAVLINK_Plane::packetReceived(const mavlink_status_t &status,
 #if HAL_ADSB_ENABLED
     plane.avoidance_adsb.handle_msg(msg);
 #endif
-#if AP_SCRIPTING_ENABLED && AP_FOLLOW_ENABLED
+#if AP_SCRIPTING_ENABLED
     // pass message to follow library
     plane.g2.follow.handle_msg(msg);
 #endif
@@ -950,7 +950,7 @@ MAV_RESULT GCS_MAVLINK_Plane::handle_command_int_guided_slew_commands(const mavl
 
 }
 
-MAV_RESULT GCS_MAVLINK_Plane::handle_command_int_packet(const mavlink_command_int_t &packet, const mavlink_message_t &msg)
+MAV_RESULT GCS_MAVLINK_Plane::handle_command_int_packet(const mavlink_command_int_t &packet)
 {
     switch(packet.command) {
 
@@ -963,34 +963,26 @@ MAV_RESULT GCS_MAVLINK_Plane::handle_command_int_packet(const mavlink_command_in
     case MAV_CMD_GUIDED_CHANGE_HEADING:
         return handle_command_int_guided_slew_commands(packet);
 
-#if AP_SCRIPTING_ENABLED && AP_FOLLOW_ENABLED
     case MAV_CMD_DO_FOLLOW:
+#if AP_SCRIPTING_ENABLED
         // param1: sysid of target to follow
         if ((packet.param1 > 0) && (packet.param1 <= 255)) {
             plane.g2.follow.set_target_sysid((uint8_t)packet.param1);
             return MAV_RESULT_ACCEPTED;
         }
-        return MAV_RESULT_DENIED;
 #endif
-
-#if AP_ICENGINE_ENABLED
-    case MAV_CMD_DO_ENGINE_CONTROL:
-        if (!plane.g2.ice_control.engine_control(packet.param1, packet.param2, packet.param3)) {
-            return MAV_RESULT_FAILED;
-        }
-        return MAV_RESULT_ACCEPTED;
-#endif
-
-    case MAV_CMD_DO_CHANGE_SPEED:
-        return handle_command_DO_CHANGE_SPEED(packet);
-
+        return MAV_RESULT_FAILED;
+        
     default:
-        return GCS_MAVLINK::handle_command_int_packet(packet, msg);
+        return GCS_MAVLINK::handle_command_int_packet(packet);
     }
 }
 
-MAV_RESULT GCS_MAVLINK_Plane::handle_command_DO_CHANGE_SPEED(const mavlink_command_int_t &packet)
+MAV_RESULT GCS_MAVLINK_Plane::handle_command_long_packet(const mavlink_command_long_t &packet)
 {
+    switch(packet.command) {
+
+    case MAV_CMD_DO_CHANGE_SPEED: {
         // if we're in failsafe modes (e.g., RTL, LOITER) or in pilot
         // controlled modes (e.g., MANUAL, TRAINING)
         // this command should be ignored since it comes in from GCS
@@ -1001,15 +993,15 @@ MAV_RESULT GCS_MAVLINK_Plane::handle_command_DO_CHANGE_SPEED(const mavlink_comma
             return MAV_RESULT_FAILED;
         }
 
-        if (plane.do_change_speed(packet.param1, packet.param2, packet.param3)) {
+        AP_Mission::Mission_Command cmd;
+        if (AP_Mission::mavlink_cmd_long_to_mission_cmd(packet, cmd) != MAV_MISSION_ACCEPTED) {
+            return MAV_RESULT_DENIED;
+        }
+        if (plane.do_change_speed(cmd)) {
             return MAV_RESULT_ACCEPTED;
         }
         return MAV_RESULT_FAILED;
-}
-
-MAV_RESULT GCS_MAVLINK_Plane::handle_command_long_packet(const mavlink_command_long_t &packet, const mavlink_message_t &msg)
-{
-    switch(packet.command) {
+    }
 
     case MAV_CMD_NAV_LOITER_UNLIM:
         plane.set_mode(plane.mode_loiter, ModeReason::GCS_COMMAND);
@@ -1102,8 +1094,26 @@ MAV_RESULT GCS_MAVLINK_Plane::handle_command_long_packet(const mavlink_command_l
         return MAV_RESULT_ACCEPTED;
 #endif
 
+#if AP_ICENGINE_ENABLED
+    case MAV_CMD_DO_ENGINE_CONTROL:
+        if (!plane.g2.ice_control.engine_control(packet.param1, packet.param2, packet.param3)) {
+            return MAV_RESULT_FAILED;
+        }
+        return MAV_RESULT_ACCEPTED;
+#endif
+
+#if AP_SCRIPTING_ENABLED
+    case MAV_CMD_DO_FOLLOW:
+        // param1: sysid of target to follow
+        if ((packet.param1 > 0) && (packet.param1 <= 255)) {
+            plane.g2.follow.set_target_sysid((uint8_t)packet.param1);
+            return MAV_RESULT_ACCEPTED;
+        }
+        return MAV_RESULT_FAILED;
+#endif
+        
     default:
-        return GCS_MAVLINK::handle_command_long_packet(packet, msg);
+        return GCS_MAVLINK::handle_command_long_packet(packet);
     }
 }
 
@@ -1306,7 +1316,6 @@ MAV_RESULT GCS_MAVLINK_Plane::handle_command_do_set_mission_current(const mavlin
     return result;
 }
 
-#if AP_MAVLINK_MISSION_SET_CURRENT_ENABLED
 void GCS_MAVLINK_Plane::handle_mission_set_current(AP_Mission &mission, const mavlink_message_t &msg)
 {
     // if you change this you must change handle_command_do_set_mission_current
@@ -1316,7 +1325,6 @@ void GCS_MAVLINK_Plane::handle_mission_set_current(AP_Mission &mission, const ma
         plane.mission.resume();
     }
 }
-#endif
 
 uint64_t GCS_MAVLINK_Plane::capabilities() const
 {

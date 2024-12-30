@@ -14,11 +14,15 @@
  */
 #pragma once
 
-#include "AP_RangeFinder_config.h"
-
-#if AP_RANGEFINDER_SIM_ENABLED
+#include <AP_BoardConfig/AP_BoardConfig.h>
 
 #include "AP_RangeFinder_Backend.h"
+
+#ifndef AP_RANGEFINDER_SIM_ENABLED
+#define AP_RANGEFINDER_SIM_ENABLED (CONFIG_HAL_BOARD == HAL_BOARD_SITL && AP_RANGEFINDER_BACKEND_DEFAULT_ENABLED)
+#endif
+
+#if AP_RANGEFINDER_SIM_ENABLED
 
 class AP_RangeFinder_SITL : public AP_RangeFinder_Backend {
 public:

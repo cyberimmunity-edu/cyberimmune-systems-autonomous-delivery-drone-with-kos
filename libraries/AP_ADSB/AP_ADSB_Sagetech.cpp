@@ -19,12 +19,8 @@
 
 #if HAL_ADSB_SAGETECH_ENABLED
 #include <GCS_MAVLink/GCS.h>
-#include <AP_SerialManager/AP_SerialManager.h>
-#include <AP_GPS/AP_GPS.h>
 #include <AP_AHRS/AP_AHRS.h>
-#include <AP_GPS/AP_GPS.h>
 #include <AP_RTC/AP_RTC.h>
-#include <AP_SerialManager/AP_SerialManager.h>
 #include <AP_HAL/utility/sparse-endian.h>
 #include <stdio.h>
 #include <time.h>
@@ -73,11 +69,11 @@ void AP_ADSB_Sagetech::update()
     // -----------------------------
     uint32_t nbytes = MIN(_port->available(), 10 * PAYLOAD_XP_MAX_SIZE);
     while (nbytes-- > 0) {
-        uint8_t data;
-        if (!_port->read(data)) {
+        const int16_t data = (uint8_t)_port->read();
+        if (data < 0) {
             break;
         }
-        if (parse_byte_XP(data)) {
+        if (parse_byte_XP((uint8_t)data)) {
             handle_packet_XP(message_in.packet);
         }
     } // while nbytes
@@ -194,7 +190,7 @@ void AP_ADSB_Sagetech::handle_ack(const Packet_XP &msg)
     if (prev_transponder_mode != last_ack_transponder_mode) {
         static const char *mode_names[] = {"OFF", "STBY", "ON", "ON-ALT"};
         if (last_ack_transponder_mode < ARRAY_SIZE(mode_names)) {
-            GCS_SEND_TEXT(MAV_SEVERITY_INFO, "ADSB: RF Mode: %s", mode_names[last_ack_transponder_mode]);
+            gcs().send_text(MAV_SEVERITY_INFO, "ADSB: RF Mode: %s", mode_names[last_ack_transponder_mode]);
         }
     }
 }

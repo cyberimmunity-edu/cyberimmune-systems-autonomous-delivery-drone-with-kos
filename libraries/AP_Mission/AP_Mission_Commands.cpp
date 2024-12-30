@@ -43,12 +43,12 @@ bool AP_Mission::start_command_do_gripper(const AP_Mission::Mission_Command& cmd
     case GRIPPER_ACTION_RELEASE:
         gripper->release();
         // Log_Write_Event(DATA_GRIPPER_RELEASE);
-        GCS_SEND_TEXT(MAV_SEVERITY_INFO, "Gripper Released");
+        gcs().send_text(MAV_SEVERITY_INFO, "Gripper Released");
         return true;
     case GRIPPER_ACTION_GRAB:
         gripper->grab();
         // Log_Write_Event(DATA_GRIPPER_GRAB);
-        GCS_SEND_TEXT(MAV_SEVERITY_INFO, "Gripper Grabbed");
+        gcs().send_text(MAV_SEVERITY_INFO, "Gripper Grabbed");
         return true;
     default:
 #if CONFIG_HAL_BOARD == HAL_BOARD_SITL
@@ -59,7 +59,6 @@ bool AP_Mission::start_command_do_gripper(const AP_Mission::Mission_Command& cmd
 }
 #endif  // AP_GRIPPER_ENABLED
 
-#if AP_SERVORELAYEVENTS_ENABLED
 bool AP_Mission::start_command_do_servorelayevents(const AP_Mission::Mission_Command& cmd)
 {
     AP_ServoRelayEvents *sre = AP::servorelayevents();
@@ -71,10 +70,9 @@ bool AP_Mission::start_command_do_servorelayevents(const AP_Mission::Mission_Com
     case MAV_CMD_DO_SET_SERVO:
         return sre->do_set_servo(cmd.content.servo.channel, cmd.content.servo.pwm);
 
-#if AP_RELAY_ENABLED
+
     case MAV_CMD_DO_SET_RELAY:
         return sre->do_set_relay(cmd.content.relay.num, cmd.content.relay.state);
-#endif
 
     case MAV_CMD_DO_REPEAT_SERVO:
         return sre->do_repeat_servo(cmd.content.repeat_servo.channel,
@@ -82,13 +80,10 @@ bool AP_Mission::start_command_do_servorelayevents(const AP_Mission::Mission_Com
                                     cmd.content.repeat_servo.repeat_count,
                                     cmd.content.repeat_servo.cycle_time * 1000.0f);
 
-#if AP_RELAY_ENABLED
     case MAV_CMD_DO_REPEAT_RELAY:
         return sre->do_repeat_relay(cmd.content.repeat_relay.num,
                                     cmd.content.repeat_relay.repeat_count,
                                     cmd.content.repeat_relay.cycle_time * 1000.0f);
-#endif
-
     default:
 #if CONFIG_HAL_BOARD == HAL_BOARD_SITL
         AP_HAL::panic("Unhandled servo/relay case");
@@ -96,7 +91,6 @@ bool AP_Mission::start_command_do_servorelayevents(const AP_Mission::Mission_Com
         return false;
     }
 }
-#endif  // AP_SERVORELAYEVENTS_ENABLED
 
 #if AP_CAMERA_ENABLED
 bool AP_Mission::start_command_camera(const AP_Mission::Mission_Command& cmd)
@@ -138,10 +132,8 @@ bool AP_Mission::start_command_camera(const AP_Mission::Mission_Command& cmd)
 
     case MAV_CMD_SET_CAMERA_ZOOM:
         if (cmd.content.set_camera_zoom.zoom_type == ZOOM_TYPE_CONTINUOUS) {
-            return camera->set_zoom(ZoomType::RATE, cmd.content.set_camera_zoom.zoom_value);
-        }
-        if (cmd.content.set_camera_zoom.zoom_type == ZOOM_TYPE_RANGE) {
-            return camera->set_zoom(ZoomType::PCT, cmd.content.set_camera_zoom.zoom_value);
+            camera->set_zoom_step(cmd.content.set_camera_zoom.zoom_value);
+            return true;
         }
         return false;
 
@@ -150,15 +142,13 @@ bool AP_Mission::start_command_camera(const AP_Mission::Mission_Command& cmd)
         if ((cmd.content.set_camera_focus.focus_type == FOCUS_TYPE_AUTO) ||
             (cmd.content.set_camera_focus.focus_type == FOCUS_TYPE_AUTO_SINGLE) ||
             (cmd.content.set_camera_focus.focus_type == FOCUS_TYPE_AUTO_CONTINUOUS)) {
-            return camera->set_focus(FocusType::AUTO, 0) == SetFocusResult::ACCEPTED;
+            camera->set_auto_focus();
+            return true;
         }
-        // accept continuous manual focus
+        // accept step or continuous manual focus
         if (cmd.content.set_camera_focus.focus_type == FOCUS_TYPE_CONTINUOUS) {
-            return camera->set_focus(FocusType::RATE, cmd.content.set_camera_focus.focus_value) == SetFocusResult::ACCEPTED;
-        }
-        // accept range manual focus
-        if (cmd.content.set_camera_focus.focus_type == FOCUS_TYPE_RANGE) {
-            return camera->set_focus(FocusType::PCT, cmd.content.set_camera_focus.focus_value) == SetFocusResult::ACCEPTED;
+            camera->set_manual_focus_step(cmd.content.set_camera_focus.focus_value);
+            return true;
         }
         return false;
 
@@ -220,7 +210,7 @@ bool AP_Mission::start_command_parachute(const AP_Mission::Mission_Command& cmd)
 bool AP_Mission::command_do_set_repeat_dist(const AP_Mission::Mission_Command& cmd)
 {
     _repeat_dist = cmd.p1;
-    GCS_SEND_TEXT(MAV_SEVERITY_INFO, "Resume repeat dist set to %u m",_repeat_dist);
+    gcs().send_text(MAV_SEVERITY_INFO, "Resume repeat dist set to %u m",_repeat_dist);
     return true;
 }
 
@@ -286,8 +276,8 @@ bool AP_Mission::start_command_do_gimbal_manager_pitchyaw(const AP_Mission::Miss
     }
 
     // handle angle target
-    const bool pitch_angle_valid = !isnan(cmd.content.gimbal_manager_pitchyaw.pitch_angle_deg) && (fabsF(cmd.content.gimbal_manager_pitchyaw.pitch_angle_deg) <= 90);
-    const bool yaw_angle_valid = !isnan(cmd.content.gimbal_manager_pitchyaw.yaw_angle_deg) && (fabsF(cmd.content.gimbal_manager_pitchyaw.yaw_angle_deg) <= 360);
+    const bool pitch_angle_valid = !isnan(cmd.content.gimbal_manager_pitchyaw.pitch_angle_deg) && (fabsf(cmd.content.gimbal_manager_pitchyaw.pitch_angle_deg) <= 90);
+    const bool yaw_angle_valid = !isnan(cmd.content.gimbal_manager_pitchyaw.yaw_angle_deg) && (fabsf(cmd.content.gimbal_manager_pitchyaw.yaw_angle_deg) <= 360);
     if (pitch_angle_valid && yaw_angle_valid) {
         mount->set_angle_target(gimbal_instance, 0, cmd.content.gimbal_manager_pitchyaw.pitch_angle_deg, cmd.content.gimbal_manager_pitchyaw.yaw_angle_deg, cmd.content.gimbal_manager_pitchyaw.flags & GIMBAL_MANAGER_FLAGS_YAW_LOCK);
         return true;

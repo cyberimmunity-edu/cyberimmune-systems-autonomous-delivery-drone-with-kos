@@ -44,12 +44,6 @@ void ModeAuto::_exit()
 
 void ModeAuto::update()
 {
-    // check if mission exists (due to being cleared while disarmed in AUTO,
-    // if no mission, then stop...needs mode change out of AUTO, mission load,
-    // and change back to AUTO to run a mission at this point
-    if (!hal.util->get_soft_armed() && mission.num_commands() <= 1) {
-        start_stop();
-    }
     // start or update mission
     if (waiting_to_start) {
         // don't start the mission until we have an origin
@@ -82,21 +76,15 @@ void ModeAuto::update()
     switch (_submode) {
         case Auto_WP:
         {
-            // check if we've reached the destination
-            if (!g2.wp_nav.reached_destination() || g2.wp_nav.is_fast_waypoint()) {
-                // update navigation controller
+            // boats loiter once the waypoint is reached
+            bool keep_navigating = true;
+            if (rover.is_boat() && g2.wp_nav.reached_destination() && !g2.wp_nav.is_fast_waypoint()) {
+                keep_navigating = !start_loiter();
+            }
+
+            // update navigation controller
+            if (keep_navigating) {
                 navigate_to_waypoint();
-            } else {
-                // we have reached the destination so stay here
-                if (rover.is_boat()) {
-                    if (!start_loiter()) {
-                        start_stop();
-                    }
-                } else {
-                    start_stop();
-                }
-                // update distance to destination
-                _distance_to_destination = rover.current_loc.get_distance(g2.wp_nav.get_destination());
             }
             break;
         }

@@ -39,7 +39,7 @@ public:
     float get_average_motor_rpm() const { return get_average_motor_rpm(0xFFFFFFFF); }
 
     // determine whether all the motors in servo_channel_mask are running
-    bool are_motors_running(uint32_t servo_channel_mask, float min_rpm, float max_rpm) const;
+    bool are_motors_running(uint32_t servo_channel_mask, float min_rpm) const;
 
     // get an individual ESC's temperature in centi-degrees if available, returns true on success
     bool get_temperature(uint8_t esc_index, int16_t& temp) const;
@@ -109,10 +109,6 @@ public:
 
 private:
 
-    // helper that validates RPM data
-    static bool rpm_data_within_timeout (const volatile AP_ESC_Telem_Backend::RpmData &instance, const uint32_t now_us, const uint32_t timeout_us);
-    static bool was_rpm_data_ever_reported (const volatile AP_ESC_Telem_Backend::RpmData &instance);
-
     // rpm data
     volatile AP_ESC_Telem_Backend::RpmData _rpm_data[ESC_TELEM_MAX_ESCS];
     // telemetry data
@@ -140,3 +136,4 @@ namespace AP {
 };
 
 #endif // HAL_WITH_ESC_TELEM
+

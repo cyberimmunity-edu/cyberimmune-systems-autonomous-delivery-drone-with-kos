@@ -14,7 +14,11 @@
 */
 #pragma once
 
-#include "AP_RCTelemetry_config.h"
+#include <AP_HAL/AP_HAL_Boards.h>
+
+#ifndef HAL_SPEKTRUM_TELEM_ENABLED
+#define HAL_SPEKTRUM_TELEM_ENABLED !HAL_MINIMIZE_FEATURES
+#endif
 
 #if HAL_SPEKTRUM_TELEM_ENABLED
 

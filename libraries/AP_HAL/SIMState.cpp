@@ -145,9 +145,6 @@ void SIMState::fdm_input_local(void)
     if (benewake_tfmini != nullptr) {
         benewake_tfmini->update(sitl_model->rangefinder_range());
     }
-    if (nooploop != nullptr) {
-        nooploop->update(sitl_model->rangefinder_range());
-    }
     if (teraranger_serial != nullptr) {
         teraranger_serial->update(sitl_model->rangefinder_range());
     }
@@ -165,9 +162,6 @@ void SIMState::fdm_input_local(void)
     }
     if (leddarone != nullptr) {
         leddarone->update(sitl_model->rangefinder_range());
-    }
-    if (rds02uf != nullptr) {
-        rds02uf->update(sitl_model->rangefinder_range());
     }
     if (USD1_v0 != nullptr) {
         USD1_v0->update(sitl_model->rangefinder_range());
@@ -197,6 +191,12 @@ void SIMState::fdm_input_local(void)
     if (frsky_d != nullptr) {
         frsky_d->update();
     }
+    // if (frsky_sport != nullptr) {
+    //     frsky_sport->update();
+    // }
+    // if (frsky_sportpassthrough != nullptr) {
+    //     frsky_sportpassthrough->update();
+    // }
 
 #if AP_SIM_CRSF_ENABLED
     if (crsf != nullptr) {
@@ -226,8 +226,8 @@ void SIMState::fdm_input_local(void)
         vectornav->update();
     }
 
-    if (microstrain5 != nullptr) {
-        microstrain5->update();
+    if (lord != nullptr) {
+        lord->update();
     }
 
 #if HAL_SIM_AIS_ENABLED
@@ -261,6 +261,7 @@ void SIMState::_simulator_servos(struct sitl_input &input)
 {
     // output at chosen framerate
     uint32_t now = AP_HAL::micros();
+    // last_update_usec = now;
 
     // find the barometer object if it exists
     const auto *_barometer = AP_Baro::get_singleton();

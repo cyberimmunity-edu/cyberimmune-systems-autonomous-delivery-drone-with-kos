@@ -10,21 +10,17 @@
     - readdir loop of 511 entry directory ~62,000 microseconds
  */
 
-#include "AP_Logger_config.h"
-
-#if HAL_LOGGING_FILESYSTEM_ENABLED
-
 #include <AP_HAL/AP_HAL.h>
 #include <AP_Filesystem/AP_Filesystem.h>
 
-#include "AP_Logger.h"
 #include "AP_Logger_File.h"
+
+#if HAL_LOGGING_FILESYSTEM_ENABLED
 
 #include <AP_Common/AP_Common.h>
 #include <AP_InternalError/AP_InternalError.h>
 #include <AP_RTC/AP_RTC.h>
 #include <AP_Vehicle/AP_Vehicle_Type.h>
-#include <AP_AHRS/AP_AHRS.h>
 
 #include <AP_Math/AP_Math.h>
 #include <GCS_MAVLink/GCS.h>
@@ -767,7 +763,7 @@ void AP_Logger_File::PrepForArming_start_logging()
         if (logging_started()) {
             break;
         }
-#if !APM_BUILD_TYPE(APM_BUILD_Replay) && AP_AHRS_ENABLED
+#if !APM_BUILD_TYPE(APM_BUILD_Replay) && !defined(HAL_BUILD_AP_PERIPH) && !APM_BUILD_TYPE(APM_BUILD_UNKNOWN)
         // keep the EKF ticking over
         AP::ahrs().update();
 #endif

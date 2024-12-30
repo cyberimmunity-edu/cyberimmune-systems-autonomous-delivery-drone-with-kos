@@ -25,9 +25,6 @@ public:
         return &obj_channels[chan];
     }
 
-    // tell the gimbal code all is good with RC input:
-    bool in_rc_failsafe() const override { return false; };
-
 protected:
 
     // note that these callbacks are not presently used on Plane:

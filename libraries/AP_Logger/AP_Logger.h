@@ -12,6 +12,10 @@
 #include <AP_Logger/LogStructure.h>
 #include <AP_Vehicle/ModeReason.h>
 
+#if HAL_LOGGER_FENCE_ENABLED
+    #include <AC_Fence/AC_Fence.h>
+#endif
+
 #include <stdint.h>
 
 #include "LoggerMessageWriter.h"
@@ -161,7 +165,7 @@ enum class LogErrorCode : uint8_t {
     FAILED_CIRCLE_INIT = 4,
     DEST_OUTSIDE_FENCE = 5,
     RTL_MISSING_RNGFND = 6,
-// subsystem specific error codes -- internal_error
+    // subsystem specific error codes -- internal_error
     INTERNAL_ERRORS_DETECTED = 1,
 
 // parachute failed to deploy because of low altitude or landed
@@ -173,7 +177,7 @@ enum class LogErrorCode : uint8_t {
 // Baro specific error codes
     BARO_GLITCH = 2,
     BAD_DEPTH = 3, // sub-only
-// GPS specific error codes
+// GPS specific error coces
     GPS_GLITCH = 2,
 };
 
@@ -247,7 +251,6 @@ public:
 #if HAL_LOGGER_FENCE_ENABLED
     void Write_Fence();
 #endif
-    void Write_NamedValueFloat(const char *name, float value);
     void Write_Power(void);
     void Write_Radio(const mavlink_radio_t &packet);
     void Write_Message(const char *message);
@@ -429,11 +432,6 @@ private:
         FILESYSTEM = (1<<0),
         MAVLINK    = (1<<1),
         BLOCK      = (1<<2),
-    };
-
-    enum class RCLoggingFlags : uint8_t {
-        HAS_VALID_INPUT = 1U<<0,  // true if the system is receiving good RC values
-        IN_RC_FAILSAFE =  1U<<1,  // true if the system is current in RC failsafe
     };
 
     /*

@@ -165,7 +165,7 @@ const AP_Scheduler::Task Copter::scheduler_tasks[] = {
 #if HAL_PROXIMITY_ENABLED
     SCHED_TASK_CLASS(AP_Proximity,         &copter.g2.proximity,        update,         200,  50,  36),
 #endif
-#if AP_BEACON_ENABLED
+#if BEACON_ENABLED == ENABLED
     SCHED_TASK_CLASS(AP_Beacon,            &copter.g2.beacon,           update,         400,  50,  39),
 #endif
     SCHED_TASK(update_altitude,       10,    100,  42),
@@ -178,11 +178,9 @@ const AP_Scheduler::Task Copter::scheduler_tasks[] = {
     SCHED_TASK_CLASS(AC_Sprayer,           &copter.sprayer,               update,         3,  90,  54),
 #endif
     SCHED_TASK(three_hz_loop,          3,     75, 57),
-#if AP_SERVORELAYEVENTS_ENABLED
     SCHED_TASK_CLASS(AP_ServoRelayEvents,  &copter.ServoRelayEvents,      update_events, 50,  75,  60),
-#endif
     SCHED_TASK_CLASS(AP_Baro,              &copter.barometer,             accumulate,    50,  90,  63),
-#if AC_PRECLAND_ENABLED
+#if PRECISION_LANDING == ENABLED
     SCHED_TASK(update_precland,      400,     50,  69),
 #endif
 #if FRAME_CONFIG == HELI_FRAME
@@ -191,6 +189,7 @@ const AP_Scheduler::Task Copter::scheduler_tasks[] = {
 #if LOGGING_ENABLED == ENABLED
     SCHED_TASK(loop_rate_logging, LOOP_RATE,    50,  75),
 #endif
+    SCHED_TASK_CLASS(AP_Notify,            &copter.notify,              update,          50,  90,  78),
     SCHED_TASK(one_hz_loop,            1,    100,  81),
     SCHED_TASK(ekf_check,             10,     75,  84),
     SCHED_TASK(check_vibration,       10,     50,  87),
@@ -257,7 +256,11 @@ const AP_Scheduler::Task Copter::scheduler_tasks[] = {
 #if STATS_ENABLED == ENABLED
     SCHED_TASK_CLASS(AP_Stats,             &copter.g2.stats,            update,           1, 100, 171),
 #endif
-    SCHED_TASK_CLASS(KOSCommModule, &copter.KOS, wait_for_KOS_message, 5, 100, 200),
+    SCHED_TASK_CLASS(KOS_InteractionModule, &copter.kos_interaction, receive_KOS_message, 5, 100, 200),
+#if AP_SIM_ENABLED
+    SCHED_TASK_CLASS(KOS_HardwareSimulation, &copter.kos_hardware_simulation, send_sensor_data, 10, 100, 200),
+    SCHED_TASK_CLASS(KOS_HardwareSimulation, &copter.kos_hardware_simulation, receive_periphery_data, 5, 100, 200),
+#endif
 };
 
 void Copter::get_scheduler_tasks(const AP_Scheduler::Task *&tasks,
@@ -448,26 +451,6 @@ bool Copter::has_ekf_failsafed() const
 
 #endif // AP_SCRIPTING_ENABLED
 
-// returns true if vehicle is landing. Only used by Lua scripts
-bool Copter::is_landing() const
-{
-    return flightmode->is_landing();
-}
-
-// returns true if vehicle is taking off. Only used by Lua scripts
-bool Copter::is_taking_off() const
-{
-    return flightmode->is_taking_off();
-}
-
-bool Copter::current_mode_requires_mission() const
-{
-#if MODE_AUTO_ENABLED == ENABLED
-        return flightmode == &mode_auto;
-#else
-        return false;
-#endif
-}
 
 // rc_loops - reads user input from transmitter/receiver
 // called at 100hz
@@ -572,7 +555,7 @@ void Copter::ten_hz_logging_loop()
 #if HAL_PROXIMITY_ENABLED
         g2.proximity.log();  // Write proximity sensor distances
 #endif
-#if AP_BEACON_ENABLED
+#if BEACON_ENABLED == ENABLED
         g2.beacon.log();
 #endif
     }
@@ -582,11 +565,6 @@ void Copter::ten_hz_logging_loop()
 #if AP_WINCH_ENABLED
     if (should_log(MASK_LOG_ANY)) {
         g2.winch.write_log();
-    }
-#endif
-#if HAL_MOUNT_ENABLED
-    if (should_log(MASK_LOG_CAMERA)) {
-        camera_mount.write_log();
     }
 #endif
 }
@@ -615,7 +593,7 @@ void Copter::twentyfive_hz_logging()
 #endif
 }
 
-// three_hz_loop - 3hz loop
+// three_hz_loop - 3.3hz loop
 void Copter::three_hz_loop()
 {
     // check if we've lost contact with the ground station
@@ -745,7 +723,7 @@ void Copter::update_super_simple_bearing(bool force_update)
 
 void Copter::read_AHRS(void)
 {
-    // we tell AHRS to skip INS update as we have already done it in FAST_TASK.
+    // we tell AHRS to skip INS update as we have already done it in fast_loop()
     ahrs.update(true);
 }
 

@@ -28,7 +28,7 @@ bool ModeRTL::init(bool ignore_checks)
     // this will be set true if prec land is later active
     copter.ap.prec_land_active = false;
 
-#if AC_PRECLAND_ENABLED
+#if PRECISION_LANDING == ENABLED
     // initialise precland state machine
     copter.precland_statemachine.init();
 #endif

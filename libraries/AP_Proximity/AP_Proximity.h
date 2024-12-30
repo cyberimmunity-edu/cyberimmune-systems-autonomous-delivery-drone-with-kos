@@ -48,42 +48,19 @@ public:
     enum class Type {
         None    = 0,
         // 1 was SF40C_v09
-#if AP_PROXIMITY_MAV_ENABLED
         MAV     = 2,
-#endif
-#if AP_PROXIMITY_TERARANGERTOWER_ENABLED
         TRTOWER = 3,
-#endif
-#if AP_PROXIMITY_RANGEFINDER_ENABLED
         RangeFinder = 4,
-#endif
-#if AP_PROXIMITY_RPLIDARA2_ENABLED
         RPLidarA2 = 5,
-#endif
-#if AP_PROXIMITY_TERARANGERTOWEREVO_ENABLED
         TRTOWEREVO = 6,
-#endif
-#if AP_PROXIMITY_LIGHTWARE_SF40C_ENABLED
         SF40C = 7,
-#endif
-#if AP_PROXIMITY_LIGHTWARE_SF45B_ENABLED
         SF45B = 8,
-#endif
-#if AP_PROXIMITY_SITL_ENABLED
+#if CONFIG_HAL_BOARD == HAL_BOARD_SITL
         SITL    = 10,
-#endif
-#if AP_PROXIMITY_AIRSIMSITL_ENABLED
         AirSimSITL = 12,
 #endif
-#if AP_PROXIMITY_CYGBOT_ENABLED
         CYGBOT_D1 = 13,
-#endif
-#if AP_PROXIMITY_DRONECAN_ENABLED
         DroneCAN = 14,
-#endif
-#if AP_PROXIMITY_SCRIPTING_ENABLED
-        Scripting = 15,
-#endif
     };
 
     enum class Status {
@@ -182,9 +159,6 @@ public:
     static const struct AP_Param::GroupInfo var_info[];
 
     static AP_Proximity *get_singleton(void) { return _singleton; };
-
-    // return backend object for Lua scripting
-    AP_Proximity_Backend *get_backend(uint8_t id) const;
 
     // 3D boundary
     AP_Proximity_Boundary_3D boundary;

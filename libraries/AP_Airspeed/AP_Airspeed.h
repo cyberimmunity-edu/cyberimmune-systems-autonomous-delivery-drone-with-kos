@@ -2,14 +2,8 @@
 
 #include "AP_Airspeed_config.h"
 
-#if AP_AIRSPEED_ENABLED
-
 #include <AP_Param/AP_Param.h>
 #include <AP_Math/AP_Math.h>
-
-#if AP_AIRSPEED_MSP_ENABLED
-#include <AP_MSP/msp.h>
-#endif
 
 class AP_Airspeed_Backend;
 
@@ -334,5 +328,3 @@ private:
 namespace AP {
     AP_Airspeed *airspeed();
 };
-
-#endif  // AP_AIRSPEED_ENABLED

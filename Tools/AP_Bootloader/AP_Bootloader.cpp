@@ -63,8 +63,6 @@ AP_FlashIface_JEDEC ext_flash;
 
 int main(void)
 {
-    custom_startup();
-
 #ifdef STM32F427xx
     if (BOARD_FLASH_SIZE > 1024 && check_limit_flash_1M()) {
         board_info.fw_size = (1024 - (FLASH_BOOTLOADER_LOAD_KB + APP_START_OFFSET_KB))*1024;
@@ -163,14 +161,6 @@ int main(void)
     }
 #endif
 
-#if EXT_FLASH_SIZE_MB
-    while (!ext_flash.init()) {
-        // keep trying until we get it working
-        // there's no future without it
-        chThdSleep(chTimeMS2I(20));
-    }
-#endif
-
     if (try_boot) {
         jump_to_app();
     }
@@ -183,6 +173,14 @@ int main(void)
 #endif
     flash_init();
 
+
+#if EXT_FLASH_SIZE_MB
+    while (!ext_flash.init()) {
+        // keep trying until we get it working
+        // there's no future without it
+        chThdSleep(chTimeMS2I(20));
+    }
+#endif
 
 #if AP_BOOTLOADER_FLASH_FROM_SD_ENABLED
     if (flash_from_sd()) {

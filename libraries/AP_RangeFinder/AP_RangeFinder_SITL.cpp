@@ -34,13 +34,13 @@ void AP_RangeFinder_SITL::update(void)
 {
     const float dist = AP::sitl()->get_rangefinder(_instance);
 
-    // nan distance means nothing is connected
-    if (isnan(dist)) {
+    // negative distance means nothing is connected
+    if (is_negative(dist)) {
         state.status = RangeFinder::Status::NoData;
         return;
     }
 
-    state.distance_m = MAX(0, dist);
+    state.distance_m = dist;
     state.last_reading_ms = AP_HAL::millis();
 
     // update range_valid state based on distance measured

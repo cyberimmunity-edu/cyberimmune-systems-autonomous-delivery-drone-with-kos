@@ -3,7 +3,6 @@
 namespace HALSITL {
 class UARTDriver;
 class Scheduler;
-class SITL_State_Common;
 class SITL_State;
 class Storage;
 class AnalogIn;

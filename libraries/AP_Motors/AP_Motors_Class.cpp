@@ -33,7 +33,8 @@ AP_Motors::AP_Motors(uint16_t speed_hz) :
     _throttle_slew(),
     _throttle_slew_filter(),
     _spool_desired(DesiredSpoolState::SHUT_DOWN),
-    _spool_state(SpoolState::SHUT_DOWN)
+    _spool_state(SpoolState::SHUT_DOWN),
+    _air_density_ratio(1.0f)
 {
     _singleton = this;
 
@@ -291,14 +292,6 @@ bool AP_Motors::arming_checks(size_t buflen, char *buffer) const
     }
 
     return true;
-}
-
-bool AP_Motors::motor_test_checks(size_t buflen, char *buffer) const
-{
-    // Must pass base class arming checks (the function above)
-    // Do not run frame specific arming checks as motor test is less strict
-    // For example not all the outputs have to be assigned
-    return AP_Motors::arming_checks(buflen, buffer);
 }
 
 namespace AP {

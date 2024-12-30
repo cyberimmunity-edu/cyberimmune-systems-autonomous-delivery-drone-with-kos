@@ -1227,7 +1227,6 @@ void emit_userdata_allocators(void) {
   struct userdata * node = parsed_userdata;
   while (node) {
     start_dependency(source, node->dependency);
-    // New method used internally
     fprintf(source, "int new_%s(lua_State *L) {\n", node->sanatized_name);
     fprintf(source, "    luaL_checkstack(L, 2, \"Out of stack\");\n"); // ensure we have sufficent stack to push the return
     fprintf(source, "    void *ud = lua_newuserdata(L, sizeof(%s));\n", node->name);
@@ -1236,22 +1235,6 @@ void emit_userdata_allocators(void) {
     fprintf(source, "    lua_setmetatable(L, -2);\n");
     fprintf(source, "    return 1;\n");
     fprintf(source, "}\n");
-
-    // New method used externally, includes argcheck, overridden by custom creation function if provided
-    if (node->creation == NULL) {
-      fprintf(source, "\n");
-      fprintf(source, "int lua_new_%s(lua_State *L) {\n", node->sanatized_name);
-
-      // emit one time warning if augments are parsed
-      fprintf(source, "    static bool warned = false;\n");
-      fprintf(source, "    if (!warned && userdata_zero_arg_check(L)) {\n");
-      fprintf(source, "        warned = true;\n");
-      fprintf(source, "    }\n");
-
-      fprintf(source, "    return new_%s(L);\n", node->sanatized_name);
-      fprintf(source, "}\n");
-    }
-
     end_dependency(source, node->dependency);
     fprintf(source, "\n");
     node = node->next;
@@ -1329,9 +1312,6 @@ void emit_userdata_declarations(void) {
   while (node) {
     start_dependency(header, node->dependency);
     fprintf(header, "int new_%s(lua_State *L);\n", node->sanatized_name);
-    if (node->creation == NULL) {
-      fprintf(header, "int lua_new_%s(lua_State *L);\n", node->sanatized_name);
-    }
     fprintf(header, "%s * check_%s(lua_State *L, int arg);\n", node->name, node->sanatized_name);
     end_dependency(header, node->dependency);
     node = node->next;
@@ -1662,10 +1642,8 @@ void emit_field(const struct userdata_field *field, const char* object_name, con
       case TYPE_INT32_T:
       case TYPE_UINT8_T:
       case TYPE_UINT16_T:
-        fprintf(source, "%slua_pushinteger(L, %s%s%s%s);\n", indent, object_name, object_access, field->name, index_string);
-        break;
       case TYPE_ENUM:
-        fprintf(source, "%slua_pushinteger(L, static_cast<int32_t>(%s%s%s%s));\n", indent, object_name, object_access, field->name, index_string);
+        fprintf(source, "%slua_pushinteger(L, %s%s%s%s);\n", indent, object_name, object_access, field->name, index_string);
         break;
       case TYPE_UINT32_T:
         fprintf(source, "%snew_uint32_t(L);\n", indent);
@@ -1681,9 +1659,7 @@ void emit_field(const struct userdata_field *field, const char* object_name, con
         fprintf(source, "%slua_pushstring(L, %s%s%s%s);\n", indent, object_name, object_access, field->name, index_string);
         break;
       case TYPE_USERDATA:
-          // userdatas must allocate a new container to return
-          fprintf(source, "%snew_%s(L);\n", indent, field->type.data.ud.sanatized_name);
-          fprintf(source, "%s*check_%s(L, -1) = %s%s%s%s;\n", indent, field->type.data.ud.sanatized_name, object_name, object_access, field->name, index_string);
+        error(ERROR_USERDATA, "Userdata does not currently support access to userdata field's");
         break;
       case TYPE_AP_OBJECT: // FIXME: collapse the identical cases here, and use the type string function
         error(ERROR_USERDATA, "AP_Object does not currently support access to userdata field's");
@@ -1729,8 +1705,8 @@ void emit_userdata_fields() {
         emit_userdata_field(node, field);
         field = field->next;
       }
-      end_dependency(source, node->dependency);
     }
+    end_dependency(source, node->dependency);
     node = node->next;
   }
 }
@@ -2361,33 +2337,14 @@ void emit_sandbox(void) {
   fprintf(source, "    const lua_CFunction fun;\n");
   fprintf(source, "} new_userdata[] = {\n");
   while (data) {
-    // Dont expose creation function for all read only items
-    int expose_creation = FALSE;
-    if (data->creation || data->methods) {
-      // Custom creation or methods
-      expose_creation = TRUE;
+    start_dependency(source, data->dependency);
+    if (data->creation) {
+      // expose custom creation function to user (not used internally)
+      fprintf(source, "    {\"%s\", %s},\n", data->rename ? data->rename :  data->name, data->creation);
     } else {
-      // Feilds only
-      struct userdata_field * field = data->fields;
-      while(field) {
-        if (field->access_flags & ACCESS_FLAG_WRITE) {
-          expose_creation = TRUE;
-          break;
-        }
-        field = field->next;
-      }
+      fprintf(source, "    {\"%s\", new_%s},\n", data->rename ? data->rename :  data->name, data->sanatized_name);
     }
-
-    if (expose_creation) {
-      start_dependency(source, data->dependency);
-      if (data->creation) {
-        // expose custom creation function to user (not used internally)
-        fprintf(source, "    {\"%s\", %s},\n", data->rename ? data->rename :  data->name, data->creation);
-      } else {
-        fprintf(source, "    {\"%s\", lua_new_%s},\n", data->rename ? data->rename :  data->name, data->sanatized_name);
-      }
-      end_dependency(source, data->dependency);
-    }
+    end_dependency(source, data->dependency);
     data = data->next;
   }
   if (parsed_globals) {
@@ -2432,40 +2389,6 @@ void emit_argcheck_helper(void) {
   fprintf(source, "        return luaL_argerror(L, args, \"too few arguments\");\n");
   fprintf(source, "    }\n");
   fprintf(source, "    return 0;\n");
-  fprintf(source, "}\n\n");
-
-  // emit warning if augments are parsed
-  fprintf(source, "bool userdata_zero_arg_check(lua_State *L) {\n");
-  fprintf(source, "    if (lua_gettop(L) == 0) {\n");
-  fprintf(source, "        return false;\n");
-  fprintf(source, "    }\n");
-
-  // Try and get debug info
-  fprintf(source, "    lua_Debug ar;\n");
-
-  // Line number and file name
-  fprintf(source, "    if (lua_getstack(L, 1, &ar)) {\n");
-  fprintf(source, "        lua_getinfo(L, \"Sl\", &ar);\n");
-  fprintf(source, "        if (ar.currentline != 0) {\n");
-
-  // Function name
-  fprintf(source, "            if (lua_getstack(L, 0, &ar)) {\n");
-  fprintf(source, "                lua_getinfo(L, \"n\", &ar);\n");
-  fprintf(source, "                if (ar.name != NULL) {\n");
-
-  // Print warning with debug info
-  fprintf(source, "                    lua_scripts::set_and_print_new_error_message(MAV_SEVERITY_WARNING, \"%%s:%%d Warning: %%s does not take arguments, will be fatal in future\", ar.short_src, ar.currentline, ar.name);\n");
-  fprintf(source, "                    return true;\n");
-
-  fprintf(source, "                }\n");
-  fprintf(source, "            }\n");
-  fprintf(source, "        }\n");
-  fprintf(source, "    }\n");
-
-  // Print generic warning
-  fprintf(source, "    lua_scripts::set_and_print_new_error_message(MAV_SEVERITY_WARNING, \"Warning: userdate creation does not take arguments, will be fatal in future\");\n");
-
-  fprintf(source, "    return true;\n");
   fprintf(source, "}\n\n");
 
   fprintf(source, "lua_Integer get_integer(lua_State *L, int arg_num, lua_Integer min_val, lua_Integer max_val) {\n");
@@ -2864,11 +2787,7 @@ int main(int argc, char **argv) {
   }
 
   fprintf(source, "// auto generated bindings, don't manually edit.  See README.md for details.\n");
-
-  fprintf(source, "#include <AP_Scripting/AP_Scripting_config.h>\n\n");
-
-  fprintf(source, "#if AP_SCRIPTING_ENABLED\n\n");
-
+  
   trace(TRACE_GENERAL, "Sanity checking parsed input");
 
   sanity_check_userdata();
@@ -2922,8 +2841,6 @@ int main(int argc, char **argv) {
 
   emit_sandbox();
 
-  fprintf(source, "#endif  // AP_SCRIPTING_ENABLED\n");
-
   fclose(source);
   source = NULL;
 
@@ -2935,8 +2852,6 @@ int main(int argc, char **argv) {
   free(file_name);
   fprintf(header, "#pragma once\n");
   fprintf(header, "// auto generated bindings, don't manually edit.  See README.md for details.\n");
-  fprintf(header, "#include <AP_Scripting/AP_Scripting_config.h>\n\n");
-  fprintf(header, "#if AP_SCRIPTING_ENABLED\n\n");
   fprintf(header, "#include <AP_Vehicle/AP_Vehicle_Type.h> // needed for APM_BUILD_TYPE #if\n");
   emit_headers(header);
   fprintf(header, "#include <AP_Scripting/lua/src/lua.hpp>\n");
@@ -2948,7 +2863,6 @@ int main(int argc, char **argv) {
   fprintf(header, "void load_generated_bindings(lua_State *L);\n");
   fprintf(header, "void load_generated_sandbox(lua_State *L);\n");
   fprintf(header, "int binding_argcheck(lua_State *L, int expected_arg_count);\n");
-  fprintf(header, "bool userdata_zero_arg_check(lua_State *L);\n");
   fprintf(header, "lua_Integer get_integer(lua_State *L, int arg_num, lua_Integer min_val, lua_Integer max_val);\n");
   fprintf(header, "int8_t get_int8_t(lua_State *L, int arg_num);\n");
   fprintf(header, "int16_t get_int16_t(lua_State *L, int arg_num);\n");
@@ -2967,8 +2881,6 @@ int main(int argc, char **argv) {
     }
     node = node->next;
   }
-
-  fprintf(header, "#endif  // AP_SCRIPTING_ENABLED\n");
 
   fclose(header);
   header = NULL;

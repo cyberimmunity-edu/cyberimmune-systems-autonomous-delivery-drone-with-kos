@@ -6,11 +6,8 @@
 // Runs the main manual controller
 void ModeManual::run()
 {
-    Vector3f pilot;
-    float pilot_yaw;
-    get_pilot_input(pilot, pilot_yaw);
-    motors->right_out = pilot.y;
-    motors->front_out = pilot.x;
-    motors->yaw_out = pilot_yaw;
-    motors->down_out = pilot.z;
+    motors->right_out = channel_right->get_control_in() / float(RC_SCALE);
+    motors->front_out = channel_front->get_control_in() / float(RC_SCALE);
+    motors->yaw_out = channel_yaw->get_control_in() / float(RC_SCALE);
+    motors->down_out = channel_down->get_control_in() / float(RC_SCALE);
 }

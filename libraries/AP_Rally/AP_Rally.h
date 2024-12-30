@@ -14,11 +14,11 @@
  */
 #pragma once
 
-#include "AP_Rally_config.h"
-
-#if HAL_RALLY_ENABLED
-
 #include <AP_HAL/AP_HAL_Boards.h>
+
+#ifndef HAL_RALLY_ENABLED
+#define HAL_RALLY_ENABLED 1
+#endif
 
 #include <AP_Common/AP_Common.h>
 #include <AP_Common/Location.h>
@@ -98,5 +98,3 @@ private:
 namespace AP {
     AP_Rally *rally();
 };
-
-#endif  // HAL_RALLY_ENABLED

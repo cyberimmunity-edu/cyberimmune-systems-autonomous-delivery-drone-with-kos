@@ -2367,7 +2367,7 @@ void QuadPlane::vtol_position_controller(void)
 
     case QPOS_APPROACH:
         if (in_vtol_mode()) {
-            // this means we're not running transition update code and
+            // this means we're not running update_transition() and
             // thus not doing qassist checking, force POSITION1 mode
             // now. We don't expect this to trigger, it is a failsafe
             // for a logic error
@@ -2821,7 +2821,7 @@ void QuadPlane::vtol_position_controller(void)
         if (plane.control_mode == &plane.mode_guided || vtol_loiter_auto) {
             plane.ahrs.get_location(plane.current_loc);
             int32_t target_altitude_cm;
-            if (!plane.next_WP_loc.get_alt_cm(Location::AltFrame::ABOVE_HOME,target_altitude_cm)) {
+            if (!plane.next_WP_loc.get_alt_cm(Location::AltFrame::ABOVE_ORIGIN,target_altitude_cm)) {
                 break;
             }
             if (poscontrol.slow_descent &&
@@ -2829,7 +2829,7 @@ void QuadPlane::vtol_position_controller(void)
                 // gradually descend as we approach target
                 plane.auto_state.wp_proportion = plane.current_loc.line_path_proportion(plane.prev_WP_loc, plane.next_WP_loc);
                 int32_t prev_alt;
-                if (plane.prev_WP_loc.get_alt_cm(Location::AltFrame::ABOVE_HOME,prev_alt)) {
+                if (plane.prev_WP_loc.get_alt_cm(Location::AltFrame::ABOVE_ORIGIN,prev_alt)) {
                     target_altitude_cm = linear_interpolate(prev_alt,
                                                          target_altitude_cm,
                                                          plane.auto_state.wp_proportion,
@@ -2973,9 +2973,9 @@ void QuadPlane::takeoff_controller(void)
         // start motor spinning if not spinning already so user sees it is armed
         set_desired_spool_state(AP_Motors::DesiredSpoolState::GROUND_IDLE);
         takeoff_start_time_ms = now;
-        if (now - plane.takeoff_state.rudder_takeoff_warn_ms > TAKEOFF_RUDDER_WARNING_TIMEOUT) {
-            gcs().send_text(MAV_SEVERITY_WARNING, "Takeoff waiting for rudder release");
-            plane.takeoff_state.rudder_takeoff_warn_ms = now;
+        if (now - rudder_takeoff_warn_ms > 3000) {
+            gcs().send_text(MAV_SEVERITY_WARNING, "takeoff wait rudder release");
+            rudder_takeoff_warn_ms = now;
         }
         return;
     }
@@ -3060,7 +3060,8 @@ void QuadPlane::waypoint_controller(void)
 
     const Location &loc = plane.next_WP_loc;
     const uint32_t now = AP_HAL::millis();
-    if (!loc.same_loc_as(last_auto_target) ||
+    if (!loc.same_latlon_as(last_auto_target) ||
+        plane.next_WP_loc.alt != last_auto_target.alt ||
         now - last_loiter_ms > 500) {
         wp_nav->set_wp_destination(poscontrol.target_cm.tofloat());
         last_auto_target = loc;
@@ -4374,7 +4375,7 @@ MAV_VTOL_STATE SLT_Transition::get_mav_vtol_state() const
 }
 
 // Set FW roll and pitch limits and keep TECS informed
-void SLT_Transition::set_FW_roll_pitch(int32_t& nav_pitch_cd, int32_t& nav_roll_cd)
+void SLT_Transition::set_FW_roll_pitch(int32_t& nav_pitch_cd, int32_t& nav_roll_cd, bool& allow_stick_mixing)
 {
     if (quadplane.in_vtol_mode() || quadplane.in_vtol_airbrake()) {
         // not in FW flight
@@ -4551,17 +4552,6 @@ bool QuadPlane::abort_landing(void)
     }
     poscontrol.set_state(QuadPlane::QPOS_LAND_ABORT);
     return true;
-}
-
-// Should we allow stick mixing from the pilot
-bool QuadPlane::allow_stick_mixing() const
-{
-    if (!available()) {
-        // Quadplane not enabled
-        return true;
-    }
-    // Ask transition logic
-    return transition->allow_stick_mixing();
 }
 
 /*

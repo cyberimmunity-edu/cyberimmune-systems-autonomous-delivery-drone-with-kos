@@ -104,24 +104,22 @@ void ModeAcro::stabilize()
         SRV_Channels::set_output_scaled(SRV_Channel::k_elevator, plane.pitchController.get_rate_out(pitch_rate, speed_scaler));
     }
 
-    float rudder_output;
+    plane.steering_control.steering = plane.rudder_input();
+
     if (plane.g.acro_yaw_rate > 0 && plane.yawController.rate_control_enabled()) {
         // user has asked for yaw rate control with yaw rate scaled by ACRO_YAW_RATE
         const float rudd_expo = plane.rudder_in_expo(true);
         const float yaw_rate = (rudd_expo/SERVO_MAX) * plane.g.acro_yaw_rate;
-        rudder_output = plane.yawController.get_rate_out(yaw_rate,  speed_scaler, false);
-    } else if (plane.flight_option_enabled(FlightOptions::ACRO_YAW_DAMPER)) {
+        plane.steering_control.steering = plane.steering_control.rudder = plane.yawController.get_rate_out(yaw_rate,  speed_scaler, false);
+    } else if (plane.g2.flight_options & FlightOptions::ACRO_YAW_DAMPER) {
         // use yaw controller
-        rudder_output = plane.calc_nav_yaw_coordinated();
+        plane.calc_nav_yaw_coordinated();
     } else {
         /*
           manual rudder
         */
-        rudder_output = plane.rudder_input();
+        plane.steering_control.rudder = plane.steering_control.steering;
     }
-
-    output_rudder_and_steering(rudder_output);
-
 }
 
 /*
@@ -217,7 +215,7 @@ void ModeAcro::stabilize_quaternion()
     // call to rate controllers
     SRV_Channels::set_output_scaled(SRV_Channel::k_aileron,  plane.rollController.get_rate_out(desired_rates.x, speed_scaler));
     SRV_Channels::set_output_scaled(SRV_Channel::k_elevator, plane.pitchController.get_rate_out(desired_rates.y, speed_scaler));
-    output_rudder_and_steering(plane.yawController.get_rate_out(desired_rates.z,  speed_scaler, false));
+    plane.steering_control.steering = plane.steering_control.rudder = plane.yawController.get_rate_out(desired_rates.z,  speed_scaler, false);
 
     acro_state.roll_active_last = roll_active;
     acro_state.pitch_active_last = pitch_active;

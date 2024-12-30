@@ -320,13 +320,27 @@ class AutoTestRover(AutoTest):
             self.start_subtest("Checking mavlink commands")
             self.change_mode("MANUAL")
             self.progress("Starting Sprayer")
-            self.run_cmd(mavutil.mavlink.MAV_CMD_DO_SPRAYER, p1=1)
+            self.run_cmd(mavutil.mavlink.MAV_CMD_DO_SPRAYER,
+                         1,  # p1
+                         0,  # p2
+                         0,  # p3
+                         0,  # p4
+                         0,  # p5
+                         0,  # p6
+                         0)  # p7
 
             self.progress("Testing speed-ramping")
             self.set_rc(3, 1700) # start driving forward
             self.wait_servo_channel_value(pump_ch, 1690, timeout=60, comparator=operator.gt)
             self.start_subtest("Stopping Sprayer")
-            self.run_cmd(mavutil.mavlink.MAV_CMD_DO_SPRAYER, p1=0)
+            self.run_cmd(mavutil.mavlink.MAV_CMD_DO_SPRAYER,
+                         0,  # p1
+                         0,  # p2
+                         0,  # p3
+                         0,  # p4
+                         0,  # p5
+                         0,  # p6
+                         0)  # p7
             self.wait_servo_channel_value(pump_ch, pump_ch_min)
             self.set_rc(3, 1000) # start driving forward
 
@@ -342,21 +356,38 @@ class AutoTestRover(AutoTest):
 
     def DriveMaxRCIN(self, timeout=30):
         """Drive rover at max RC inputs"""
-        self.progress("Testing max RC inputs")
-        self.change_mode("MANUAL")
+        self.context_push()
+        ex = None
 
-        self.wait_ready_to_arm()
-        self.arm_vehicle()
+        try:
+            self.progress("Testing max RC inputs")
+            self.change_mode("MANUAL")
 
-        self.set_rc(3, 2000)
-        self.set_rc(1, 1000)
+            self.wait_ready_to_arm()
+            self.arm_vehicle()
 
-        tstart = self.get_sim_time()
-        while self.get_sim_time_cached() - tstart < timeout:
-            m = self.assert_receive_message('VFR_HUD')
-            self.progress("Current speed: %f" % m.groundspeed)
+            self.set_rc(3, 2000)
+            self.set_rc(1, 1000)
+
+            tstart = self.get_sim_time()
+            while self.get_sim_time_cached() - tstart < timeout:
+                m = self.mav.recv_match(type='VFR_HUD', blocking=True, timeout=1)
+                if m is not None:
+                    self.progress("Current speed: %f" % m.groundspeed)
+
+            # reduce throttle
+            self.set_rc(3, 1500)
+            self.set_rc(1, 1500)
+
+        except Exception as e:
+            self.print_exception_caught(e)
+            ex = e
 
         self.disarm_vehicle()
+        self.context_pop()
+
+        if ex:
+            raise ex
 
     #################################################
     # AUTOTEST ALL
@@ -582,113 +613,19 @@ Brakes have negligible effect (with=%0.2fm without=%0.2fm delta=%0.2fm)
 
     def ServoRelayEvents(self):
         '''Test ServoRelayEvents'''
-        for method in self.run_cmd, self.run_cmd_int:
-            self.context_push()
-            method(mavutil.mavlink.MAV_CMD_DO_SET_RELAY, p1=0, p2=0)
-            off = self.get_parameter("SIM_PIN_MASK")
-            method(mavutil.mavlink.MAV_CMD_DO_SET_RELAY, p1=0, p2=1)
-            on = self.get_parameter("SIM_PIN_MASK")
-            if on == off:
-                raise NotAchievedException(
-                    "Pin mask unchanged after relay cmd")
-            self.progress("Pin mask changed after relay command")
-            method(mavutil.mavlink.MAV_CMD_DO_SET_RELAY, p1=0, p2=0)
-
-            self.set_message_rate_hz("RELAY_STATUS", 10)
-
-            # default configuration for relays in sim have one relay:
-            self.assert_received_message_field_values('RELAY_STATUS', {
-                "present": 3,
-                "on": 0,
-            })
-            method(mavutil.mavlink.MAV_CMD_DO_SET_RELAY, p1=0, p2=1)
-            self.assert_received_message_field_values('RELAY_STATUS', {
-                "present": 3,
-                "on": 1,
-            })
-            method(mavutil.mavlink.MAV_CMD_DO_SET_RELAY, p1=1, p2=1)
-            self.assert_received_message_field_values('RELAY_STATUS', {
-                "present": 3,
-                "on": 3,
-            })
-            method(mavutil.mavlink.MAV_CMD_DO_SET_RELAY, p1=0, p2=0)
-            method(mavutil.mavlink.MAV_CMD_DO_SET_RELAY, p1=1, p2=0)
-            self.assert_received_message_field_values('RELAY_STATUS', {
-                "present": 3,
-                "on": 0,
-            })
-
-            # add another servo:
-            self.set_parameter("RELAY_PIN6", 14)
-            self.assert_received_message_field_values('RELAY_STATUS', {
-                "present": 35,
-                "on": 0,
-            })
-            method(mavutil.mavlink.MAV_CMD_DO_SET_RELAY, p1=5, p2=1)
-            self.assert_received_message_field_values('RELAY_STATUS', {
-                "present": 35,
-                "on": 32,
-            })
-            method(mavutil.mavlink.MAV_CMD_DO_SET_RELAY, p1=0, p2=1)
-            self.assert_received_message_field_values('RELAY_STATUS', {
-                "present": 35,
-                "on": 33,
-            })
-            method(mavutil.mavlink.MAV_CMD_DO_SET_RELAY, p1=5, p2=0)
-            self.assert_received_message_field_values('RELAY_STATUS', {
-                "present": 35,
-                "on": 1,
-            })
-
-            self.start_subtest("test MAV_CMD_DO_REPEAT_RELAY")
-            self.context_push()
-            self.set_parameter("SIM_SPEEDUP", 1)
-            method(
-                mavutil.mavlink.MAV_CMD_DO_REPEAT_RELAY,
-                p1=0,  # servo 1
-                p2=5,  # 5 times
-                p3=0.5,  # 1 second between being on
-            )
-            for value in 0, 1, 0, 1, 0, 1, 0, 1:
-                self.wait_message_field_values('RELAY_STATUS', {
-                    "on": value,
-                })
-            self.context_pop()
-            self.delay_sim_time(3)
-            self.assert_received_message_field_values('RELAY_STATUS', {
-                "on": 1,  # back to initial state
-            })
-            self.context_pop()
-
-            self.start_subtest("test MAV_CMD_DO_SET_SERVO")
-            for value in 1678, 2300, 0:
-                method(mavutil.mavlink.MAV_CMD_DO_SET_SERVO, p1=13, p2=value)
-                self.wait_servo_channel_value(13, value)
-
-            self.start_subtest("test MAV_CMD_DO_REPEAT_SERVO")
-
-            self.context_push()
-            self.set_parameter("SIM_SPEEDUP", 1)
-            trim = self.get_parameter("SERVO13_TRIM")
-            value = 2000
-            method(
-                mavutil.mavlink.MAV_CMD_DO_REPEAT_SERVO,
-                p1=12,  # servo12
-                p2=value,  # pwm
-                p3=5,  # count
-                p4=0.5,  # cycle time (1 second between high and high)
-            )
-            for value in trim, value, trim, value, trim, value, trim, value:
-                self.wait_servo_channel_value(12, value)
-            self.context_pop()
-
-        self.set_message_rate_hz("RELAY_STATUS", 0)
+        self.do_set_relay(0, 0)
+        off = self.get_parameter("SIM_PIN_MASK")
+        self.do_set_relay(0, 1)
+        on = self.get_parameter("SIM_PIN_MASK")
+        if on == off:
+            raise NotAchievedException(
+                "Pin mask unchanged after relay cmd")
+        self.progress("Pin mask changed after relay command")
 
     def MAVProxy_SetModeUsingSwitch(self):
         """Set modes via mavproxy switch"""
-        port = self.sitl_rcin_port(offset=1)
         self.customise_SITL_commandline([
-            "--rc-in-port", str(port),
+            "--rc-in-port", "5502",
         ])
         ex = None
         try:
@@ -700,7 +637,7 @@ Brakes have negligible effect (with=%0.2fm without=%0.2fm delta=%0.2fm)
                     (4, 'AUTO'),
                     (5, 'AUTO'),  # non-existant mode, should stay in RTL
                     (6, 'MANUAL')]
-            mavproxy = self.start_mavproxy(sitl_rcin_port=port)
+            mavproxy = self.start_mavproxy()
             for (num, expected) in fnoo:
                 mavproxy.send('switch %u\n' % num)
                 self.wait_mode(expected)
@@ -1257,7 +1194,7 @@ Brakes have negligible effect (with=%0.2fm without=%0.2fm delta=%0.2fm)
         self.do_set_mode_via_command_long("HOLD")
         self.do_set_mode_via_command_long("MANUAL")
 
-    def RoverInitialMode(self):
+    def InitialMode(self):
         '''test INITIAL_MODE parameter works'''
         # from mavproxy_rc.py
         self.wait_ready_to_arm()
@@ -4836,12 +4773,13 @@ Brakes have negligible effect (with=%0.2fm without=%0.2fm delta=%0.2fm)
         self.wait_ready_to_arm()
         self.run_cmd(
             mavutil.mavlink.MAV_CMD_DO_MOTOR_TEST,
-            p1=1, # motor instance
-            p2=mavutil.mavlink.MOTOR_TEST_THROTTLE_PWM, # throttle type
-            p3=magic_throttle_value, # throttle
-            p4=5, # timeout
-            p5=1, # motor count
-            p6=0, # test order (see MOTOR_TEST_ORDER)
+            1, # p1 - motor instance
+            mavutil.mavlink.MOTOR_TEST_THROTTLE_PWM, # p2 - throttle type
+            magic_throttle_value, # p3 - throttle
+            5, # p4 - timeout
+            1, # p5 - motor count
+            0, # p6 - test order (see MOTOR_TEST_ORDER)
+            0, # p7
         )
         self.wait_armed()
         self.progress("Waiting for magic throttle value")
@@ -5283,19 +5221,15 @@ Brakes have negligible effect (with=%0.2fm without=%0.2fm delta=%0.2fm)
 
         self.context_push()
 
-        test_scripts = ["scripting_test.lua", "math.lua", "strings.lua", "mavlink_test.lua"]
-        success_text = ["Internal tests passed", "Math tests passed", "String tests passed", "Received heartbeat from"]
-        named_value_float_types = ["test"]
+        test_scripts = ["scripting_test.lua", "math.lua", "strings.lua"]
+        success_text = ["Internal tests passed", "Math tests passed", "String tests passed"]
 
         messages = []
-        named_value_float = []
 
         def my_message_hook(mav, message):
-            if message.get_type() == 'STATUSTEXT':
-                messages.append(message)
-            # also sniff for named value float messages
-            if message.get_type() == 'NAMED_VALUE_FLOAT':
-                named_value_float.append(message)
+            if message.get_type() != 'STATUSTEXT':
+                return
+            messages.append(message)
 
         self.install_message_hook_context(my_message_hook)
         self.set_parameters({
@@ -5303,8 +5237,6 @@ Brakes have negligible effect (with=%0.2fm without=%0.2fm delta=%0.2fm)
             "SCR_HEAP_SIZE": 1024000,
             "SCR_VM_I_COUNT": 1000000,
         })
-        self.install_test_modules_context()
-        self.install_mavlink_module_context()
         for script in test_scripts:
             self.install_test_script_context(script)
         self.reboot_sitl()
@@ -5322,21 +5254,9 @@ Brakes have negligible effect (with=%0.2fm without=%0.2fm delta=%0.2fm)
                 if text in m.text:
                     script_success = True
             success = script_success and success
+        self.progress("Success")
         if not success:
-            raise NotAchievedException("Failed to receive STATUS_TEXT")
-        else:
-            self.progress("Success STATUS_TEXT")
-
-        for type in named_value_float_types:
-            script_success = False
-            for m in named_value_float:
-                if type == m.name:
-                    script_success = True
-            success = script_success and success
-        if not success:
-            raise NotAchievedException("Failed to receive NAMED_VALUE_FLOAT")
-        else:
-            self.progress("Success NAMED_VALUE_FLOAT")
+            raise NotAchievedException("Scripting internal test failed")
 
     def test_scripting_hello_world(self):
         self.start_subtest("Scripting hello world")
@@ -5991,14 +5911,18 @@ Brakes have negligible effect (with=%0.2fm without=%0.2fm delta=%0.2fm)
 
         self.set_current_waypoint_using_mav_cmd_do_set_mission_current(2)
 
-        self.run_cmd(
-            mavutil.mavlink.MAV_CMD_DO_SET_MISSION_CURRENT,
-            p1=17,
-            timeout=1,
-            target_sysid=target_sysid,
-            target_compid=target_compid,
-            want_result=mavutil.mavlink.MAV_RESULT_FAILED,
-        )
+        self.run_cmd(mavutil.mavlink.MAV_CMD_DO_SET_MISSION_CURRENT,
+                     17,
+                     0,
+                     0,
+                     0,
+                     0,
+                     0,
+                     0,
+                     timeout=1,
+                     target_sysid=target_sysid,
+                     target_compid=target_compid,
+                     want_result=mavutil.mavlink.MAV_RESULT_FAILED)
 
     def FlashStorage(self):
         '''Test flash storage (for parameters etc)'''
@@ -6152,9 +6076,8 @@ Brakes have negligible effect (with=%0.2fm without=%0.2fm delta=%0.2fm)
         })
         self.set_rc(9, 2000)
         self.reboot_sitl()
-        self.assert_prearm_failure(
-            "Motors Emergency Stopped",
-            other_prearm_failures_fatal=False)
+        self.delay_sim_time(10)
+        self.assert_prearm_failure("Motors Emergency Stopped")
         self.context_pop()
         self.reboot_sitl()
 
@@ -6257,8 +6180,7 @@ Brakes have negligible effect (with=%0.2fm without=%0.2fm delta=%0.2fm)
     def PrivateChannel(self):
         '''test the serial option bit specifying a mavlink channel as private'''
         global mav2
-        port = self.adjust_ardupilot_port(5763)
-        mav2 = mavutil.mavlink_connection("tcp:localhost:%u" % port,
+        mav2 = mavutil.mavlink_connection("tcp:localhost:5763",
                                           robust_parsing=True,
                                           source_system=7,
                                           source_component=7)
@@ -6359,161 +6281,6 @@ Brakes have negligible effect (with=%0.2fm without=%0.2fm delta=%0.2fm)
             # both the vehicle and this tests's special heartbeat
             raise NotAchievedException("Got heartbeat on private channel from non-vehicle")
 
-    def MAV_CMD_DO_SET_REVERSE(self):
-        '''test MAV_CMD_DO_SET_REVERSE command'''
-        self.change_mode('GUIDED')
-        self.wait_ready_to_arm()
-        self.arm_vehicle()
-
-        here = self.mav.location()
-        target_loc = self.offset_location_ne(here, 2000, 0)
-        self.send_guided_mission_item(target_loc)
-
-        self.wait_groundspeed(3, 100, minimum_duration=5)
-
-        for method in self.run_cmd, self.run_cmd_int:
-            self.progress("Forwards!")
-            method(mavutil.mavlink.MAV_CMD_DO_SET_REVERSE, p1=0)
-            self.wait_heading(0)
-
-            self.progress("Backwards!")
-            method(mavutil.mavlink.MAV_CMD_DO_SET_REVERSE, p1=1)
-            self.wait_heading(180)
-
-            self.progress("Forwards!")
-            method(mavutil.mavlink.MAV_CMD_DO_SET_REVERSE, p1=0)
-            self.wait_heading(0)
-
-        self.disarm_vehicle()
-
-    def MAV_CMD_NAV_RETURN_TO_LAUNCH(self):
-        '''test MAV_CMD_NAV_RETURN_TO_LAUNCH mavlink command'''
-        self.change_mode('GUIDED')
-        self.wait_ready_to_arm()
-        self.arm_vehicle()
-
-        here = self.mav.location()
-        target_loc = self.offset_location_ne(here, 2000, 0)
-        self.send_guided_mission_item(target_loc)
-        self.wait_distance_to_home(20, 100)
-
-        self.run_cmd(mavutil.mavlink.MAV_CMD_NAV_RETURN_TO_LAUNCH)
-        self.wait_mode('RTL')
-
-        self.change_mode('GUIDED')
-
-        self.run_cmd_int(mavutil.mavlink.MAV_CMD_NAV_RETURN_TO_LAUNCH)
-        self.wait_mode('RTL')
-
-        self.wait_distance_to_home(0, 5, timeout=30)
-        self.disarm_vehicle()
-
-    def MAV_CMD_DO_CHANGE_SPEED(self):
-        '''test MAV_CMD_NAV_RETURN_TO_LAUNCH mavlink command'''
-        self.change_mode('GUIDED')
-        self.wait_ready_to_arm()
-        self.arm_vehicle()
-
-        original_loc = self.mav.location()
-        here = original_loc
-        target_loc = self.offset_location_ne(here, 2000, 0)
-        self.send_guided_mission_item(target_loc)
-        self.wait_distance_to_home(20, 100)
-
-        speeds = 3, 7, 12, 4
-
-        for speed in speeds:
-            self.run_cmd(mavutil.mavlink.MAV_CMD_DO_CHANGE_SPEED, p2=speed)
-            self.wait_groundspeed(speed-0.5, speed+0.5, minimum_duration=5)
-
-        self.send_guided_mission_item(original_loc)
-
-        for speed in speeds:
-            self.run_cmd_int(mavutil.mavlink.MAV_CMD_DO_CHANGE_SPEED, p2=speed)
-            self.wait_groundspeed(speed-0.5, speed+0.5, minimum_duration=5)
-
-        self.change_mode('RTL')
-
-        self.wait_distance_to_home(0, 5, timeout=30)
-        self.disarm_vehicle()
-
-    def MAV_CMD_MISSION_START(self):
-        '''simple test for starting missing using this command'''
-        # home and 1 waypoint a long way away:
-        self.upload_simple_relhome_mission([
-            (mavutil.mavlink.MAV_CMD_NAV_WAYPOINT, 0, 0, 0),
-            (mavutil.mavlink.MAV_CMD_NAV_WAYPOINT, 2000, 0, 0),
-        ])
-        self.change_mode('AUTO')
-        self.wait_ready_to_arm()
-        self.arm_vehicle()
-        for method in self.run_cmd, self.run_cmd_int:
-            self.change_mode('MANUAL')
-            self.wait_groundspeed(0, 1)
-            method(mavutil.mavlink.MAV_CMD_MISSION_START)
-            self.wait_mode('AUTO')
-            self.wait_groundspeed(3, 100)
-        self.disarm_vehicle()
-
-    def MAV_CMD_NAV_SET_YAW_SPEED(self):
-        '''tests for MAV_CMD_NAV_SET_YAW_SPEED guided-mode command'''
-        self.change_mode('GUIDED')
-        self.wait_ready_to_arm()
-        self.arm_vehicle()
-
-        for method in self.run_cmd, self.run_cmd_int:
-            self.change_mode('MANUAL')
-            self.wait_groundspeed(0, 1)
-            self.change_mode('GUIDED')
-            self.start_subtest("Absolute angles")
-            for (heading, speed) in (10, 5), (190, 10), (0, 2), (135, 6):
-                def cf(*args, **kwargs):
-                    method(
-                        mavutil.mavlink.MAV_CMD_NAV_SET_YAW_SPEED,
-                        p1=heading,
-                        p2=speed,
-                        p3=0,  # zero is absolute-angles
-                    )
-                self.wait_groundspeed(speed-0.5, speed+0.5, called_function=cf, minimum_duration=2)
-                self.wait_heading(heading-0.5, heading+0.5, called_function=cf, minimum_duration=2)
-
-            self.start_subtest("relative angles")
-            original_angle = 90
-            method(
-                mavutil.mavlink.MAV_CMD_NAV_SET_YAW_SPEED,
-                p1=original_angle,
-                p2=5,
-                p3=0,  # zero is absolute-angles
-            )
-            self.wait_groundspeed(4, 6)
-            self.wait_heading(original_angle-0.5, original_angle+0.5)
-
-            expected_angle = original_angle
-            for (angle_delta, speed) in (5, 6), (-30, 2), (180, 7):
-                method(
-                    mavutil.mavlink.MAV_CMD_NAV_SET_YAW_SPEED,
-                    p1=angle_delta,
-                    p2=speed,
-                    p3=1,  # one is relative-angles
-                )
-
-                def cf(*args, **kwargs):
-                    method(
-                        mavutil.mavlink.MAV_CMD_NAV_SET_YAW_SPEED,
-                        p1=0,
-                        p2=speed,
-                        p3=1,  # one is absolute-angles
-                    )
-                expected_angle += angle_delta
-                if expected_angle < 0:
-                    expected_angle += 360
-                if expected_angle > 360:
-                    expected_angle -= 360
-                self.wait_groundspeed(speed-0.5, speed+0.5, called_function=cf, minimum_duration=2)
-                self.wait_heading(expected_angle, called_function=cf, minimum_duration=2)
-        self.do_RTL()
-        self.disarm_vehicle()
-
     def tests(self):
         '''return list of all tests'''
         ret = super(AutoTestRover, self).tests()
@@ -6547,9 +6314,6 @@ Brakes have negligible effect (with=%0.2fm without=%0.2fm delta=%0.2fm)
             self.SET_ATTITUDE_TARGET,
             self.SET_POSITION_TARGET_LOCAL_NED,
             self.MAV_CMD_DO_SET_MISSION_CURRENT,
-            self.MAV_CMD_DO_CHANGE_SPEED,
-            self.MAV_CMD_MISSION_START,
-            self.MAV_CMD_NAV_SET_YAW_SPEED,
             self.Button,
             self.Rally,
             self.Offboard,
@@ -6583,16 +6347,12 @@ Brakes have negligible effect (with=%0.2fm without=%0.2fm delta=%0.2fm)
             self.DepthFinder,
             self.ChangeModeByNumber,
             self.EStopAtBoot,
-            self.MAV_CMD_NAV_RETURN_TO_LAUNCH,
             self.StickMixingAuto,
             self.AutoDock,
             self.PrivateChannel,
             self.GCSFailsafe,
-            self.RoverInitialMode,
+            self.InitialMode,
             self.DriveMaxRCIN,
-            self.NoArmWithoutMissionItems,
-            self.CompassPrearms,
-            self.MAV_CMD_DO_SET_REVERSE,
         ])
         return ret
 

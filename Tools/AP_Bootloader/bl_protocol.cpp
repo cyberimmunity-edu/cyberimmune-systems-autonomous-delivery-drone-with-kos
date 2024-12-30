@@ -163,7 +163,7 @@ extern AP_FlashIface_JEDEC ext_flash;
 /*
   1ms timer tick callback
  */
-static void sys_tick_handler(virtual_timer_t* vt, void *ctx)
+static void sys_tick_handler(void *ctx)
 {
     chSysLockFromISR();
     chVTSetI(&systick_vt, chTimeMS2I(1), sys_tick_handler, nullptr);
@@ -238,10 +238,6 @@ do_jump(uint32_t stacktop, uint32_t entrypoint)
 
 #ifndef APP_START_ADDRESS
 #define APP_START_ADDRESS (FLASH_LOAD_ADDRESS + (FLASH_BOOTLOADER_LOAD_KB + APP_START_OFFSET_KB)*1024U)
-#endif
-
-#if !defined(STM32_OTG2_IS_OTG1)
-#define STM32_OTG2_IS_OTG1 0
 #endif
 
 void
@@ -320,17 +316,12 @@ jump_to_app()
 #elif defined(STM32L4)
     rccDisableAPB1R1(~0);
     rccDisableAPB1R2(~0);
-#elif defined(STM32L4PLUS)
-    rccDisableAPB1R1(~0);
-    rccDisableAPB1R2(~0);
 #else
     rccDisableAPB1(~0);
 #endif
     rccDisableAPB2(~0);
-#if HAL_USE_SERIAL_USB == TRUE
-#if !STM32_OTG2_IS_OTG1
+#if HAL_USE_SERIAL_USB == TRUE    
     rccResetOTG_FS();
-#endif
 #if defined(rccResetOTG_HS)
     rccResetOTG_HS();
 #endif
@@ -634,7 +625,7 @@ bootloader(unsigned timeout)
             led_set(LED_OFF);
 
             // erase all sectors
-            for (uint16_t i = 0; flash_func_sector_size(i) != 0; i++) {
+            for (uint8_t i = 0; flash_func_sector_size(i) != 0; i++) {
 #if defined(STM32F7) || defined(STM32H7)
                 if (!flash_func_erase_sector(i, c == PROTO_CHIP_FULL_ERASE)) {
 #else

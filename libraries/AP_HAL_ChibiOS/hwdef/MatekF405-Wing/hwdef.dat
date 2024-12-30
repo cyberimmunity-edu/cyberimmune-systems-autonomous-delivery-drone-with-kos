@@ -128,8 +128,8 @@ PC13 VBUS INPUT OPENDRAIN
 
 PC15 BUZZER OUTPUT GPIO(80) LOW
 define HAL_BUZZER_PIN 80
-
-
+define HAL_BUZZER_ON 1
+define HAL_BUZZER_OFF 0
 
 #################################################
 ###                 DEVICES                   ###
@@ -157,6 +157,8 @@ define AP_BARO_BMP280_ENABLED 1
 define AP_BARO_DPS280_ENABLED 1
 
 define HAL_OS_FATFS_IO 1
+define HAL_BOARD_LOG_DIRECTORY "/APM/LOGS"
+define HAL_BOARD_TERRAIN_DIRECTORY "/APM/TERRAIN"
 
 # define default battery setup
 define HAL_BATT_MONITOR_DEFAULT 4

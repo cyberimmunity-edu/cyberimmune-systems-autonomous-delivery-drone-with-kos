@@ -1,10 +1,10 @@
 #pragma once
 
-#include "AP_Notify_config.h"
-
-#if HAL_DISPLAY_ENABLED
-
 #include "NotifyDevice.h"
+
+#ifndef HAL_DISPLAY_ENABLED
+#define HAL_DISPLAY_ENABLED !HAL_MINIMIZE_FEATURES
+#endif
 
 #define ROW(Y)    ((Y * 10) + 6)
 #define COLUMN(X) ((X *  7) + 0)
@@ -43,5 +43,3 @@ private:
     // stop showing text in display after this many millis:
     const uint16_t _send_text_valid_millis = 20000;
 };
-
-#endif  // HAL_DISPLAY_ENABLED

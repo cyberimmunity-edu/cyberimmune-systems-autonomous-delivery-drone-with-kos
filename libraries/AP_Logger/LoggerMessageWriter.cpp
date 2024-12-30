@@ -1,20 +1,7 @@
-#include "AP_Logger_config.h"
-
-#if HAL_LOGGING_ENABLED
-
 #include "AP_Common/AP_FWVersion.h"
 #include "LoggerMessageWriter.h"
 #include <AP_Scheduler/AP_Scheduler.h>
 #include <AP_Vehicle/AP_Vehicle_Type.h>
-#include "AP_Logger.h"
-
-#if HAL_LOGGER_FENCE_ENABLED
-    #include <AC_Fence/AC_Fence.h>
-#endif
-
-#if HAL_LOGGER_RALLY_ENABLED
-#include <AP_Rally/AP_Rally.h>
-#endif
 
 #define FORCE_VERSION_H_INCLUDE
 #include "ap_version.h"
@@ -55,7 +42,7 @@ void LoggerMessageWriter_DFLogStart::reset()
 #if AP_MISSION_ENABLED
     _writeentiremission.reset();
 #endif
-#if HAL_LOGGER_RALLY_ENABLED
+#if HAL_RALLY_ENABLED
     _writeallrallypoints.reset();
 #endif
 #if HAL_LOGGER_FENCE_ENABLED
@@ -192,7 +179,7 @@ void LoggerMessageWriter_DFLogStart::process()
             }
         }
 #endif
-#if HAL_LOGGER_RALLY_ENABLED
+#if HAL_RALLY_ENABLED
         if (!_writeallrallypoints.finished()) {
             _writeallrallypoints.process();
             if (!_writeallrallypoints.finished()) {
@@ -244,7 +231,7 @@ bool LoggerMessageWriter_DFLogStart::writeentiremission()
 }
 #endif
 
-#if HAL_LOGGER_RALLY_ENABLED
+#if HAL_RALLY_ENABLED
 bool LoggerMessageWriter_DFLogStart::writeallrallypoints()
 {
     if (stage != Stage::DONE) {
@@ -365,7 +352,6 @@ void LoggerMessageWriter_WriteSysInfo::process() {
     _finished = true;  // all done!
 }
 
-#if HAL_LOGGER_RALLY_ENABLED
 void LoggerMessageWriter_WriteAllRallyPoints::process()
 {
     const AP_Rally *_rally = AP::rally();
@@ -415,7 +401,6 @@ void LoggerMessageWriter_WriteAllRallyPoints::reset()
     stage = Stage::WRITE_NEW_RALLY_MESSAGE;
     _rally_number_to_send = 0;
 }
-#endif  // HAL_LOGGER_RALLY_ENABLED
 
 void LoggerMessageWriter_WriteEntireMission::process() {
     const AP_Mission *_mission = AP::mission();
@@ -524,5 +509,3 @@ void LoggerMessageWriter_Write_Polyfence::reset()
 }
 #endif // !APM_BUILD_TYPE(APM_BUILD_Replay)
 #endif // AP_FENCE_ENABLED
-
-#endif  // HAL_LOGGING_ENABLED

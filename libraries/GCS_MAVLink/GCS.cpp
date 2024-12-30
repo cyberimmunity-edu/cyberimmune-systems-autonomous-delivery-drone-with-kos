@@ -1,7 +1,3 @@
-#include "GCS_config.h"
-
-#if HAL_GCS_ENABLED
-
 #include "GCS.h"
 
 #include <AC_Fence/AC_Fence.h>
@@ -153,12 +149,9 @@ void GCS::update_sensor_status_flags()
     control_sensors_enabled = 0;
     control_sensors_health = 0;
 
-#if AP_INERTIALSENSOR_ENABLED
-    const AP_InertialSensor &ins = AP::ins();
-#endif
-
-#if AP_AHRS_ENABLED && AP_INERTIALSENSOR_ENABLED
+#if !defined(HAL_BUILD_AP_PERIPH) || defined(HAL_PERIPH_ENABLE_AHRS)
     AP_AHRS &ahrs = AP::ahrs();
+    const AP_InertialSensor &ins = AP::ins();
 
     control_sensors_present |= MAV_SYS_STATUS_AHRS;
     if (ahrs.initialised()) {
@@ -171,7 +164,7 @@ void GCS::update_sensor_status_flags()
     }
 #endif
 
-#if AP_COMPASS_ENABLED
+#if !defined(HAL_BUILD_AP_PERIPH) || defined(HAL_PERIPH_ENABLE_MAG)
     const Compass &compass = AP::compass();
     if (AP::compass().available()) {
         control_sensors_present |= MAV_SYS_STATUS_SENSOR_3D_MAG;
@@ -182,16 +175,18 @@ void GCS::update_sensor_status_flags()
     }
 #endif
 
-#if AP_BARO_ENABLED
+#if !defined(HAL_BUILD_AP_PERIPH) || defined(HAL_PERIPH_ENABLE_BARO)
     const AP_Baro &barometer = AP::baro();
-    control_sensors_present |= MAV_SYS_STATUS_SENSOR_ABSOLUTE_PRESSURE;
-    control_sensors_enabled |= MAV_SYS_STATUS_SENSOR_ABSOLUTE_PRESSURE;
-    if (barometer.all_healthy()) {
-        control_sensors_health |= MAV_SYS_STATUS_SENSOR_ABSOLUTE_PRESSURE;
+    if (barometer.num_instances() > 0) {
+        control_sensors_present |= MAV_SYS_STATUS_SENSOR_ABSOLUTE_PRESSURE;
+        control_sensors_enabled |= MAV_SYS_STATUS_SENSOR_ABSOLUTE_PRESSURE;
+        if (barometer.all_healthy()) {
+            control_sensors_health |= MAV_SYS_STATUS_SENSOR_ABSOLUTE_PRESSURE;
+        }
     }
 #endif
 
-#if AP_GPS_ENABLED
+#if !defined(HAL_BUILD_AP_PERIPH) || defined(HAL_PERIPH_ENABLE_GPS)
     const AP_GPS &gps = AP::gps();
     if (gps.status() > AP_GPS::NO_GPS) {
         control_sensors_present |= MAV_SYS_STATUS_SENSOR_GPS;
@@ -202,7 +197,7 @@ void GCS::update_sensor_status_flags()
     }
 #endif
 
-#if AP_BATTERY_ENABLED
+#if !defined(HAL_BUILD_AP_PERIPH) || defined(HAL_PERIPH_ENABLE_BATTERY)
     const AP_BattMonitor &battery = AP::battery();
     control_sensors_present |= MAV_SYS_STATUS_SENSOR_BATTERY;
     if (battery.num_instances() > 0) {
@@ -213,7 +208,7 @@ void GCS::update_sensor_status_flags()
     }
 #endif
 
-#if AP_INERTIALSENSOR_ENABLED
+#if !defined(HAL_BUILD_AP_PERIPH) || defined(HAL_PERIPH_ENABLE_AHRS)
     control_sensors_present |= MAV_SYS_STATUS_SENSOR_3D_GYRO;
     control_sensors_present |= MAV_SYS_STATUS_SENSOR_3D_ACCEL;
     if (!ins.calibrating()) {
@@ -233,7 +228,7 @@ void GCS::update_sensor_status_flags()
     bool logging_present = logger.logging_present();
     bool logging_enabled = logger.logging_enabled();
     bool logging_healthy = !logger.logging_failed();
-#if AP_GPS_ENABLED
+#if !defined(HAL_BUILD_AP_PERIPH) || defined(HAL_PERIPH_ENABLE_GPS)
     // some GPS units do logging, so they have to be healthy too:
     logging_present |= gps.logging_present();
     logging_enabled |= gps.logging_enabled();
@@ -379,5 +374,3 @@ bool GCS_MAVLINK::check_payload_size(uint16_t max_payload_len)
     }
     return true;
 }
-
-#endif  // HAL_GCS_ENABLED

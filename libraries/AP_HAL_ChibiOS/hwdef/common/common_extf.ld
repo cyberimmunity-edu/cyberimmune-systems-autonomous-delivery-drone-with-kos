@@ -22,8 +22,7 @@
 /* RAM region to be used for fast code. */
 REGION_ALIAS("FASTCODE_RAM", flashram)
 
-/* stack areas are configured to be in AXI RAM (ram0) to ensure the SSBL will load the image.
-   better performance can be achieved by using DTCM for stack but this will break SSBL. */
+/* stack areas are configured to be in AXI RAM (ram1) to ensure the SSBL will load the image */
 /* RAM region to be used for Main stack. This stack accommodates the processing
    of all exceptions and interrupts*/
 REGION_ALIAS("MAIN_STACK_RAM", flashram);
@@ -41,18 +40,11 @@ REGION_ALIAS("BSS_RAM", ram0);
 /* RAM region to be used for the default heap.*/
 REGION_ALIAS("HEAP_RAM", ram0);
 
-/* The ChibiOS crt code looks at all of the __ramx_xxxx__ sections
-   it will copy from __ramx_init_text__ to __ramx_init__ until __ramx_clear__ is hit
-   it will then clear from __ramx_clear__ to __ramx_no_init__
-   the number of areas actually used is determined by CRT0_AREAS_NUMBER
- */
-
-/* AXI */
 __ram0_start__          = ORIGIN(ram0);
 __ram0_size__           = LENGTH(ram0);
 __ram0_end__            = __ram0_start__ + __ram0_size__;
 
-/* AXI for RAM functions */
+/* AXI */
 __ram1_start__          = ORIGIN(flashram);
 __ram1_size__           = LENGTH(flashram);
 __ram1_end__            = __ram1_start__ + __ram1_size__;
@@ -62,7 +54,7 @@ __ram2_start__          = ORIGIN(dataram);
 __ram2_size__           = LENGTH(dataram);
 __ram2_end__            = __ram2_start__ + __ram2_size__;
 
-/* ITCM for RAM functions */
+/* ITCM */
 __ram3_start__          = ORIGIN(instram);
 __ram3_size__           = LENGTH(instram);
 __ram3_end__            = __ram3_start__ + __ram3_size__;
@@ -106,7 +98,7 @@ SECTIONS
         __ram3_init_text__ = LOADADDR(.fastramfunc);
         __ram3_init__ = .;
         /* ChibiOS won't boot unless these are excluded */
-        EXCLUDE_FILE (*vectors.o *crt0_v7m.o *crt1.o *board.o)
+        EXCLUDE_FILE (*vectors.o *crt0_v7m.o *crt1.o)
         /* performance critical sections of ChibiOS */
         *libch.a:ch*.*(.text*)
         *libch.a:nvic.*(.text*)
@@ -151,7 +143,7 @@ SECTIONS
         __ram1_init_text__ = LOADADDR(.ramfunc);
         __ram1_init__ = .;
         /* ChibiOS won't boot unless these are excluded */
-        EXCLUDE_FILE (*vectors.o *crt0_v7m.o *crt1.o *board.o)
+        EXCLUDE_FILE (*vectors.o *crt0_v7m.o *crt1.o)
         /*libch.a:*(.text* .rodata* .glue_7t .glue_7 .gcc*)*/
         /* a selection of larger performance critical functions */
         lib/lib*.a:*Filter.*(.text* .rodata*)
@@ -192,9 +184,9 @@ SECTIONS
         __ram1_clear__ = .;
         . = ALIGN(4);
         __ram1_noinit__ = .;
+        *(.ram1*)
         . = ALIGN(4);
         __ram1_free__ = .;
-        . = ALIGN(4);
     } > flashram
 
     /* DATA_RAM area is DTCM primarily used for RAM-based data, e.g. vtables */
@@ -204,7 +196,7 @@ SECTIONS
         __ram2_init_text__ = LOADADDR(.ramdata);
         __ram2_init__ = .;
         /* ChibiOS won't boot unless these are excluded */
-        EXCLUDE_FILE (*vectors.o *crt0_v7m.o *crt1.o *board.o)
+        EXCLUDE_FILE (*vectors.o *crt0_v7m.o *crt1.o)
         /* performance critical sections of ChibiOS */
         *libch.a:ch*.*(.rodata*)
         *libch.a:nvic.*(.rodata*)
@@ -231,9 +223,9 @@ SECTIONS
         __ram2_clear__ = .;
         . = ALIGN(4);
         __ram2_noinit__ = .;
+        *(.ram2*)
         . = ALIGN(4);
         __ram2_free__ = .;
-        . = ALIGN(4);
     } > dataram
 
     .text : ALIGN(4) SUBALIGN(4)
@@ -242,8 +234,6 @@ SECTIONS
            positive isn't found by the bootloader (eg. ROMFS) */
         KEEP(*libch.a:vectors.o);
         KEEP(*libch.a:crt0_v7m.o);
-        KEEP(*libch.a:crt1.o);
-        KEEP(*libch.a:board.o);
         KEEP(*(.apsec_data));
         KEEP(*(.app_descriptor));
         *(.text)

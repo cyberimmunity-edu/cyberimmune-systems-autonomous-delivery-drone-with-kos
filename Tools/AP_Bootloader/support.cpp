@@ -34,10 +34,6 @@ static uint8_t last_uart;
 #define BOOTLOADER_BAUDRATE 115200
 #endif
 
-#ifndef AP_BOOTLOADER_ALWAYS_ERASE
-#define AP_BOOTLOADER_ALWAYS_ERASE 0
-#endif
-
 // #pragma GCC optimize("O0")
 
 static bool cin_data(uint8_t *data, uint8_t len, unsigned timeout_ms)
@@ -143,21 +139,12 @@ uint32_t flash_func_sector_size(uint32_t sector)
     return stm32_flash_getpagesize(flash_base_page+sector);
 }
 
-bool flash_func_is_erased(uint32_t sector)
-{
-    return stm32_flash_ispageerased(flash_base_page+sector);
-}
-
 bool flash_func_erase_sector(uint32_t sector, bool force_erase)
 {
-#if AP_BOOTLOADER_ALWAYS_ERASE
-    return stm32_flash_erasepage(flash_base_page+sector);
-#else
     if (force_erase || !stm32_flash_ispageerased(flash_base_page+sector)) {
         return stm32_flash_erasepage(flash_base_page+sector);
     }
     return true;
-#endif
 }
 
 // read one-time programmable memory
@@ -254,31 +241,34 @@ uint32_t get_mcu_desc(uint32_t max, uint8_t *revstr)
     int32_t mcuid = idcode & DEVID_MASK;
     uint16_t revid = ((idcode & REVID_MASK) >> 16);
 
-    uint8_t *endp = &revstr[max - 1];
-    uint8_t *strp = revstr;
+    mcu_des_t des = mcu_descriptions[STM32_UNKNOWN];
 
     for (const auto &desc : mcu_descriptions) {
         if (mcuid == desc.mcuid) {
-            // copy the string in:
-            const char *tmp = desc.desc;
-            while (strp < endp && *tmp) {
-                *strp++ = *tmp++;
-            }
+            des = desc;
             break;
         }
     }
 
-    // comma-separated:
+    for (const auto &rev : silicon_revs) {
+        if (rev.revid == revid) {
+            des.rev = rev.rev;
+        }
+    }
+
+    uint8_t *endp = &revstr[max - 1];
+    uint8_t *strp = revstr;
+
+    while (strp < endp && *des.desc) {
+        *strp++ = *des.desc++;
+    }
+
     if (strp < endp) {
         *strp++ = ',';
     }
 
-    for (const auto &rev : silicon_revs) {
-        if (rev.revid == revid) {
-            if (strp < endp) {
-                *strp++ = rev.rev;
-            }
-        }
+    if (strp < endp) {
+        *strp++ = des.rev;
     }
 
     return  strp - revstr;
@@ -353,17 +343,6 @@ void uprintf(const char *fmt, ...)
 #endif
 }
 
-static void thread_sleep_ms(uint32_t ms)
-{
-    while (ms > 0) {
-        // don't sleep more than 65 at a time, to cope with 16 bit
-        // timer
-        const uint32_t dt = ms > 65? 65: ms;
-        chThdSleepMilliseconds(dt);
-        ms -= dt;
-    }
-}
-
 // generate a pulse sequence forever, for debugging
 void led_pulses(uint8_t npulses)
 {
@@ -371,11 +350,11 @@ void led_pulses(uint8_t npulses)
     while (true) {
         for (uint8_t i=0; i<npulses; i++) {
             led_on(LED_BOOTLOADER);
-            thread_sleep_ms(200);
+            chThdSleepMilliseconds(200);
             led_off(LED_BOOTLOADER);
-            thread_sleep_ms(200);
+            chThdSleepMilliseconds(200);
         }
-        thread_sleep_ms(2000);
+        chThdSleepMilliseconds(2000);
     }
 }
 
@@ -447,7 +426,7 @@ void init_uarts(void)
     sduStart(&SDU1, &serusbcfg1);
     
     usbDisconnectBus(serusbcfg1.usbp);
-    thread_sleep_ms(1000);
+    chThdSleepMilliseconds(1000);
     usbStart(serusbcfg1.usbp, &usbcfg);
     usbConnectBus(serusbcfg1.usbp);
 #endif
@@ -485,4 +464,3 @@ void port_setbaud(uint32_t baudrate)
 #endif
 }
 #endif // BOOTLOADER_DEV_LIST
-

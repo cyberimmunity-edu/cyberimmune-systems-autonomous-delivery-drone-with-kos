@@ -29,7 +29,6 @@
 #include <AP_Math/crc.h>
 #include <GCS_MAVLink/GCS.h>
 #include <AP_Logger/AP_Logger.h>
-#include <AP_SerialManager/AP_SerialManager.h>
 
 const AP_Param::GroupInfo AP_RunCam::var_info[] = {
     // @Param: TYPE
@@ -792,6 +791,7 @@ void AP_RunCam::start_uart()
     uart->configure_parity(0);
     uart->set_stop_bits(1);
     uart->set_flow_control(AP_HAL::UARTDriver::FLOW_CONTROL_DISABLE);
+    uart->set_blocking_writes(false);   // updates run in the main thread
     uart->set_options(uart->get_options() | AP_HAL::UARTDriver::OPTION_NODMA_TX | AP_HAL::UARTDriver::OPTION_NODMA_RX);
     uart->begin(115200, 10, 10);
     uart->discard_input();
@@ -958,11 +958,11 @@ void AP_RunCam::parse_device_info(const Request& request)
     }
     if (_features > 0) {
         _state = State::INITIALIZED;
-        GCS_SEND_TEXT(MAV_SEVERITY_INFO, "RunCam initialized, features 0x%04X, %d-key OSD\n", _features.get(),
+        gcs().send_text(MAV_SEVERITY_INFO, "RunCam initialized, features 0x%04X, %d-key OSD\n", _features.get(),
             has_5_key_OSD() ? 5 : has_2_key_OSD() ? 2 : 0);
     } else {
         // nothing as as nothing does
-        GCS_SEND_TEXT(MAV_SEVERITY_WARNING, "RunCam device not found\n");
+        gcs().send_text(MAV_SEVERITY_WARNING, "RunCam device not found\n");
     }
     debug("RunCam: initialized state: video: %d, osd: %d, cam: %d\n", int(_video_recording), int(_osd_option), int(_cam_control_option));
 }

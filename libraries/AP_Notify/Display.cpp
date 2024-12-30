@@ -14,10 +14,6 @@
  */
 
 /* Notify display driver for 128 x 64 pixel displays */
-#include "AP_Notify_config.h"
-
-#if HAL_DISPLAY_ENABLED
-
 #include "Display.h"
 
 #include "Display_SH1106_I2C.h"
@@ -591,5 +587,3 @@ void Display::update_text(uint8_t r)
 
     draw_text(COLUMN(0), ROW(0), msg);
  }
-
-#endif  // HAL_DISPLAY_ENABLED

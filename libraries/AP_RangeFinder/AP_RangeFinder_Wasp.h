@@ -1,11 +1,13 @@
 #pragma once
 
-#include "AP_RangeFinder_config.h"
-
-#if AP_RANGEFINDER_WASP_ENABLED
-
 #include "AP_RangeFinder.h"
 #include "AP_RangeFinder_Backend_Serial.h"
+
+#ifndef AP_RANGEFINDER_WASP_ENABLED
+#define AP_RANGEFINDER_WASP_ENABLED AP_RANGEFINDER_BACKEND_DEFAULT_ENABLED
+#endif
+
+#if AP_RANGEFINDER_WASP_ENABLED
 
 // WASP 200 LRF
 // http://www.attolloengineering.com/wasp-200-lrf.html

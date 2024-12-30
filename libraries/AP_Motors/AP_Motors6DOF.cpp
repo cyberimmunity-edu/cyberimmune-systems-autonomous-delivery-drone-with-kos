@@ -232,9 +232,7 @@ void AP_Motors6DOF::output_min()
 
 int16_t AP_Motors6DOF::calc_thrust_to_pwm(float thrust_in) const
 {
-    int16_t range_up = get_pwm_output_max() - 1500;
-    int16_t range_down = 1500 - get_pwm_output_min();
-    return 1500 + thrust_in * (thrust_in > 0 ? range_up : range_down);
+    return constrain_int16(1500 + thrust_in * 400, get_pwm_output_min(), get_pwm_output_max());
 }
 
 void AP_Motors6DOF::output_to_motors()

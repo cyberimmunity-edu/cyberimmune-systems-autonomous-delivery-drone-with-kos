@@ -79,9 +79,6 @@ public:
     // extrapolate latitude/longitude given distances (in meters) north and east
     static void offset_latlng(int32_t &lat, int32_t &lng, ftype ofs_north, ftype ofs_east);
     void offset(ftype ofs_north, ftype ofs_east);
-    // extrapolate latitude/longitude given distances (in meters) north
-    // and east. Note that this is metres, *even for the altitude*.
-    void offset(const Vector3p &ofs_ned);
 
     // extrapolate latitude/longitude given bearing and distance
     void offset_bearing(ftype bearing_deg, ftype distance);
@@ -109,14 +106,6 @@ public:
 
     // check if lat and lng match. Ignore altitude and options
     bool same_latlon_as(const Location &loc2) const;
-
-    // check if altitude matches.
-    bool same_alt_as(const Location &loc2) const;
-
-    // check if lat, lng, and alt match.
-    bool same_loc_as(const Location &loc2) const {
-        return same_latlon_as(loc2) && same_alt_as(loc2);
-    }
 
     /*
      * convert invalid waypoint with useful data. return true if location changed

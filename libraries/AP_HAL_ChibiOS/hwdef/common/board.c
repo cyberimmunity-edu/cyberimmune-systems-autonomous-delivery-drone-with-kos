@@ -18,7 +18,6 @@
 #include "hal.h"
 #include "usbcfg.h"
 #include "stm32_util.h"
-#include "flash.h"
 #include "watchdog.h"
 
 
@@ -179,7 +178,7 @@ static void stm32_gpio_init(void) {
 #elif defined(STM32F3)
   rccResetAHB(STM32_GPIO_EN_MASK);
   rccEnableAHB(STM32_GPIO_EN_MASK, true);
-#elif defined(STM32G4) || defined(STM32L4) || defined(STM32L4PLUS)
+#elif defined(STM32G4) || defined(STM32L4)
   rccResetAHB2(STM32_GPIO_EN_MASK);
   rccEnableAHB2(STM32_GPIO_EN_MASK, true);
 #else
@@ -229,18 +228,12 @@ static void stm32_gpio_init(void) {
  * @brief   Early initialization code.
  * @details This initialization must be performed just after stack setup
  *          and before any other initialization.
- *
- * You must not rely on: 1) BSS variables being cleared 2) DATA Variables being initialized 3) RAM functions to be in RAM
- * You can rely on: 1) const variables or tables 2) flash code 3) automatic variables
  */
 void __early_init(void) {
 #if !defined(STM32F1)
   stm32_gpio_init();
 #endif
-#if !HAL_XIP_ENABLED || defined(HAL_FORCE_CLOCK_INIT)
-  // if running from external flash then the clocks must not be reset - instead rely on the bootloader to setup
   stm32_clock_init();
-#endif
 #if defined(HAL_DISABLE_DCACHE)
   SCB_DisableDCache();
 #endif
@@ -251,24 +244,13 @@ void __early_init(void) {
   SCB->ITCMCR |= 1; // ITCM enable
   SCB->DTCMCR |= 1; // DTCM enable
 
-#ifdef STM32_NOCACHE_MPU_REGION_1
-  // disable cache on configured regions so they can be used for DMA
-  // this requires some coordination with the memory map in the MCU configuration script
-  mpuConfigureRegion(STM32_NOCACHE_MPU_REGION_1,
-                     STM32_NOCACHE_MPU_REGION_1_BASE,
+  // disable cache on SRAM4 so we can use it for DMA
+  mpuConfigureRegion(MPU_REGION_5,
+                     0x38000000U,
                      MPU_RASR_ATTR_AP_RW_RW |
                      MPU_RASR_ATTR_NON_CACHEABLE |
-                     STM32_NOCACHE_MPU_REGION_1_SIZE |
+                     MPU_RASR_SIZE_64K |
                      MPU_RASR_ENABLE);
-#endif
-#ifdef STM32_NOCACHE_MPU_REGION_2
-  mpuConfigureRegion(STM32_NOCACHE_MPU_REGION_2,
-                     STM32_NOCACHE_MPU_REGION_2_BASE,
-                     MPU_RASR_ATTR_AP_RW_RW |
-                     MPU_RASR_ATTR_NON_CACHEABLE |
-                     STM32_NOCACHE_MPU_REGION_2_SIZE |
-                     MPU_RASR_ENABLE);
-#endif
 #endif
 }
 
@@ -294,11 +276,6 @@ void __late_init(void) {
 #endif
 #ifdef HAL_USB_PRODUCT_ID
   setup_usb_strings();
-#endif
-
-#ifdef HAL_FLASH_SET_NRST_MODE
-  // ensure NRST_MODE is set correctly
-  stm32_flash_set_NRST_MODE(HAL_FLASH_SET_NRST_MODE);
 #endif
 }
 

@@ -54,6 +54,7 @@ private:
     void Log_Write_Gimbal(SoloGimbal &gimbal);
 
     bool _params_saved;
+    MountTarget _angle_rad;         // angle target
     SoloGimbal _gimbal;
 };
 

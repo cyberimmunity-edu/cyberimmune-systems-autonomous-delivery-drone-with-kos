@@ -42,12 +42,6 @@
 #include <AP_Mission/AP_Mission_ChangeDetector.h>
 #include <AR_WPNav/AR_WPNav_OA.h>
 #include <AP_OpticalFlow/AP_OpticalFlow.h>
-#include <AC_PrecLand/AC_PrecLand_config.h>
-#include <AP_Follow/AP_Follow_config.h>
-#include <AP_ExternalControl/AP_ExternalControl_config.h>
-#if AP_EXTERNAL_CONTROL_ENABLED
-#include <AP_ExternalControl/AP_ExternalControl.h>
-#endif
 
 // Configuration
 #include "defines.h"
@@ -67,10 +61,16 @@
 #include "GCS_Mavlink.h"
 #include "GCS_Rover.h"
 #include "AP_Rally.h"
-#if AC_PRECLAND_ENABLED
+#include "RC_Channel.h"                  // RC Channel Library
+#if PRECISION_LANDING == ENABLED
 #include <AC_PrecLand/AC_PrecLand.h>
 #endif
-#include "RC_Channel.h"                  // RC Channel Library
+
+#include <KOS_FlightController/KOS_Interaction.h>
+#include <KOS_FlightController/KOS_CommandExecutor.h>
+#if AP_SIM_ENABLED
+#include <KOS_FlightController/KOS_HardwareSimulation.h>
+#endif
 
 #include "mode.h"
 
@@ -96,9 +96,7 @@ public:
     friend class ModeManual;
     friend class ModeRTL;
     friend class ModeSmartRTL;
-#if MODE_FOLLOW_ENABLED == ENABLED
     friend class ModeFollow;
-#endif
     friend class ModeSimple;
 #if MODE_DOCK_ENABLED == ENABLED
     friend class ModeDock;
@@ -108,6 +106,8 @@ public:
     friend class RC_Channels_Rover;
 
     friend class Sailboat;
+
+    friend class KOS_CommandExecutor;
 
     Rover(void);
 
@@ -133,6 +133,12 @@ private:
     RC_Channel *channel_pitch;
     RC_Channel *channel_walking_height;
 
+	KOS_InteractionModule kos_interaction;
+    KOS_CommandExecutor kos_command_executor;
+#if AP_SIM_ENABLED
+    KOS_HardwareSimulation kos_hardware_simulation;
+#endif
+
     AP_Logger logger;
 
     // flight modes convenience array
@@ -147,11 +153,6 @@ private:
     // Arming/Disarming management class
     AP_Arming_Rover arming;
 
-    // dummy external control implementation
-#if AP_EXTERNAL_CONTROL_ENABLED
-    AP_ExternalControl external_control;
-#endif
-
 #if AP_OPTICALFLOW_ENABLED
     AP_OpticalFlow optflow;
 #endif
@@ -159,7 +160,7 @@ private:
 #if OSD_ENABLED || OSD_PARAM_ENABLED
     AP_OSD osd;
 #endif
-#if AC_PRECLAND_ENABLED
+#if PRECISION_LANDING == ENABLED
     AC_PrecLand precland;
 #endif
     // GCS handling
@@ -248,9 +249,7 @@ private:
     ModeSteering mode_steering;
     ModeRTL mode_rtl;
     ModeSmartRTL mode_smartrtl;
-#if MODE_FOLLOW_ENABLED == ENABLED
     ModeFollow mode_follow;
-#endif
     ModeSimple mode_simple;
 #if MODE_DOCK_ENABLED == ENABLED
     ModeDock mode_dock;
@@ -375,14 +374,9 @@ private:
     void init_ardupilot() override;
     void startup_ground(void);
     void update_ahrs_flyforward();
-    bool gcs_mode_enabled(const Mode::Number mode_num) const;
     bool set_mode(Mode &new_mode, ModeReason reason);
     bool set_mode(const uint8_t new_mode, ModeReason reason) override;
     uint8_t get_mode() const override { return (uint8_t)control_mode->mode_number(); }
-    bool current_mode_requires_mission() const override {
-        return control_mode == &mode_auto;
-    }
-
     void startup_INS_ground(void);
     void notify_mode(const Mode *new_mode);
     uint8_t check_digital_pin(uint8_t pin);

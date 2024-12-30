@@ -1,9 +1,4 @@
-#include "GCS_config.h"
-
-#if HAL_GCS_ENABLED
-
 #include "GCS_Dummy.h"
-
 #include <stdio.h>
 
 #define FORCE_VERSION_H_INCLUDE
@@ -27,5 +22,3 @@ void GCS_Dummy::send_textv(MAV_SEVERITY severity, const char *fmt, va_list arg_l
     ::printf("\n");
 #endif
 }
-
-#endif  // HAL_GCS_ENABLED

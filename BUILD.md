@@ -8,17 +8,18 @@ git clone --recursive https://github.com/ArduPilot/ardupilot.git
 cd ardupilot
 ```
 
-You can also read more about the build system in the
+Ardupilot is gradually moving from the make-based build system to
+[Waf](https://waf.io/). The instructions below should be enough for you to
+build Ardupilot, but you can also read more about the build system in the
 [Waf Book](https://waf.io/book/).
 
-waf should always be called from the locally cloned ardupilot root directory for the local branch you are trying to build from.
-
-**Note**
-Do not run `waf` with `sudo`!  This leads to permission and environment problems.
+Waf should always be called from the ardupilot's root directory. Differently
+from the make-based build, with Waf there's a configure step to choose the
+board to be used (default is `sitl`).
 
 ## Basic usage ##
 
-There are several commands in the build system for advanced usage, but here we
+There are several commands in the build system for advanced usages, but here we
 list some basic and more used commands as example.
 
 * **Build ArduCopter**
@@ -162,18 +163,6 @@ list some basic and more used commands as example.
     # unit test of our math functions
     ./waf --targets tests/test_math
     ```
-
-* **Use clang instead of gcc**
-
-    Currently, gcc is the default on linux, and clang is used for MacOS.
-    Building with clang on linux can be accomplished by setting the CXX
-    environment variables during the configure step, e.g.:
-
-    ```
-    CXX=clang++ CC=clang ./waf configure --board=sitl
-    ```
-
-    Note: Your clang binary names may differ.
 
 * **Other options**
 

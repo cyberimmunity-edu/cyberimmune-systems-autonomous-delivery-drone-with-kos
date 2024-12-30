@@ -90,7 +90,6 @@ default_ports = ['/dev/serial/by-id/usb-Ardu*',
                  '/dev/serial/by-id/usb-*_BL_*',
                  '/dev/serial/by-id/usb-Swift-Flyer*',
                  '/dev/serial/by-id/usb-CubePilot*',
-                 '/dev/serial/by-id/usb-Qiotek*',
                  '/dev/tty.usbmodem*']
 
 if "cygwin" in _platform or is_WSL:
@@ -176,11 +175,11 @@ class firmware(object):
             self.extf_image = None
         # pad image to 4-byte length
         while ((len(self.image) % 4) != 0):
-            self.image += bytes(0xFF)
+            self.image.append('\xff')
         # pad image to 4-byte length
         if self.extf_image is not None:
             while ((len(self.extf_image) % 4) != 0):
-                self.extf_image += bytes(0xFF)
+                self.extf_image.append('\xff')
 
     def property(self, propname, default=None):
         if propname in self.desc:

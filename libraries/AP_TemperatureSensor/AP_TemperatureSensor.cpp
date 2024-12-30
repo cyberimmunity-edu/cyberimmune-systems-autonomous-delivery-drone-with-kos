@@ -25,7 +25,6 @@
 #if !AP_TEMPERATURE_SENSOR_DUMMY_METHODS_ENABLED
 
 #include "AP_TemperatureSensor_TSYS01.h"
-#include "AP_TemperatureSensor_TSYS03.h"
 #include "AP_TemperatureSensor_MCP9600.h"
 #include "AP_TemperatureSensor_MAX31865.h"
 
@@ -125,7 +124,6 @@ void AP_TemperatureSensor::init()
 
     // create each instance
     for (uint8_t instance = 0; instance < AP_TEMPERATURE_SENSOR_MAX_INSTANCES; instance++) {
-        _state[instance].instance = instance;
 
         switch (get_type(instance)) {
 #if AP_TEMPERATURE_SENSOR_TSYS01_ENABLED
@@ -143,11 +141,6 @@ void AP_TemperatureSensor::init()
                 drivers[instance] = new AP_TemperatureSensor_MAX31865(*this, _state[instance], _params[instance]);
                 break;
 #endif
-#if AP_TEMPERATURE_SENSOR_TSYS03_ENABLED
-            case AP_TemperatureSensor_Params::Type::TSYS03:
-                drivers[instance] = new AP_TemperatureSensor_TSYS03(*this, _state[instance], _params[instance]);
-                break;
-#endif
             case AP_TemperatureSensor_Params::Type::NONE:
             default:
                 break;
@@ -155,6 +148,7 @@ void AP_TemperatureSensor::init()
 
         // call init function for each backend
         if (drivers[instance] != nullptr) {
+            _state[instance].instance = instance;
             drivers[instance]->init();
             // _num_instances is actually the index for looping over instances
             // the user may have TEMP_TYPE=0 and TEMP2_TYPE=7, in which case

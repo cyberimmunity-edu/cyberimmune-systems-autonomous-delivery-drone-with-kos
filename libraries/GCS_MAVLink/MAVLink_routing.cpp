@@ -16,10 +16,6 @@
 /// @file	MAVLink_routing.h
 /// @brief	handle routing of MAVLink packets by sysid/componentid
 
-#include "GCS_config.h"
-
-#if HAL_GCS_ENABLED
-
 #include <stdio.h>
 #include <AP_HAL/AP_HAL.h>
 #include <AP_Common/AP_Common.h>
@@ -98,7 +94,7 @@ bool MAVLink_routing::check_and_forward(GCS_MAVLINK &in_link, const mavlink_mess
     // incorrect serial configuration.
     if (msg.sysid == mavlink_system.sysid &&
         msg.compid == mavlink_system.compid) {
-        return false;
+        return true;
     }
 
     // learn new routes including private channels
@@ -409,4 +405,3 @@ void MAVLink_routing::get_targets(const mavlink_message_t &msg, int16_t &sysid, 
     }
 }
 
-#endif  // HAL_GCS_ENABLED

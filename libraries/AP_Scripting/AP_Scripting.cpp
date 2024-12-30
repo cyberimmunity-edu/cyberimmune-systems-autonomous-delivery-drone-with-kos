@@ -13,10 +13,6 @@
    along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "AP_Scripting_config.h"
-
-#if AP_SCRIPTING_ENABLED
-
 #include <AP_Scripting/AP_Scripting.h>
 #include <AP_HAL/AP_HAL.h>
 #include <GCS_MAVLink/GCS.h>
@@ -268,16 +264,6 @@ void AP_Scripting::thread(void) {
         }
         num_pwm_source = 0;
 
-        // Clear blocked commands
-        {
-            WITH_SEMAPHORE(mavlink_command_block_list_sem);
-            while (mavlink_command_block_list != nullptr) {
-                command_block_list *next_item = mavlink_command_block_list->next;
-                delete mavlink_command_block_list;
-                mavlink_command_block_list = next_item;
-            }
-        }
-
         bool cleared = false;
         while(true) {
             // 1hz check if we should restart
@@ -362,41 +348,6 @@ void AP_Scripting::restart_all()
     _stop = true;
 }
 
-void AP_Scripting::handle_message(const mavlink_message_t &msg, const mavlink_channel_t chan) {
-    if (mavlink_data.rx_buffer == nullptr) {
-        return;
-    }
-
-    struct mavlink_msg data {msg, chan, AP_HAL::millis()};
-
-    WITH_SEMAPHORE(mavlink_data.sem);
-    for (uint16_t i = 0; i < mavlink_data.accept_msg_ids_size; i++) {
-        if (mavlink_data.accept_msg_ids[i] == UINT32_MAX) {
-            return;
-        }
-        if (mavlink_data.accept_msg_ids[i] == msg.msgid) {
-            mavlink_data.rx_buffer->push(data);
-            return;
-        }
-    }
-}
-
-bool AP_Scripting::is_handling_command(uint16_t cmd_id)
-{
-    WITH_SEMAPHORE(mavlink_command_block_list_sem);
-
-    // Look in linked list to see if id is registered
-    if (mavlink_command_block_list != nullptr) {
-        for (command_block_list *item = mavlink_command_block_list; item; item = item->next) {
-            if (item->id == cmd_id) {
-                return true;
-            }
-        }
-    }
-
-    return false;
-}
-
 AP_Scripting *AP_Scripting::_singleton = nullptr;
 
 namespace AP {
@@ -404,5 +355,3 @@ namespace AP {
         return AP_Scripting::get_singleton();
     }
 }
-
-#endif  // AP_SCRIPTING_ENABLED

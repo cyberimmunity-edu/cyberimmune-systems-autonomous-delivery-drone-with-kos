@@ -2,9 +2,6 @@
 // lua/src/lua.c. It overall modified the functions to the minimum amount
 // required, with the exception of fixing whitespace/indentation on if's
 
-#include "AP_Scripting_config.h"
-
-#if AP_SCRIPTING_ENABLED
 
 #include "lua_scripts.h"
 #include <AP_Scripting/lua_generated_bindings.h>
@@ -260,5 +257,3 @@ void lua_scripts::doREPL(lua_State *L) {
     repl_cleanup();
 }
 
-
-#endif  // AP_SCRIPTING_ENABLED

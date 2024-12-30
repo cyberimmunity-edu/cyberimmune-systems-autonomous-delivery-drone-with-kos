@@ -35,7 +35,7 @@
 #endif
 
 #if CONFIG_HAL_BOARD == HAL_BOARD_CHIBIOS
-#if AP_FILESYSTEM_FATFS_ENABLED
+#if HAVE_FILESYSTEM_SUPPORT
 #include "AP_Filesystem_FATFS.h"
 #endif
 
@@ -51,7 +51,12 @@ struct dirent {
 #include <unistd.h>
 
 #ifndef AP_FILESYSTEM_FORMAT_ENABLED
-#define AP_FILESYSTEM_FORMAT_ENABLED 1
+// only enable for SDMMC filesystems for now as other types can't query
+// block size
+#ifndef HAL_USE_SDMMC
+#define HAL_USE_SDMMC 0
+#endif
+#define AP_FILESYSTEM_FORMAT_ENABLED HAL_USE_SDMMC
 #endif
 
 #if CONFIG_HAL_BOARD == HAL_BOARD_LINUX || CONFIG_HAL_BOARD == HAL_BOARD_SITL
@@ -63,6 +68,10 @@ struct dirent {
 #endif
 
 #include "AP_Filesystem_backend.h"
+
+#ifndef AP_FILESYSTEM_FORMAT_ENABLED
+#define AP_FILESYSTEM_FORMAT_ENABLED 0
+#endif
 
 class AP_Filesystem {
 private:

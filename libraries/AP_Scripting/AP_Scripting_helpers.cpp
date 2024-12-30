@@ -1,7 +1,3 @@
-#include "AP_Scripting_config.h"
-
-#if AP_SCRIPTING_ENABLED
-
 #include "AP_Scripting_helpers.h"
 #include <AP_Scripting/lua_generated_bindings.h>
 
@@ -196,5 +192,3 @@ bool Parameter::set_default(float value)
     // not a supported type
     return false;
 }
-
-#endif  // AP_SCRIPTING_ENABLED

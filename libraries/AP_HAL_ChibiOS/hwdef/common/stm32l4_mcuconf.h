@@ -20,7 +20,6 @@
 #ifndef MCUCONF_H
 #define MCUCONF_H
 
-#define STM32L431_MCUCONF
 #define STM32L4xx_MCUCONF
 #define STM32L496_MCUCONF
 #define STM32L4A6_MCUCONF
@@ -222,6 +221,11 @@
 #define STM32_I2C_I2C3_DMA_PRIORITY         3
 #define STM32_I2C_I2C4_DMA_PRIORITY         3
 #define STM32_I2C_DMA_ERROR_HOOK(i2cp)      STM32_DMA_ERROR_HOOK(i2cp)
+
+/*
+ * PWM driver system settings.
+ */
+#define STM32_PWM_USE_ADVANCED              FALSE
 
 /*
  * RTC driver system settings.

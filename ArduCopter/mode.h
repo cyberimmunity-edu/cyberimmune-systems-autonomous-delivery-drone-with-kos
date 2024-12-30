@@ -2,7 +2,6 @@
 
 #include "Copter.h"
 #include <AP_Math/chirp.h>
-#include <AP_ExternalControl/AP_ExternalControl_config.h> // TODO why is this needed if Copter.h includes this
 class Parameters;
 class ParametersG2;
 
@@ -148,7 +147,7 @@ protected:
     // pause_descent is true if vehicle should not descend
     void land_run_normal_or_precland(bool pause_descent = false);
 
-#if AC_PRECLAND_ENABLED
+#if PRECISION_LANDING == ENABLED
     // Go towards a position commanded by prec land state machine in order to retry landing
     // The passed in location is expected to be NED and in meters
     void precland_retry_position(const Vector3f &retry_pos);
@@ -258,6 +257,7 @@ public:
         void set_mode(Mode new_mode);
         Mode default_mode(bool rtl) const;
 
+
         void set_rate(float new_rate_cds);
 
         // set_roi(...): set a "look at" location:
@@ -280,11 +280,11 @@ public:
 
     private:
 
-        // yaw_cd(): main product of AutoYaw; the heading:
-        float yaw_cd();
+        // yaw(): main product of AutoYaw; the heading:
+        float yaw();
 
         // rate_cds(): desired yaw rate in centidegrees/second:
-        float rate_cds();
+        float rate_cds() const;
 
         float look_ahead_yaw();
         float roi_yaw() const;
@@ -463,7 +463,6 @@ public:
     // pause continue in auto mode
     bool pause() override;
     bool resume() override;
-    bool paused() const;
 
     bool loiter_start();
     void rtl_start();
@@ -484,6 +483,10 @@ public:
     bool set_speed_down(float speed_down_cms) override;
 
     bool requires_terrain_failsafe() const override { return true; }
+
+    // return true if this flight mode supports user takeoff
+    //  must_nagivate is true if mode must also control horizontal position
+    virtual bool has_user_takeoff(bool must_navigate) const override { return false; }
 
     void payload_place_start();
 
@@ -567,7 +570,7 @@ private:
     void do_loiter_to_alt(const AP_Mission::Mission_Command& cmd);
     void do_spline_wp(const AP_Mission::Mission_Command& cmd);
     void get_spline_from_cmd(const AP_Mission::Mission_Command& cmd, const Location& default_loc, Location& dest_loc, Location& next_dest_loc, bool& next_dest_loc_is_spline);
-#if AC_NAV_GUIDED == ENABLED
+#if NAV_GUIDED == ENABLED
     void do_nav_guided_enable(const AP_Mission::Mission_Command& cmd);
     void do_guided_limits(const AP_Mission::Mission_Command& cmd);
 #endif
@@ -605,7 +608,7 @@ private:
     bool verify_nav_wp(const AP_Mission::Mission_Command& cmd);
     bool verify_circle(const AP_Mission::Mission_Command& cmd);
     bool verify_spline_wp(const AP_Mission::Mission_Command& cmd);
-#if AC_NAV_GUIDED == ENABLED
+#if NAV_GUIDED == ENABLED
     bool verify_nav_guided_enable(const AP_Mission::Mission_Command& cmd);
 #endif
     bool verify_nav_delay(const AP_Mission::Mission_Command& cmd);
@@ -958,10 +961,6 @@ private:
 class ModeGuided : public Mode {
 
 public:
-#if AP_EXTERNAL_CONTROL_ENABLED
-    friend class AP_ExternalControl_Copter;
-#endif
-
     // inherit constructor
     using Mode::Mode;
     Number mode_number() const override { return Number::GUIDED; }
@@ -1183,7 +1182,7 @@ public:
     bool has_user_takeoff(bool must_navigate) const override { return true; }
     bool allows_autotune() const override { return true; }
 
-#if AC_PRECLAND_ENABLED
+#if PRECISION_LANDING == ENABLED
     void set_precision_loiter_enabled(bool value) { _precision_loiter_enabled = value; }
 #endif
 
@@ -1196,14 +1195,14 @@ protected:
     int32_t wp_bearing() const override;
     float crosstrack_error() const override { return pos_control->crosstrack_error();}
 
-#if AC_PRECLAND_ENABLED
+#if PRECISION_LANDING == ENABLED
     bool do_precision_loiter();
     void precision_loiter_xy();
 #endif
 
 private:
 
-#if AC_PRECLAND_ENABLED
+#if PRECISION_LANDING == ENABLED
     bool _precision_loiter_enabled;
     bool _precision_loiter_active; // true if user has switched on prec loiter
 #endif
@@ -1723,7 +1722,6 @@ private:
 
 };
 
-#if AP_FOLLOW_ENABLED
 class ModeFollow : public ModeGuided {
 
 public:
@@ -1753,7 +1751,6 @@ protected:
 
     uint32_t last_log_ms;   // system time of last time desired velocity was logging
 };
-#endif
 
 class ModeZigZag : public Mode {        
 
@@ -1803,9 +1800,6 @@ protected:
 
     const char *name() const override { return "ZIGZAG"; }
     const char *name4() const override { return "ZIGZ"; }
-    uint32_t wp_distance() const override;
-    int32_t wp_bearing() const override;
-    float crosstrack_error() const override;
 
 private:
 

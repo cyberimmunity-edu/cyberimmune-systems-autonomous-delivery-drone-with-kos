@@ -14,11 +14,6 @@
    You should have received a copy of the GNU General Public License
    along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
-#include "GCS_config.h"
-
-#if HAL_GCS_ENABLED
-
 #include <AP_HAL/AP_HAL.h>
 
 #include "GCS.h"
@@ -271,7 +266,7 @@ void GCS_MAVLINK::ftp_worker(void) {
                         const size_t file_size = st.st_size;
 
                         // actually open the file
-                        ftp.fd = AP::FS().open((char *)request.data, O_RDONLY);
+                        ftp.fd = AP::FS().open((char *)request.data, 0);
                         if (ftp.fd == -1) {
                             ftp_error(reply, FTP_ERROR::FailErrno);
                             break;
@@ -701,5 +696,3 @@ void GCS_MAVLINK::ftp_list_dir(struct pending_ftp &request, struct pending_ftp &
 
     AP::FS().closedir(dir);
 }
-
-#endif  // HAL_GCS_ENABLED

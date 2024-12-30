@@ -16,9 +16,6 @@
  *   AP_ServoRelayEvents - handle servo and relay MAVLink events
  */
 
-#include "AP_ServoRelayEvents_config.h"
-
-#if AP_SERVORELAYEVENTS_ENABLED
 
 #include <AP_HAL/AP_HAL.h>
 #include <AP_Common/AP_Common.h>
@@ -45,7 +42,7 @@ bool AP_ServoRelayEvents::do_set_servo(uint8_t _channel, uint16_t pwm)
     case SRV_Channel::k_rcin1 ... SRV_Channel::k_rcin16: // rc pass-thru
         break;
     default:
-        GCS_SEND_TEXT(MAV_SEVERITY_INFO, "ServoRelayEvent: Channel %d is already in use", _channel);
+        gcs().send_text(MAV_SEVERITY_INFO, "ServoRelayEvent: Channel %d is already in use", _channel);
         return false;
     }
     if (type == EVENT_TYPE_SERVO && 
@@ -58,7 +55,6 @@ bool AP_ServoRelayEvents::do_set_servo(uint8_t _channel, uint16_t pwm)
     return true;
 }
 
-#if AP_RELAY_ENABLED
 bool AP_ServoRelayEvents::do_set_relay(uint8_t relay_num, uint8_t state)
 {
     AP_Relay *relay = AP::relay();
@@ -83,7 +79,6 @@ bool AP_ServoRelayEvents::do_set_relay(uint8_t relay_num, uint8_t state)
     }
     return true;
 }
-#endif
 
 bool AP_ServoRelayEvents::do_repeat_servo(uint8_t _channel, uint16_t _servo_value, 
                                           int16_t _repeat, uint16_t _delay_ms)
@@ -102,7 +97,7 @@ bool AP_ServoRelayEvents::do_repeat_servo(uint8_t _channel, uint16_t _servo_valu
     case SRV_Channel::k_rcin1 ... SRV_Channel::k_rcin16: // rc pass-thru
         break;
     default:
-        GCS_SEND_TEXT(MAV_SEVERITY_INFO, "ServoRelayEvent: Channel %d is already in use", _channel);
+        gcs().send_text(MAV_SEVERITY_INFO, "ServoRelayEvent: Channel %d is already in use", _channel);
         return false;
     }
     channel = _channel;
@@ -116,7 +111,6 @@ bool AP_ServoRelayEvents::do_repeat_servo(uint8_t _channel, uint16_t _servo_valu
     return true;
 }
 
-#if AP_RELAY_ENABLED
 bool AP_ServoRelayEvents::do_repeat_relay(uint8_t relay_num, int16_t _repeat, uint32_t _delay_ms)
 {
     AP_Relay *relay = AP::relay();
@@ -134,7 +128,6 @@ bool AP_ServoRelayEvents::do_repeat_relay(uint8_t relay_num, int16_t _repeat, ui
     update_events();
     return true;
 }
-#endif
 
 
 /*
@@ -162,7 +155,6 @@ void AP_ServoRelayEvents::update_events(void)
         break;
     }
 
-#if AP_RELAY_ENABLED
     case EVENT_TYPE_RELAY: {
         AP_Relay *relay = AP::relay();
         if (relay != nullptr) {
@@ -170,7 +162,6 @@ void AP_ServoRelayEvents::update_events(void)
         }
         break;
     }
-#endif
     }
     if (repeat > 0) {
         repeat--;
@@ -191,5 +182,3 @@ AP_ServoRelayEvents *servorelayevents()
 }
 
 }
-
-#endif  // AP_SERVORELAYEVENTS_ENABLED

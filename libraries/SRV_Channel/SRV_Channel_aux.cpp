@@ -20,7 +20,6 @@
 #include <AP_Math/AP_Math.h>
 #include <AP_HAL/AP_HAL.h>
 #include <RC_Channel/RC_Channel.h>
-#include <GCS_MAVLink/GCS.h>
 
 #if NUM_SERVO_CHANNELS == 0
 #pragma GCC diagnostic ignored "-Wtype-limits"
@@ -59,19 +58,7 @@ void SRV_Channel::output_ch(void)
                 // non-mapped rc passthrough
                 int16_t radio_in = c->get_radio_in();
                 if (passthrough_mapped) {
-                    if (rc().has_valid_input()) {
-                        radio_in = pwm_from_angle(c->norm_input_dz() * 4500);
-                    } else {
-                        // no valid input.  If we are in radio
-                        // failsafe then go to trim values (if
-                        // configured for this channel).  Otherwise
-                        // use the last-good value
-                        if ( ((1U<<passthrough_from) & SRV_Channels::get_rc_fs_mask()) && rc().in_rc_failsafe()) {
-                            radio_in = pwm_from_angle(0);
-                        } else {
-                            radio_in = previous_radio_in;
-                        }
-                    }
+                    radio_in = pwm_from_angle(c->norm_input_dz() * 4500);
                 }
                 if (!ign_small_rcin_changes) {
                     output_pwm = radio_in;
@@ -382,7 +369,6 @@ SRV_Channels::set_trim_to_servo_out_for(SRV_Channel::Aux_servo_function_t functi
     }
 }
 
-#if AP_RC_CHANNEL_ENABLED
 /*
   copy radio_in to radio_out for a given function
  */
@@ -423,7 +409,6 @@ SRV_Channels::copy_radio_in_out_mask(uint32_t mask)
     }
 
 }
-#endif  // AP_RC_CHANNEL_ENABLED
 
 /*
   setup failsafe value for an auxiliary function type to a Limit
@@ -474,7 +459,6 @@ SRV_Channels::set_output_limit(SRV_Channel::Aux_servo_function_t function, SRV_C
         if (c.function == function) {
             uint16_t pwm = c.get_limit_pwm(limit);
             c.set_output_pwm(pwm);
-#if AP_RC_CHANNEL_ENABLED
             if (c.function == SRV_Channel::k_manual) {
                 RC_Channel *cin = rc().channel(c.ch_num);
                 if (cin != nullptr) {
@@ -483,7 +467,6 @@ SRV_Channels::set_output_limit(SRV_Channel::Aux_servo_function_t function, SRV_C
                     cin->set_radio_in(pwm);
                 }
             }
-#endif
         }
     }
 }
@@ -572,9 +555,12 @@ bool SRV_Channels::find_channel(SRV_Channel::Aux_servo_function_t function, uint
 /*
   get a pointer to first auxiliary channel for a channel function
 */
-SRV_Channel *SRV_Channels::get_channel_for(SRV_Channel::Aux_servo_function_t function)
+SRV_Channel *SRV_Channels::get_channel_for(SRV_Channel::Aux_servo_function_t function, int8_t default_chan)
 {
     uint8_t chan;
+    if (default_chan >= 0) {
+        set_aux_channel_default(function, default_chan);
+    }
     if (!find_channel(function, chan)) {
         return nullptr;
     }

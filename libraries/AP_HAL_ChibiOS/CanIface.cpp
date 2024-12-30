@@ -77,7 +77,7 @@
 #define Debug(fmt, args...)
 #endif
 
-#if !defined(HAL_BOOTLOADER_BUILD)
+#if !defined(HAL_BUILD_AP_PERIPH) && !defined(HAL_BOOTLOADER_BUILD)
 #define PERF_STATS(x) (x++)
 #else
 #define PERF_STATS(x)
@@ -360,10 +360,7 @@ int16_t CANIface::send(const AP_HAL::CANFrame& frame, uint64_t tx_deadline,
         txi.pushed         = false;
     }
 
-    // also send on MAVCAN, but don't consider it an error if we can't send
-    AP_HAL::CANIface::send(frame, tx_deadline, flags);
-
-    return 1;
+    return AP_HAL::CANIface::send(frame, tx_deadline, flags);
 }
 
 int16_t CANIface::receive(AP_HAL::CANFrame& out_frame, uint64_t& out_timestamp_us, CanIOFlags& out_flags)
@@ -496,9 +493,6 @@ void CANIface::handleTxMailboxInterrupt(uint8_t mailbox_index, bool txok, const 
     if (txok && !txi.pushed) {
         txi.pushed = true;
         PERF_STATS(stats.tx_success);
-#if !defined(HAL_BOOTLOADER_BUILD)
-        stats.last_transmit_us = timestamp_us;
-#endif
     }
 }
 
@@ -780,13 +774,7 @@ void CANIface::initOnce(bool enable_irq)
             RCC->APB1RSTR &= ~RCC_APB1RSTR_CAN1RST;
 #endif
             break;
-#if defined(RCC_APB1ENR1_CAN2EN)
-        case 1:
-            RCC->APB1ENR1  |=  RCC_APB1ENR1_CAN2EN;
-            RCC->APB1RSTR1 |=  RCC_APB1RSTR1_CAN2RST;
-            RCC->APB1RSTR1 &= ~RCC_APB1RSTR1_CAN2RST;
-            break;
-#elif defined(RCC_APB1ENR_CAN2EN)
+#ifdef RCC_APB1ENR_CAN2EN
         case 1:
             RCC->APB1ENR  |=  RCC_APB1ENR_CAN2EN;
             RCC->APB1RSTR |=  RCC_APB1RSTR_CAN2RST;

@@ -259,8 +259,7 @@ private:
 
     uint32_t last_scan_output_time_ms;
 
-    float last_degrees_bf;  // previous iteration's lidar angle
-    float last_dir = 1;     // previous iterations movement direction.  +1 CW, -1 for CCW
+    float last_degrees_bf;
 
 };
 

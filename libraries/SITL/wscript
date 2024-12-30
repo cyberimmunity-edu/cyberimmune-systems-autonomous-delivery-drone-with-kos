@@ -1,2 +1,0 @@
-def configure(cfg):
-    cfg.env.DOUBLE_PRECISION_LIBRARIES['SITL'] = True

@@ -18,14 +18,17 @@
 
 #pragma once
 
-#include "SIM_config.h"
+#include <AP_HAL/AP_HAL_Boards.h>
+
+#ifndef AP_SIM_SHIP_ENABLED
+#define AP_SIM_SHIP_ENABLED (CONFIG_HAL_BOARD == HAL_BOARD_SITL)
+#endif
 
 #if AP_SIM_SHIP_ENABLED
 
 #include <AP_HAL/utility/Socket.h>
 #include <AP_Math/AP_Math.h>
 #include <AP_Common/Location.h>
-#include <GCS_MAVLink/GCS_MAVLink.h>
 
 namespace SITL {
 

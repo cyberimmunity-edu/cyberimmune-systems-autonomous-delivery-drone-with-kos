@@ -162,13 +162,6 @@ const AP_Param::GroupInfo AP_AdvancedFailsafe::var_info[] = {
     // @User: Advanced
     // @Units: km
     AP_GROUPINFO("MAX_RANGE",   20, AP_AdvancedFailsafe, _max_range_km,    0),
-
-    // @Param: OPTIONS
-    // @DisplayName: AFS options
-    // @Description: See description for each bitmask bit description
-    // @Bitmask: 0: Continue the mission even after comms are recovered (does not go to the mission item at the time comms were lost)
-    // @Bitmask: 1: Enable AFS for all autonomous modes (not just AUTO) 
-    AP_GROUPINFO("OPTIONS", 21, AP_AdvancedFailsafe, options, 0),
     
     AP_GROUPEND
 };
@@ -247,9 +240,6 @@ AP_AdvancedFailsafe::check(uint32_t last_valid_rc_ms)
             if (_wp_comms_hold) {
                 _saved_wp = mission.get_current_nav_cmd().index;
                 mission.set_current_cmd(_wp_comms_hold);
-                if (mode == AFS_AUTO && option_is_set(Option::GCS_FS_ALL_AUTONOMOUS_MODES)) {
-                    set_mode_auto();
-                }
             }
             // if two events happen within 30s we consider it to be part of the same event
             if (now - _last_comms_loss_ms > 30*1000UL) {
@@ -287,11 +277,6 @@ AP_AdvancedFailsafe::check(uint32_t last_valid_rc_ms)
         } else if (gcs_link_ok) {
             _state = STATE_AUTO;
             gcs().send_text(MAV_SEVERITY_DEBUG, "AFS State: AFS_AUTO, GCS now OK");
-
-            if (option_is_set(Option::CONTINUE_AFTER_RECOVERED)) {
-                break;
-            }
-
             // we only return to the mission if we have not exceeded AFS_MAX_COM_LOSS
             if (_saved_wp != 0 && 
                 (_max_comms_loss <= 0 || 

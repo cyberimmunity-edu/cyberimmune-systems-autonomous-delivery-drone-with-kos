@@ -16,12 +16,14 @@
  */
 #pragma once
 
-#include "AP_RangeFinder_config.h"
-
-#if AP_RANGEFINDER_BENEWAKE_TFMINIPLUS_ENABLED
-
 #include "AP_RangeFinder.h"
 #include "AP_RangeFinder_Backend.h"
+
+#ifndef AP_RANGEFINDER_BENEWAKE_TFMINIPLUS_ENABLED
+#define AP_RANGEFINDER_BENEWAKE_TFMINIPLUS_ENABLED AP_RANGEFINDER_BACKEND_DEFAULT_ENABLED
+#endif
+
+#if AP_RANGEFINDER_BENEWAKE_TFMINIPLUS_ENABLED
 
 #define TFMINIPLUS_ADDR_DEFAULT              0x10        // TFMini default device id
 

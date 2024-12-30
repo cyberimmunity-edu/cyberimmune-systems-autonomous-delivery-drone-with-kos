@@ -24,12 +24,11 @@
 
 #include <AP_Param/AP_Param.h>
 #include <Filter/LowPassFilter.h>
-#include <AP_RPM/AP_RPM_config.h>
 
 class AP_ICEngine {
 public:
     // constructor
-    AP_ICEngine();
+    AP_ICEngine(const class AP_RPM &_rpm);
 
     static const struct AP_Param::GroupInfo var_info[];
 
@@ -66,13 +65,13 @@ public:
 private:
     static AP_ICEngine *_singleton;
 
+    const class AP_RPM &rpm;
+
     enum ICE_State state;
 
-#if AP_RPM_ENABLED
     // filter for RPM value
     LowPassFilterFloat _rpm_filter;
     float filtered_rpm_value;
-#endif
 
     // enable library
     AP_Int8 enable;
@@ -83,10 +82,8 @@ private:
     // min pwm on start channel for engine stop
     AP_Int16 start_chan_min_pwm;
     
-#if AP_RPM_ENABLED
     // which RPM instance to use
     AP_Int8 rpm_instance;
-#endif
     
     // time to run starter for (seconds)
     AP_Float starter_time;
@@ -100,10 +97,8 @@ private:
     AP_Int16 pwm_starter_on;
     AP_Int16 pwm_starter_off;
     
-#if AP_RPM_ENABLED
     // RPM above which engine is considered to be running
     AP_Int32 rpm_threshold;
-#endif
 
     // time when we started the starter
     uint32_t starter_start_time_ms;
@@ -117,7 +112,6 @@ private:
     // throttle percentage for engine idle
     AP_Int8 idle_percent;
 
-#if AP_RPM_ENABLED
     // Idle Controller RPM setpoint
     AP_Int16 idle_rpm;
 
@@ -126,7 +120,6 @@ private:
 
     // Idle Controller Slew Rate
     AP_Float idle_slew;
-#endif
     
     // height when we enter ICE_START_HEIGHT_DELAY
     float initial_height;
@@ -155,7 +148,6 @@ private:
     uint16_t start_chan_last_value = 1500;
     uint32_t start_chan_last_ms;
 
-#if AP_RPM_ENABLED
     // redline rpm
     AP_Int32 redline_rpm;
     struct {
@@ -163,7 +155,6 @@ private:
         float governor_integrator;
         float throttle_percentage;
     } redline;
-#endif
 };
 
 

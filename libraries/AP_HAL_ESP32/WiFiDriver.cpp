@@ -23,7 +23,7 @@
 #include "freertos/event_groups.h"
 #include "esp_system.h"
 #include "esp_wifi.h"
-#include "esp_event.h"
+#include "esp_event_loop.h"
 #include "nvs_flash.h"
 
 #include "lwip/err.h"
@@ -45,29 +45,28 @@ WiFiDriver::WiFiDriver()
     }
 }
 
-void WiFiDriver::_begin(uint32_t b, uint16_t rxS, uint16_t txS)
+void WiFiDriver::begin(uint32_t b)
+{
+    begin(b, 0, 0);
+}
+
+void WiFiDriver::begin(uint32_t b, uint16_t rxS, uint16_t txS)
 {
     if (_state == NOT_INITIALIZED) {
         initialize_wifi();
-
-	if (xTaskCreatePinnedToCore(_wifi_thread, "APM_WIFI1", Scheduler::WIFI_SS1, this, Scheduler::WIFI_PRIO1, &_wifi_task_handle,0) != pdPASS) {
-           hal.console->printf("FAILED to create task _wifi_thread\n");
-        } else {
-           hal.console->printf("OK created task _wifi_thread\n");
-        }
-
+        xTaskCreate(_wifi_thread, "APM_WIFI", Scheduler::WIFI_SS, this, Scheduler::WIFI_PRIO, &_wifi_task_handle);
         _readbuf.set_size(RX_BUF_SIZE);
         _writebuf.set_size(TX_BUF_SIZE);
         _state = INITIALIZED;
     }
 }
 
-void WiFiDriver::_end()
+void WiFiDriver::end()
 {
     //TODO
 }
 
-void WiFiDriver::_flush()
+void WiFiDriver::flush()
 {
 }
 
@@ -76,12 +75,17 @@ bool WiFiDriver::is_initialized()
     return _state != NOT_INITIALIZED;
 }
 
+void WiFiDriver::set_blocking_writes(bool blocking)
+{
+    //blocking writes do not used anywhere
+}
+
 bool WiFiDriver::tx_pending()
 {
     return (_writebuf.available() > 0);
 }
 
-uint32_t WiFiDriver::_available()
+uint32_t WiFiDriver::available()
 {
     if (_state != CONNECTED) {
         return 0;
@@ -99,12 +103,16 @@ uint32_t WiFiDriver::txspace()
     return MAX(result, 0);
 }
 
-ssize_t WiFiDriver::_read(uint8_t *buf, uint16_t count)
+int16_t WiFiDriver::read()
 {
     if (_state != CONNECTED) {
-        return 0;
+        return -1;
     }
-    return _readbuf.read(buf, count);
+    uint8_t byte;
+    if (!_readbuf.read_byte(&byte)) {
+        return -1;
+    }
+    return byte;
 }
 
 bool WiFiDriver::start_listen()
@@ -230,7 +238,12 @@ void WiFiDriver::initialize_wifi()
     esp_wifi_start();
 }
 
-size_t WiFiDriver::_write(const uint8_t *buffer, size_t size)
+size_t WiFiDriver::write(uint8_t c)
+{
+    return write(&c,1);
+}
+
+size_t WiFiDriver::write(const uint8_t *buffer, size_t size)
 {
     if (_state != CONNECTED) {
         return 0;
@@ -267,12 +280,10 @@ void WiFiDriver::_wifi_thread(void *arg)
                 }
             }
         }
-        hal.scheduler->delay_microseconds(10); // don't flog the thread if nothing to accept.
-
     }
 }
 
-bool WiFiDriver::_discard_input()
+bool WiFiDriver::discard_input()
 {
     return false;
 }

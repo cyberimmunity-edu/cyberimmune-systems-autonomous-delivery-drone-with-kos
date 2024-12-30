@@ -116,7 +116,7 @@ const AP_Param::GroupInfo AP_TECS::var_info[] = {
 
     // @Param: LAND_ARSPD
     // @DisplayName: Airspeed during landing approach (m/s)
-    // @Description: When performing an autonomus landing, this value is used as the goal airspeed during approach.  Max airspeed allowed is Trim Airspeed or ARSPD_FBW_MAX as defined by LAND_OPTIONS bitmask.  Note that this parameter is not useful if your platform does not have an airspeed sensor (use TECS_LAND_THR instead).  If negative then this value is halfway between ARSPD_FBW_MIN and TRIM_CRUISE_CM speed for fixed wing autolandings.
+    // @Description: When performing an autonomus landing, this value is used as the goal airspeed during approach.  Max airspeed allowed is Trim Airspeed or ARSPD_FBW_MAX as defined by LAND_OPTIONS bitmask.  Note that this parameter is not useful if your platform does not have an airspeed sensor (use TECS_LAND_THR instead).  If negative then this value is not used during landing.
     // @Range: -1 127
     // @Increment: 1
     // @User: Standard
@@ -268,9 +268,10 @@ const AP_Param::GroupInfo AP_TECS::var_info[] = {
 
     // @Param: FLARE_HGT
     // @DisplayName: Flare holdoff height
-    // @Description: When height above ground is below this, the sink rate will be held at TECS_LAND_SINK. Use this to perform a hold-off manoeuvre when combined with small values for TECS_LAND_SINK.
-    // @Range: 0 15
-    // @Units: m
+    // @Description: When height above ground is below this, the sink rate will be held at TECS_LAND_SINK. Use this to perform a hold-of manoeuvre when combined with small values for TECS_LAND_SINK.
+    // @Range: -10 15
+    // @Units: deg
+    // @Increment: 1
     // @User: Advanced
     AP_GROUPINFO("FLARE_HGT", 32, AP_TECS, _flare_holdoff_hgt, 1.0f),
 
@@ -831,6 +832,9 @@ float AP_TECS::_get_i_gain(void)
  */
 void AP_TECS::_update_throttle_without_airspeed(int16_t throttle_nudge)
 {
+    // reset clip status after possible use of synthetic airspeed
+    _thr_clip_status = clipStatus::NONE;
+
     // Calculate throttle demand by interpolating between pitch and throttle limits
     float nomThr;
     //If landing and we don't have an airspeed sensor and we have a non-zero
@@ -1088,6 +1092,7 @@ void AP_TECS::_initialise_states(int32_t ptchMinCO_cd, float hgt_afe)
         _lag_comp_hgt_offset  = 0.0f;
         _post_TO_hgt_offset   = 0.0f;
         _takeoff_start_ms = 0;
+        _use_synthetic_airspeed_once = false;
 
         _flags.underspeed            = false;
         _flags.badDescent            = false;

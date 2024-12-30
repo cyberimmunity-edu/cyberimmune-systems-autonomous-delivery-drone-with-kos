@@ -38,7 +38,6 @@
 #include <AP_AHRS/AP_AHRS.h>
 #include <AP_Parachute/AP_Parachute.h>
 #include <AP_Vehicle/AP_Vehicle.h>
-#include <AP_DroneCAN/AP_DroneCAN.h>
 #include <stdio.h>
 #include <GCS_MAVLink/GCS.h>
 
@@ -132,9 +131,6 @@ void AP_OpenDroneID::set_basic_id() {
     if (pkt_basic_id.id_type != MAV_ODID_ID_TYPE_NONE) {
         return;
     }
-    if (id_len == 0) {
-        load_UAS_ID_from_persistent_memory();
-    }
     if (id_len > 0) {
         // prepare basic id pkt
         uint8_t val = gcs().sysid_this_mav();
@@ -209,10 +205,12 @@ void AP_OpenDroneID::update()
 
     if ((pkt_basic_id.id_type == MAV_ODID_ID_TYPE_SERIAL_NUMBER)
         && (_options & LockUASIDOnFirstBasicIDRx)
-        && id_len == 0) {
+        && id_len == 0
+        && !bootloader_flashed) {
         hal.util->flash_bootloader();
         // reset the basic id on next set_basic_id call
         pkt_basic_id.id_type = MAV_ODID_ID_TYPE_NONE;
+        bootloader_flashed = true;
     }
 
     set_basic_id();
@@ -226,20 +224,6 @@ void AP_OpenDroneID::update()
 
     send_dynamic_out();
     send_static_out();
-#if HAL_ENABLE_DRONECAN_DRIVERS
-    uint8_t can_num_drivers = AP::can().get_num_drivers();
-    for (uint8_t i = 0; i < can_num_drivers; i++) {
-        AP_DroneCAN *dronecan = AP_DroneCAN::get_dronecan(i);
-        if (dronecan == nullptr) {
-            continue;
-        }
-        if (dronecan->get_driver_index()+1 != _can_driver) {
-            continue;
-        }
-        // send messages
-        dronecan_send(dronecan);
-    }
-#endif
 }
 
 // local payload space check which treats invalid channel as having space

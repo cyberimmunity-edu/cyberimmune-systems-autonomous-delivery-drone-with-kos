@@ -35,8 +35,7 @@
 #include <stdio.h>
 
 #include "esp_attr.h"
-
-#include "rom/ets_sys.h" // seems to work for both...for now..deprecated
+#include "esp32/rom/ets_sys.h"
 
 #include "soc/gpio_reg.h"
 #include "soc/gpio_struct.h"

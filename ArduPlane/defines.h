@@ -8,8 +8,6 @@
 
 #define MIN_AIRSPEED_MIN 5 // m/s, used for arming check and speed scaling
 
-#define TAKEOFF_RUDDER_WARNING_TIMEOUT 3000 //ms that GCS warning about not returning arming rudder to neutral repeats
-
 // failsafe
 // ----------------------
 enum failsafe_state {
@@ -44,7 +42,6 @@ enum failsafe_action_long {
     FS_ACTION_LONG_RTL = 1,
     FS_ACTION_LONG_GLIDE = 2,
     FS_ACTION_LONG_PARACHUTE = 3,
-    FS_ACTION_LONG_AUTO = 4,
 };
 
 // type of stick mixing enabled
@@ -123,7 +120,6 @@ enum log_messages {
 #define MASK_LOG_IMU_RAW                (1UL<<19)
 #define MASK_LOG_ATTITUDE_FULLRATE      (1U<<20)
 #define MASK_LOG_VIDEO_STABILISATION    (1UL<<21)
-#define MASK_LOG_NOTCH_FULLRATE         (1UL<<22)
 
 enum {
     CRASH_DETECT_ACTION_BITMASK_DISABLED = 0,
@@ -165,7 +161,7 @@ enum FlightOptions {
     CENTER_THROTTLE_TRIM = (1<<10),
     DISABLE_GROUND_PID_SUPPRESSION = (1<<11),
     ENABLE_LOITER_ALT_CONTROL = (1<<12),
-    INDICATE_WAITING_FOR_RUDDER_NEUTRAL = (1<<13),
+
 };
 
 enum CrowFlapOptions {

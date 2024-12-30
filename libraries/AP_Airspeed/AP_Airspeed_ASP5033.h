@@ -14,7 +14,11 @@
  */
 #pragma once
 
-#include "AP_Airspeed_config.h"
+#include <AP_HAL/AP_HAL_Boards.h>
+
+#ifndef AP_AIRSPEED_ASP5033_ENABLED
+#define AP_AIRSPEED_ASP5033_ENABLED AP_AIRSPEED_BACKEND_DEFAULT_ENABLED
+#endif
 
 #if AP_AIRSPEED_ASP5033_ENABLED
 

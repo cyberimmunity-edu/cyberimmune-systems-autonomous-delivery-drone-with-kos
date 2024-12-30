@@ -36,7 +36,13 @@ void UARTDriver::vprintf(const char *fmt, va_list ap)
     }
 }
 
-void UARTDriver::_begin(uint32_t b, uint16_t rxS, uint16_t txS)
+void UARTDriver::begin(uint32_t b)
+{
+    begin(b, 0, 0);
+}
+
+
+void UARTDriver::begin(uint32_t b, uint16_t rxS, uint16_t txS)
 {
     if (uart_num < ARRAY_SIZE(uart_desc)) {
         uart_port_t p = uart_desc[uart_num].port;
@@ -66,10 +72,9 @@ void UARTDriver::_begin(uint32_t b, uint16_t rxS, uint16_t txS)
 
         }
     }
-    _baudrate = b;
 }
 
-void UARTDriver::_end()
+void UARTDriver::end()
 {
     if (_initialized) {
         uart_driver_delete(uart_desc[uart_num].port);
@@ -79,7 +84,7 @@ void UARTDriver::_end()
     _initialized = false;
 }
 
-void UARTDriver::_flush()
+void UARTDriver::flush()
 {
     uart_port_t p = uart_desc[uart_num].port;
     uart_flush(p);
@@ -90,13 +95,18 @@ bool UARTDriver::is_initialized()
     return _initialized;
 }
 
+void UARTDriver::set_blocking_writes(bool blocking)
+{
+    //blocking writes do not used anywhere
+}
+
 bool UARTDriver::tx_pending()
 {
     return (_writebuf.available() > 0);
 }
 
 
-uint32_t UARTDriver::_available()
+uint32_t UARTDriver::available()
 {
     if (!_initialized) {
         return 0;
@@ -115,7 +125,7 @@ uint32_t UARTDriver::txspace()
 
 }
 
-ssize_t IRAM_ATTR UARTDriver::_read(uint8_t *buffer, uint16_t count)
+ssize_t IRAM_ATTR UARTDriver::read(uint8_t *buffer, uint16_t count)
 {
     if (!_initialized) {
         return -1;
@@ -126,10 +136,19 @@ ssize_t IRAM_ATTR UARTDriver::_read(uint8_t *buffer, uint16_t count)
         return 0;
     }
 
-
-    _receive_timestamp_update();
-
     return ret;
+}
+
+int16_t IRAM_ATTR UARTDriver::read()
+{
+    if (!_initialized) {
+        return -1;
+    }
+    uint8_t byte;
+    if (!_readbuf.read_byte(&byte)) {
+        return -1;
+    }
+    return byte;
 }
 
 void IRAM_ATTR UARTDriver::_timer_tick(void)
@@ -168,7 +187,12 @@ void IRAM_ATTR UARTDriver::write_data()
     _write_mutex.give();
 }
 
-size_t IRAM_ATTR UARTDriver::_write(const uint8_t *buffer, size_t size)
+size_t IRAM_ATTR UARTDriver::write(uint8_t c)
+{
+    return write(&c,1);
+}
+
+size_t IRAM_ATTR UARTDriver::write(const uint8_t *buffer, size_t size)
 {
     if (!_initialized) {
         return 0;
@@ -182,41 +206,11 @@ size_t IRAM_ATTR UARTDriver::_write(const uint8_t *buffer, size_t size)
     return ret;
 }
 
-bool UARTDriver::_discard_input()
+bool UARTDriver::discard_input()
 {
     //uart_port_t p = uart_desc[uart_num].port;
     //return uart_flush_input(p) == ESP_OK;
     return false;
-}
-
-// record timestamp of new incoming data
-void IRAM_ATTR UARTDriver::_receive_timestamp_update(void)
-{
-    _receive_timestamp[_receive_timestamp_idx^1] = AP_HAL::micros64();
-    _receive_timestamp_idx ^= 1;
-}
-
-
-/*
-  return timestamp estimate in microseconds for when the start of
-  a nbytes packet arrived on the uart. This should be treated as a
-  time constraint, not an exact time. It is guaranteed that the
-  packet did not start being received after this time, but it
-  could have been in a system buffer before the returned time.
-  This takes account of the baudrate of the link. For transports
-  that have no baudrate (such as USB) the time estimate may be
-  less accurate.
-  A return value of zero means the HAL does not support this API
-*/
-uint64_t UARTDriver::receive_time_constraint_us(uint16_t nbytes)
-{
-    uint64_t last_receive_us = _receive_timestamp[_receive_timestamp_idx];
-    if (_baudrate > 0) {
-        // assume 10 bits per byte. For USB we assume zero transport delay
-        uint32_t transport_time_us = (1000000UL * 10UL / _baudrate) * (nbytes + available());
-        last_receive_us -= transport_time_us;
-    }
-    return last_receive_us;
 }
 
 }

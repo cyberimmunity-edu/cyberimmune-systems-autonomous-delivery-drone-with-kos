@@ -152,13 +152,7 @@ class AutoTestHelicopter(AutoTestCopter):
         self.progress("Raising rotor speed")
         self.set_rc(8, 2000)
         self.progress("wait for rotor runup to complete")
-        if self.get_parameter("H_RSC_MODE") == 4:
-            self.context_collect('STATUSTEXT')
-            self.wait_statustext("Governor Engaged", check_context=True)
-        elif self.get_parameter("H_RSC_MODE") == 3:
-            self.wait_rpm(1, 1300, 1400)
-        else:
-            self.wait_servo_channel_value(8, 1659, timeout=10)
+        self.wait_servo_channel_value(8, 1659, timeout=10)
 
         # wait for motor runup
         self.delay_sim_time(20)
@@ -194,7 +188,7 @@ class AutoTestHelicopter(AutoTestCopter):
             # to carry the path to the JSON.
             actual_model = model.split(":")[0]
             defaults = self.model_defaults_filepath(actual_model)
-            if not isinstance(defaults, list):
+            if type(defaults) != list:
                 defaults = [defaults]
             self.customise_SITL_commandline(
                 ["--defaults", ','.join(defaults), ],
@@ -204,18 +198,6 @@ class AutoTestHelicopter(AutoTestCopter):
             self.takeoff(10)
             self.do_RTL()
             self.set_rc(8, 1000)
-
-    def governortest(self):
-        '''Test Heli Internal Throttle Curve and Governor'''
-        self.customise_SITL_commandline(
-            ["--defaults", ','.join(self.model_defaults_filepath('heli-gas')), ],
-            model="heli-gas",
-            wipe=True,
-        )
-        self.set_parameter("H_RSC_MODE", 4)
-        self.takeoff(10)
-        self.do_RTL()
-        self.set_rc(8, 1000)
 
     def hover(self):
         self.progress("Setting hover collective")
@@ -303,7 +285,7 @@ class AutoTestHelicopter(AutoTestCopter):
             if abs(m.relative_alt) > 100:
                 raise NotAchievedException("Took off prematurely")
             self.progress("Pushing throttle past half-way")
-            self.set_rc(3, 1650)
+            self.set_rc(3, 1600)
 
             self.progress("Monitoring takeoff")
             self.wait_altitude(6.9, 8, relative=True)
@@ -401,27 +383,20 @@ class AutoTestHelicopter(AutoTestCopter):
         self.context_collect('STATUSTEXT')
         self.change_mode('STABILIZE')
         self.progress("Triggering manual autorotation by disabling interlock")
-        self.set_rc(3, 1000)
+        self.set_rc(3, 1300)
         self.set_rc(8, 1000)
-        self.wait_servo_channel_value(8, 1199, timeout=3)
+        self.wait_servo_channel_value(8, 1200, timeout=3)
         self.progress("channel 8 set to autorotation window")
-
-        # wait to establish autorotation
-        self.delay_sim_time(2)
 
         self.set_rc(8, 2000)
         self.wait_servo_channel_value(8, 1659, timeout=AROT_RAMP_TIME * 1.1)
 
-        # give time for engine to power up
-        self.set_rc(3, 1400)
-        self.delay_sim_time(2)
-
         self.progress("in-flight power recovery")
-        self.set_rc(3, 1500)
+        self.set_rc(3, 1700)
         self.delay_sim_time(5)
 
         # initiate autorotation again
-        self.set_rc(3, 1000)
+        self.set_rc(3, 1200)
         self.set_rc(8, 1000)
 
         self.wait_statustext(r"SIM Hit ground at ([0-9.]+) m/s",
@@ -818,7 +793,6 @@ class AutoTestHelicopter(AutoTestCopter):
             self.SplineWaypoint,
             self.AutoRotation,
             self.ManAutoRotation,
-            self.governortest,
             self.FlyEachFrame,
             self.AirspeedDrivers,
             self.TurbineStart,

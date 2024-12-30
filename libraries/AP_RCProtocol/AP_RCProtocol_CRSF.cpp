@@ -17,11 +17,8 @@
   Code by Andy Piper
  */
 
-#include "AP_RCProtocol_config.h"
-
-#if AP_RCPROTOCOL_CRSF_ENABLED
-
 #include "AP_RCProtocol.h"
+#include "AP_RCProtocol_SRXL.h"
 #include "AP_RCProtocol_CRSF.h"
 #include <AP_HAL/AP_HAL.h>
 #include <AP_Math/AP_Math.h>
@@ -308,10 +305,8 @@ void AP_RCProtocol_CRSF::update(void)
         _last_frame_time_us = now;
     }
 
-#if AP_RC_CHANNEL_ENABLED
     //Check if LQ is to be reported in place of RSSI
-    _use_lq_for_rssi = rc().option_is_enabled(RC_Channels::Option::USE_CRSF_LQ_AS_RSSI);
-#endif
+    _use_lq_for_rssi = bool(rc().use_crsf_lq_as_rssi());
 }
 
 // write out a frame of any type
@@ -395,7 +390,7 @@ bool AP_RCProtocol_CRSF::decode_crsf_packet()
         default:
             break;
     }
-#if HAL_CRSF_TELEM_ENABLED
+#if HAL_CRSF_TELEM_ENABLED && !APM_BUILD_TYPE(APM_BUILD_iofirmware)
     if (AP_CRSF_Telem::process_frame(FrameType(_frame.type), (uint8_t*)&_frame.payload)) {
         process_telemetry();
     }
@@ -582,6 +577,7 @@ void AP_RCProtocol_CRSF::start_uart()
     _uart->configure_parity(0);
     _uart->set_stop_bits(1);
     _uart->set_flow_control(AP_HAL::UARTDriver::FLOW_CONTROL_DISABLE);
+    _uart->set_blocking_writes(false);
     _uart->set_options(_uart->get_options() & ~AP_HAL::UARTDriver::OPTION_RXINV);
     _uart->begin(get_bootstrap_baud_rate());
 }
@@ -635,5 +631,3 @@ namespace AP {
         return AP_RCProtocol_CRSF::get_singleton();
     }
 };
-
-#endif  // AP_RCPROTOCOL_CRSF_ENABLED

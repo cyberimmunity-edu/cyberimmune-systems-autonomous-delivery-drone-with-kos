@@ -49,7 +49,15 @@ void UARTDriver::set_device_path(const char *path)
     device_path = path;
 }
 
-void UARTDriver::_begin(uint32_t b, uint16_t rxS, uint16_t txS)
+/*
+  open the tty
+ */
+void UARTDriver::begin(uint32_t b)
+{
+    begin(b, 0, 0);
+}
+
+void UARTDriver::begin(uint32_t b, uint16_t rxS, uint16_t txS)
 {
     if (!_initialised) {
         if (device_path == nullptr && _console) {
@@ -205,7 +213,7 @@ AP_HAL::OwnPtr<SerialDevice> UARTDriver::_parseDevicePath(const char *arg)
 /*
   shutdown a UART
  */
-void UARTDriver::_end()
+void UARTDriver::end()
 {
     _initialised = false;
     _connected = false;
@@ -219,7 +227,7 @@ void UARTDriver::_end()
 }
 
 
-void UARTDriver::_flush()
+void UARTDriver::flush()
 {
     // we are not doing any buffering, so flush is a no-op
 }
@@ -235,6 +243,15 @@ bool UARTDriver::is_initialized()
 
 
 /*
+  enable or disable blocking writes
+ */
+void UARTDriver::set_blocking_writes(bool blocking)
+{
+    _nonblocking_writes = !blocking;
+}
+
+
+/*
   do we have any bytes pending transmission?
  */
 bool UARTDriver::tx_pending()
@@ -245,7 +262,7 @@ bool UARTDriver::tx_pending()
 /*
   return the number of bytes available to be read
  */
-uint32_t UARTDriver::_available()
+uint32_t UARTDriver::available()
 {
     if (!_initialised) {
         return 0;
@@ -264,16 +281,21 @@ uint32_t UARTDriver::txspace()
     return _writebuf.space();
 }
 
-ssize_t UARTDriver::_read(uint8_t *buffer, uint16_t count)
+int16_t UARTDriver::read()
 {
     if (!_initialised) {
-        return 0;
+        return -1;
     }
 
-    return _readbuf.read(buffer, count);
+    uint8_t byte;
+    if (!_readbuf.read_byte(&byte)) {
+        return -1;
+    }
+
+    return byte;
 }
 
-bool UARTDriver::_discard_input()
+bool UARTDriver::discard_input()
 {
     if (!_initialised) {
         return false;
@@ -282,16 +304,50 @@ bool UARTDriver::_discard_input()
     return true;
 }
 
-/*
-  write size bytes to the write buffer
- */
-size_t UARTDriver::_write(const uint8_t *buffer, size_t size)
+/* Linux implementations of Print virtual methods */
+size_t UARTDriver::write(uint8_t c)
 {
     if (!_initialised) {
         return 0;
     }
     if (!_write_mutex.take_nonblocking()) {
         return 0;
+    }
+
+    while (_writebuf.space() == 0) {
+        if (_nonblocking_writes) {
+            _write_mutex.give();
+            return 0;
+        }
+        hal.scheduler->delay(1);
+    }
+    size_t ret = _writebuf.write(&c, 1);
+    _write_mutex.give();
+    return ret;
+}
+
+/*
+  write size bytes to the write buffer
+ */
+size_t UARTDriver::write(const uint8_t *buffer, size_t size)
+{
+    if (!_initialised) {
+        return 0;
+    }
+    if (!_write_mutex.take_nonblocking()) {
+        return 0;
+    }
+    if (!_nonblocking_writes) {
+        /*
+          use the per-byte delay loop in write() above for blocking writes
+         */
+        _write_mutex.give();
+        size_t ret = 0;
+        while (size--) {
+            if (write(*buffer++) != 1) break;
+            ret++;
+        }
+        return ret;
     }
 
     size_t ret = _writebuf.write(buffer, size);
