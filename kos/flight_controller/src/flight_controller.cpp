@@ -494,19 +494,26 @@ int missionToString(MissionCommand* commands, uint8_t num, char* string, uint32_
         char command[256] = {0};
         switch (commands[i].type) {
         case CommandType::HOME:
-            commandLen = snprintf(command, 256, "H%d_%d_%d", commands[i].content.waypoint.latitude,
-                commands[i].content.waypoint.longitude, commands[i].content.waypoint.altitude);
+            commandLen = snprintf(command, 256, "H%d.%d_%d.%d_%d.%d", commands[i].content.waypoint.latitude / 10000000,
+                abs(commands[i].content.waypoint.latitude % 10000000), commands[i].content.waypoint.longitude / 10000000,
+                abs(commands[i].content.waypoint.longitude % 10000000), commands[i].content.waypoint.altitude / 100,
+                abs(commands[i].content.waypoint.altitude % 100));
             break;
         case CommandType::TAKEOFF:
-            commandLen = snprintf(command, 256, "T%d", commands[i].content.takeoff.altitude);
+            commandLen = snprintf(command, 256, "T%d.%d", commands[i].content.takeoff.altitude / 100,
+                abs(commands[i].content.takeoff.altitude % 100));
             break;
         case CommandType::WAYPOINT:
-            commandLen = snprintf(command, 256, "W%d_%d_%d", commands[i].content.waypoint.latitude,
-                commands[i].content.waypoint.longitude, commands[i].content.waypoint.altitude);
+            commandLen = snprintf(command, 256, "W%d.%d_%d.%d_%d.%d", commands[i].content.waypoint.latitude / 10000000,
+                abs(commands[i].content.waypoint.latitude % 10000000), commands[i].content.waypoint.longitude / 10000000,
+                abs(commands[i].content.waypoint.longitude % 10000000), commands[i].content.waypoint.altitude / 100,
+                abs(commands[i].content.waypoint.altitude % 100));
             break;
         case CommandType::LAND:
-            commandLen = snprintf(command, 256, "L%d_%d_%d", commands[i].content.waypoint.latitude,
-                commands[i].content.waypoint.longitude, commands[i].content.waypoint.altitude);
+            commandLen = snprintf(command, 256, "L%d.%d_%d.%d_%d.%d", commands[i].content.waypoint.latitude / 10000000,
+                abs(commands[i].content.waypoint.latitude % 10000000), commands[i].content.waypoint.longitude / 10000000,
+                abs(commands[i].content.waypoint.longitude % 10000000), commands[i].content.waypoint.altitude / 100,
+                abs(commands[i].content.waypoint.altitude % 100));
             break;
         case CommandType::SET_SERVO:
             commandLen = snprintf(command, 256, "S%d_%d", commands[i].content.servo.number, commands[i].content.servo.pwm);
