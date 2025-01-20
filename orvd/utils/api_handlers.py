@@ -345,7 +345,6 @@ def telemetry_handler(id: str, lat: float, lon: float, alt: float,
     Returns:
         str: Статус арма БПЛА.
     """
-    print('telemetry_handler')
     uav_entity = get_entity_by_key(Uav, id)
     if not uav_entity:
         return NOT_FOUND
