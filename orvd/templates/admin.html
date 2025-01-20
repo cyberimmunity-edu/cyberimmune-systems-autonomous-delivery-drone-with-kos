@@ -19,47 +19,54 @@
         <p id="id" class="id note">ID: </p>
         <select id="id_select" style="display:inline-block;margin-left:10px;">
         </select>
-        <p id="status" class="status note">Статус: - </p>
-        <p id="waiters" class="wait note">Ожидают: - </p>
-        <p id="dop" class="dop note">HDOP: - </p>
-        <p id="sats" class="sats note">SATS: - </p>
-        <p id="delay" class="delay note">Задержка связи (сек): - </p>
-        <div class="marginb"></div>
+        <p></p>
+        <label>
+          <input id="monitoring-checkbox" type="checkbox">
+          Режим мониторинга
+        </label>
+        <div id="main-buttons">
+          <p id="status" class="status note">Статус: - </p>
+          <p id="waiters" class="wait note">Ожидают: - </p>
+          <p id="dop" class="dop note">HDOP: - </p>
+          <p id="sats" class="sats note">SATS: - </p>
+          <p id="delay" class="delay note">Задержка связи (сек): - </p>
+          <div class="marginb"></div>
 
-        <button id="arm" class="arm button" type="button">Arm</button>
-        <button id="disarm" class="disarm button" type="button">Disarm</button>
-        <div class="marginb"></div>
-        <button id="kill_switch" class="kill_switch button" type="button">Kill switch</button>
-        <div class="marginb"></div>
+          <button id="arm" class="arm button" type="button">Arm</button>
+          <button id="disarm" class="disarm button" type="button">Disarm</button>
+          <div class="marginb"></div>
+          <button id="kill_switch" class="kill_switch button" type="button">Kill switch</button>
+          <div class="marginb"></div>
 
-        <form>
-          <label>
-            <input id="mission_checkbox" type="checkbox" name="languages" value="mission">
-            Подтверждение миссии
-          </label>
-          <br><br>
-          <label>
-            <input id="fly_accept_checkbox" type="checkbox" name="languages" value="fly_accept">
-            Разрешение на полет
-          </label>
-          <br><br>
-          <label>
-            <input id="forbidden_zones_checkbox" type="checkbox" name="forbidden_zones" value="forbidden_zones">
-            Показ запрещенных зон
-          </label>
-          <br><br>
-          <label>
-            Задержка связи (сек):
-            <input id="delay_input" type="number" min="0" step="1">
-          </label>
-          <button id="set_delay" class="set_delay button" type="button">Установить задержку</button>
-          <br>
-          <div id="revised-mission-block">
-            Новая миссия:
-            <button id="revised-mission-accept" class="button" type="button">Подтвердить</button>
-            <button id="revised-mission-decline" class="button" type="button">Отклонить</button>
-          </div>
-        </form>
+          <form>
+            <label>
+              <input id="mission_checkbox" type="checkbox" name="languages" value="mission">
+              Подтверждение миссии
+            </label>
+            <br><br>
+            <label>
+              <input id="fly_accept_checkbox" type="checkbox" name="languages" value="fly_accept">
+              Разрешение на полет
+            </label>
+            <br><br>
+            <label>
+              <input id="forbidden_zones_checkbox" type="checkbox" name="forbidden_zones" value="forbidden_zones">
+              Показ запрещенных зон
+            </label>
+            <br><br>
+            <label>
+              Задержка связи (сек):
+              <input id="delay_input" type="number" min="0" step="1">
+            </label>
+            <button id="set_delay" class="set_delay button" type="button">Установить задержку</button>
+            <br>
+            <div id="revised-mission-block">
+              Новая миссия:
+              <button id="revised-mission-accept" class="button" type="button">Подтвердить</button>
+              <button id="revised-mission-decline" class="button" type="button">Отклонить</button>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
     <script type="module" src="{{ url_for('static',filename='admin.js') }}"> </script>

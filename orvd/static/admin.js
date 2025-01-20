@@ -27,6 +27,7 @@ document.getElementById('fly_accept_checkbox').onclick = fly_accept;
 document.getElementById('forbidden_zones_checkbox').onclick = toggleForbiddenZones;
 document.getElementById('revised-mission-accept').onclick = () => revised_mission_decision(0);
 document.getElementById('revised-mission-decline').onclick = () => revised_mission_decision(1);
+document.getElementById('monitoring-checkbox').onclick = () => toggle_display_mode();
 
 ol.proj.useGeographic()
 const place = [142.812588, 46.617637];
@@ -339,6 +340,32 @@ async function revised_mission_decision(decision) {
   console.log(mission_text);
 }
 
+async function toggle_display_mode() {
+  const query_str = `admin/toggle_display_mode?token=${access_token}`;
+  await fetch(query_str);
+  const $monitoringCheckbox = document.getElementById('monitoring-checkbox')
+  const $mainButtons = document.getElementById('main-buttons');
+  if($monitoringCheckbox.checked) {
+    $mainButtons.style.visibility = 'hidden';
+  } else {
+    $mainButtons.style.visibility = 'visible';
+  }
+}
+
+async function get_display_mode() {
+  const delay_resp = await fetch(`admin/get_display_mode?token=${access_token}`);
+  const delay_text = await delay_resp.text();
+  const $monitoringCheckbox = document.getElementById('monitoring-checkbox')
+  const $mainButtons = document.getElementById('main-buttons');
+  if (delay_text === '0') {
+    $monitoringCheckbox.checked = true;
+    $mainButtons.style.visibility = 'hidden';
+  } else {
+    $monitoringCheckbox.checked = false;
+    $mainButtons.style.visibility = 'visible';
+  }
+}
+
 async function fly_accept() {
   let fly_accept_checkbox = document.getElementById('fly_accept_checkbox');
   if (active_id == null || current_state == "Kill switch ON") {
@@ -547,6 +574,7 @@ async function get_delay() {
 
 setInterval(async function() {
   get_ids();
+  get_display_mode();
   if (active_id != null) {
     status_change();
     waiters_change();

@@ -1153,8 +1153,10 @@ def auth():
         description: Ошибка проверки подписи.
     """
     id = cast_wrapper(request.args.get('id'), str)
-    sig = request.args.get('sig')
-    if id:
+    if modes['display_only'] and id is not None:
+        return regular_request(handler_func=auth_handler, id=id)
+    elif id is not None:
+        sig = request.args.get('sig')
         return signed_request(handler_func=auth_handler, verifier_func=verify, signer_func=sign,
                           query_str=f'/api/auth?id={id}', key_group=f'kos{id}', sig=sig, id=id)
     else:
@@ -1703,3 +1705,15 @@ def revise_mission_decision():
         return authorized_request(handler_func=revise_mission_decision_handler, token=token, id=id, decision=decision)
     else:
         return bad_request('Wrong id/decision')
+      
+      
+@bp.route('/admin/get_display_mode')
+def get_display_mode():
+    token = request.args.get('token')
+    return authorized_request(handler_func=get_display_mode_handler, token=token)
+      
+
+@bp.route('/admin/toggle_display_mode')
+def toggle_display_mode():
+    token = request.args.get('token')
+    return authorized_request(handler_func=toggle_display_mode_handler, token=token)
