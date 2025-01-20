@@ -346,6 +346,10 @@ def telemetry_handler(id: str, lat: float, lon: float, alt: float,
         str: Статус арма БПЛА.
     """
     uav_entity = get_entity_by_key(Uav, id)
+    if not uav_entity and modes['display_only']:
+        uav_entity = Uav(id=id, is_armed=False, state='В сети', kill_switch_state=False)
+        add_and_commit(uav_entity)
+        
     if not uav_entity:
         return NOT_FOUND
     else:
