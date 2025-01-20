@@ -11,6 +11,9 @@ OUT_ADDR = 'localhost'
 
 arm_queue = set()
 revise_mission_queue = set()
+modes = {
+    "display_only": False
+}
 
 if ENABLE_MAVLINK:
     from pymavlink import mavutil
@@ -342,6 +345,7 @@ def telemetry_handler(id: str, lat: float, lon: float, alt: float,
     Returns:
         str: Статус арма БПЛА.
     """
+    print('telemetry_handler')
     uav_entity = get_entity_by_key(Uav, id)
     if not uav_entity:
         return NOT_FOUND
@@ -1035,3 +1039,11 @@ def set_delay_handler(id: str, delay: int):
         uav_entity.delay = delay
         commit_changes()
         return OK
+    
+    
+def get_display_mode_handler():
+    return '0' if modes['display_only'] else '1'
+
+def toggle_display_mode_handler():
+    modes['display_only'] = not modes['display_only']
+    return OK
