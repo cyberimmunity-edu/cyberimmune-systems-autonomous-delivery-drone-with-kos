@@ -1153,9 +1153,7 @@ def auth():
         description: Ошибка проверки подписи.
     """
     id = cast_wrapper(request.args.get('id'), str)
-    if modes['display_only'] and id is not None:
-        return regular_request(handler_func=auth_handler, id=id)
-    elif id is not None:
+    if id is not None:
         sig = request.args.get('sig')
         return signed_request(handler_func=auth_handler, verifier_func=verify, signer_func=sign,
                           query_str=f'/api/auth?id={id}', key_group=f'kos{id}', sig=sig, id=id)
