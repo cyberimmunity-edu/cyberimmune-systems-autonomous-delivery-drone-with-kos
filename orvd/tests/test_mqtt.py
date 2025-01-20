@@ -23,8 +23,7 @@ class TestMQTTPublish:
     def test_publish_to_telemetry_topic(self, mqtt_client):
         """Тест публикации данных в топик api/telemetry."""
         
-        data_query = f"id={1}&lat={50}&lon={50.1}&alt={852}&azimuth={0}&dop={1.2}&sats={12}&speed={0}"
-        message = json.dumps(data_query)
+        message = f'id={1}&lat={50}&lon={50.1}&alt={852}&azimuth={0}&dop={1.2}&sats={12}&speed={0}'
         
         published = False
         def on_publish(client, userdata, mid):
