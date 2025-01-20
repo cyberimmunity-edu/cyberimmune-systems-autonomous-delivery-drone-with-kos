@@ -1,8 +1,44 @@
+import socket
+import time
+from threading import Thread
 from flask import jsonify
 from utils.db_utils import *
 from utils.utils import *
 
+ENABLE_MAVLINK = False
+MAVLINK_CONNECTIONS_NUMBER = 10
+OUT_ADDR = 'localhost'
+
 arm_queue = set()
+revise_mission_queue = set()
+
+if ENABLE_MAVLINK:
+    from pymavlink import mavutil
+    
+    def mavlink_handler(in_port: int, out_port: int, out_addr: str = 'localhost'):
+        mavlink_connection = mavutil.mavlink_connection(f'udp:0.0.0.0:{in_port}')
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+
+        while True:
+            msg = mavlink_connection.recv_msg()
+            if msg:
+                data = msg.get_msgbuf()
+                sock.sendto(data, (out_addr, out_port))
+            time.sleep(1e-4)
+
+    def start_mavlink_connections(connections):
+        for conn in connections:
+            in_port, out_port, out_addr = conn
+            thread = Thread(
+                name=f"mav_thread_{in_port}_{out_port}",
+                target=mavlink_handler,
+                args=(in_port, out_port, out_addr),
+                daemon=True
+            )
+            thread.start()
+            
+    connections = [(in_port, in_port + 20, OUT_ADDR) for in_port in range(14551, 14551 + MAVLINK_CONNECTIONS_NUMBER)]
+    start_mavlink_connections(connections)
 
 def bad_request(message: str):
     """
@@ -197,7 +233,7 @@ def arm_handler(id: str):
             commit_changes()
             decision = _arm_wait_decision(id)
             if decision == ARMED:
-                uav_entity.state = 'В полете'
+                uav_entity.state = 'В поездке'
             else:
                 uav_entity.state = 'В сети'
             commit_changes()
@@ -459,6 +495,61 @@ def fmission_ms_handler(id: str, mission_str: str):
         commit_changes()
         
     return mission_verification_status
+
+
+def revise_mission_handler(id: str, mission: str):
+    mission_list = mission.split('*')
+    
+    mission_entity = get_entity_by_key(Mission, id)
+    if mission_entity:
+        get_entities_by_field(MissionStep, MissionStep.mission_id, id).delete()
+        delete_entity(mission_entity)
+        commit_changes()
+    
+    mission_entity = Mission(uav_id=id, is_accepted=False)
+    add_changes(mission_entity)
+    for idx, cmd in enumerate(mission_list):
+        mission_step_entity = MissionStep(mission_id=id, step=idx, operation=cmd)
+        add_changes(mission_step_entity)
+    commit_changes()
+    
+    uav_entity = get_entity_by_key(Uav, id)
+    if uav_entity:
+        uav_entity.is_armed = False
+        uav_entity.state = 'Ожидает'
+        commit_changes()
+        
+    revise_mission_queue.add(id)
+    while id in revise_mission_queue:
+        time.sleep(0.1)
+        
+    mission_entity = get_entity_by_key(Mission, id)
+    if mission_entity:
+        if mission_entity.is_accepted:
+            return '$Approve 0'
+        else:
+            return '$Approve 1'
+
+
+def revise_mission_decision_handler(id: str, decision: int):
+    uav_entity = get_entity_by_key(Uav, id)
+    if not uav_entity:
+        return NOT_FOUND
+    elif id in revise_mission_queue:
+        mission_entity = get_entity_by_key(Mission, id)
+        if decision == 0:
+            uav_entity.is_armed = True
+            uav_entity.state = 'В поездке'
+            mission_entity.is_accepted = True
+        else:
+            uav_entity.is_armed = False
+            uav_entity.state = 'В сети'
+            mission_entity.is_accepted = False
+        commit_changes()
+        revise_mission_queue.remove(id)
+        return f'$Arm: {decision}'
+    else:
+        return f'$Arm: -1'
 
 
 def get_logs_handler(id: str):
@@ -742,6 +833,8 @@ def get_mission_state_handler(id: str):
     Returns:
         str: Состояние миссии (принята/не принята) или NOT_FOUND.
     """
+    if id in revise_mission_queue:
+        return '2'
     uav_entity = get_entity_by_key(Uav, id)
     if uav_entity:
         mission = get_entity_by_key(Mission, id)
@@ -768,7 +861,7 @@ def change_fly_accept_handler(id: str, decision: int):
     if uav_entity:
         if decision == 0:
             uav_entity.is_armed = True
-            uav_entity.state = 'В полете'
+            uav_entity.state = 'В поездке'
         else:
             uav_entity.is_armed = False
             uav_entity.state = 'В сети'
