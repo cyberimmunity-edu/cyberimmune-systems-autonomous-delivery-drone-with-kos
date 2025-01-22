@@ -6,7 +6,8 @@ from unittest.mock import patch
 
 MQTT_BROKER = "localhost"
 MQTT_PORT = 1883
-MQTT_TOPIC = "api/telemetry"
+MQTT_TELEMETRY_TOPIC = "api/telemetry"
+MQTT_MISSION_TOPIC = 'api/mission'
 TIMEOUT = 5
 
 class TestMQTTPublish:
@@ -31,12 +32,36 @@ class TestMQTTPublish:
             published = True
 
         mqtt_client.on_publish = on_publish
-        result = mqtt_client.publish(MQTT_TOPIC, message, qos=1)
+        result = mqtt_client.publish(MQTT_TELEMETRY_TOPIC, message, qos=1)
         status = result[0]
         start_time = time.time()
         while not published and time.time() - start_time < TIMEOUT:
             time.sleep(0.1)
-        assert status == 0, f"Не удалось отправить сообщение в топик {MQTT_TOPIC}"
+        assert status == 0, f"Не удалось отправить сообщение в топик {MQTT_TELEMETRY_TOPIC}"
+        assert published, f"Сообщение не было опубликовано в течение {TIMEOUT} секунд"
+        
+    def test_publish_to_mission_topic(self, mqtt_client):
+        """Тест публикации миссии в топик api/mission."""
+        
+        data = {
+            "id": 1,
+            "mission_str": "QGC WPL 110\n0\t1\t0\t16\t0\t0\t0\t0\t55.7558\t37.6173\t200\t1\n"
+        }
+        
+        payload = json.dumps(data)
+        
+        published = False
+        def on_publish(client, userdata, mid):
+            nonlocal published
+            published = True
+
+        mqtt_client.on_publish = on_publish
+        result = mqtt_client.publish(MQTT_MISSION_TOPIC, payload, qos=1)
+        status = result[0]
+        start_time = time.time()
+        while not published and time.time() - start_time < TIMEOUT:
+            time.sleep(0.1)
+        assert status == 0, f"Не удалось отправить сообщение в топик {MQTT_MISSION_TOPIC}"
         assert published, f"Сообщение не было опубликовано в течение {TIMEOUT} секунд"
 
     @patch('paho.mqtt.client.Client.connect')        
