@@ -487,6 +487,11 @@ def fmission_ms_handler(id: str, mission_str: str):
     mission_list, mission_verification_status = read_mission(mission_str)
     
     if mission_verification_status == MissionVerificationStatus.OK:
+        uav_entity = get_entity_by_key(Uav, id)
+        if not uav_entity and modes['display_only']:
+            uav_entity = Uav(id=id, is_armed=False, state='В сети', kill_switch_state=False)
+            add_and_commit(uav_entity)
+            
         mission_entity = get_entity_by_key(Mission, id)
         if mission_entity:
             get_entities_by_field(MissionStep, MissionStep.mission_id, id).delete()
