@@ -1,13 +1,13 @@
 /**
  * \file
  * \~English
- * \brief Implementation of methods for communication with the ATM server.
+ * \brief Implementation of methods for communication with the VMS server.
  * \details The file contains implementation of methods
- * for requests to an ATM server send and for received responses process.
+ * for requests to an VMS server send and for received responses process.
  *
  * \~Russian
- * \brief Реализация методов для общения с сервером ОРВД.
- * \details В файле реализованы методы для отправки запросов на сервер ОРВД
+ * \brief Реализация методов для общения с сервером СУПА.
+ * \details В файле реализованы методы для отправки запросов на сервер СУПА
  * и обработке полученных ответов.
  */
 

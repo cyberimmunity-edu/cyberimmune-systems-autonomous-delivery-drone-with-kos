@@ -3,12 +3,12 @@
  * \~English
  * \brief Implementation of methods for drone position update and transmit.
  * \details The file contains implementation of methods, that update, store and
- * transmit current drone position to the ATM server.
+ * transmit current drone position to the VMS server.
  *
  * \~Russian
  * \brief Реализация методов для обновления и передачи данных о местоположении дрона.
  * \details В файле реализованы методы, обеспечивающие обновление, хранение и
- * передачу данных о текущем местоположении дрона на сервер ОРВД.
+ * передачу данных о текущем местоположении дрона на сервер СУПА.
  */
 
 #include "../include/navigation_system.h"

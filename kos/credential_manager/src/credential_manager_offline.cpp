@@ -4,12 +4,12 @@
  * \brief Implementation of methods for RSA message signature check simulation.
  * \details The file contains implementation of methods, that simulate
  * message authenticity check. These methods are intended for offline build,
- * where there is no connection with the ATM server, and therefore any message is considered authentic.
+ * where there is no connection with the VMS server, and therefore any message is considered authentic.
  *
  * \~Russian
  * \brief Реализация методов для имитации проверки RSA-подписей сообщений.
  * \details В файле реализованы методы, имитирующие проверку аутентичности сообщений.
- * Эти методы предназначены для оффлайн-сборки, где отсутствует связь с сервером ОРВД,
+ * Эти методы предназначены для оффлайн-сборки, где отсутствует связь с сервером СУПА,
  * а потому любые сообщения считаются аутентичными.
  */
 

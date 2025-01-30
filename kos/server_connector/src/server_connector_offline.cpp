@@ -1,13 +1,13 @@
 /**
  * \file
  * \~English
- * \brief Implementation of methods for ATM server communication simulation.
+ * \brief Implementation of methods for VMS server communication simulation.
  * \details The file contains implementation of methods, that simulate
- * requests to an ATM server send and received responses process.
+ * requests to an VMS server send and received responses process.
  *
  * \~Russian
- * \brief Реализация методов для имитации общения с сервером ОРВД.
- * \details В файле реализованы методы, имитирующие отправку запросов на сервер ОРВД
+ * \brief Реализация методов для имитации общения с сервером СУПА.
+ * \details В файле реализованы методы, имитирующие отправку запросов на сервер СУПА
  * и обработку полученных ответов.
  */
 

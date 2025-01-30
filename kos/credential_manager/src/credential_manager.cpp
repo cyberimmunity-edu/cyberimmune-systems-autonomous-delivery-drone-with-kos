@@ -3,14 +3,14 @@
  * \~English
  * \brief Implementation of methods for managing security module RSA keys.
  * \details The file contains implementation of methods, that read/write RSA key from/to a file,
- * generate the key and sign messages for the ATM server.
+ * generate the key and sign messages for the VMS server.
  * message authenticity check. These methods are intended for offline build,
- * where there is no connection with the ATM server, and therefore any message is considered authentic.
+ * where there is no connection with the VMS server, and therefore any message is considered authentic.
  *
  * \~Russian
  * \brief Реализация методов для работы с RSA-ключами модуля безопасности.
  * \details В файле реализованы методы, предназначенные для чтения/записи RSA-ключа из/в файл,
- * их генерации и подписи сообщений, предназначенных для отправки серверу ОРВД.
+ * их генерации и подписи сообщений, предназначенных для отправки серверу СУПА.
  */
 
 #include "../include/credential_manager.h"
@@ -34,7 +34,7 @@ char keyD[257] = {0};
 
 /**
  * \~English Converts a decimal array into a hexadecimal string.
- * \details The method is designed to convert a message sign, that will be sent to the ATM server,
+ * \details The method is designed to convert a message sign, that will be sent to the VMS server,
  * and therefore it is designed to work with arrays no longer than 128 bytes.
  * If the length is less than 128 bytes, the missing zeros are assumed to precede the array.
  * \param[in] source Pointer to a decimal array.
@@ -42,7 +42,7 @@ char keyD[257] = {0};
  * \param[out] destination Pointer to a string to write hexadecimal result.
  * \param[in] destinationSize Size of a string to write the result.
  * \~Russian Переводит 10-ричный массив в 16-ричную строку.
- * \details Метод предназначен для перевода подписи сообщения, предназначенного для сервера ОРВД,
+ * \details Метод предназначен для перевода подписи сообщения, предназначенного для сервера СУПА,
  * поэтому рассчитан на работу с массивами в 128 байт. Если длина меньше 128 байт,
  * считается, что перед массивом находятся недостающие нули.
  * \param[in] source Указатель на 10-ричный массив.

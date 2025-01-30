@@ -32,17 +32,17 @@ std::thread sessionThread;
 /** \endcond */
 
 /**
- * \~English Auxiliary procedure. Adds drone ID to request and signs it, sends message to the ATM server
+ * \~English Auxiliary procedure. Adds drone ID to request and signs it, sends message to the AFCS server
  * and checks the authenticity of the received response.
- * \param[in] method Request to the ATM server. "/api/method" form is expected.
+ * \param[in] method Request to the AFCS server. "/api/method" form is expected.
  * Drone ID and signature will be added.
  * \param[out] response Significant part of the response from the server. Authenticity is checked.
  * \param[in] errorMessage String identifier of request. This will be displayed in error text on occured error in the procedure.
  * \param[in] delay Delay in seconds before request resend if an error occurs.
  * \return Returns 1 on successful send, 0 otherwise.
  * \~Russian Вспомогательная процедура. Снабжает запрос идентификатором дрона,
- * подписывает его, отправляет на сервер ОРВД и проверяет аутентичность полученного ответа.
- * \param[in] method Запрос к серверу ОРВД. Ожидается вид "/api/method".
+ * подписывает его, отправляет на сервер СУПА и проверяет аутентичность полученного ответа.
+ * \param[in] method Запрос к серверу СУПА. Ожидается вид "/api/method".
  * Идентификатор дрона и подпись будут добавлены.
  * \param[out] response Значимая часть ответа от сервера. Аутентичность проверена.
  * \param[in] errorMessage Строковый идентификатор отправляемого запроса, который будет отображен в тексте ошибки при
@@ -80,9 +80,9 @@ int sendSignedMessage(char* method, char* response, char* errorMessage, uint8_t 
 }
 
 /**
- * \~English Procedure that checks the flight status at the ATM server. Check includes permission to continue flight, changes in
+ * \~English Procedure that checks the flight status at the AFCS server. Check includes permission to continue flight, changes in
  * no-flight areas and time until next communication session.
- * \~Russian Процедура, запрашивающая статус полета от сервера ОРВД. Статус включает в себя разрешение на продолжение полета,
+ * \~Russian Процедура, запрашивающая статус полета от сервера СУПА. Статус включает в себя разрешение на продолжение полета,
  * изменения в бесполетных зонах и время до следующей коммуникации с сервером.
  */
 void serverSession() {
@@ -137,13 +137,13 @@ void serverSession() {
 }
 
 /**
- * \~English Auxiliary procedure. Asks the ATM server to approve new mission and parses its response.
+ * \~English Auxiliary procedure. Asks the AFCS server to approve new mission and parses its response.
  * \param[in] mission New mission in string format.
- * \param[out] result ATM server response: 1 if mission approved, 0 otherwise.
+ * \param[out] result AFCS server response: 1 if mission approved, 0 otherwise.
  * \return Returns 1 on successful send, 0 otherwise.
- * \~Russian Вспомогательная процедура. Просит у сервера ОРВД одобрения новой миссии и обрабатывает ответ.
+ * \~Russian Вспомогательная процедура. Просит у сервера СУПА одобрения новой миссии и обрабатывает ответ.
  * \param[in] mission Новая миссия в виде строки.
- * \param[out] result Ответ сервера ОРВД: 1 при одобрении миссии, иначе -- 0.
+ * \param[out] result Ответ сервера СУПА: 1 при одобрении миссии, иначе -- 0.
  * \return Возвращает 1 при успешной отправке, иначе -- 0.
  */
 int askForMissionApproval(char* mission, int& result) {
@@ -185,13 +185,13 @@ int askForMissionApproval(char* mission, int& result) {
 
 /**
  * \~English Security module main loop. Waits for all other components to initialize. Authenticates
- * on the ATM server and receives the mission from it. After a mission and an arm request from the autopilot
- * are received, requests permission to take off from the ATM server. On receive supplies power to motors.
+ * on the AFCS server and receives the mission from it. After a mission and an arm request from the autopilot
+ * are received, requests permission to take off from the AFCS server. On receive supplies power to motors.
  * Then flight control must be performed.
  * \return Returns 1 on completion with no errors.
  * \~Russian Основной цикл модуля безопасности. Ожидает инициализации всех остальных компонентов. Аутентифицируется
- * на сервере ОРВД и получает от него миссию. После получения миссии и запроса на арминг от автопилота, запрашивает разрешение
- * на взлет у сервера ОРВД. При его получении подает питание на двигатели. Далее должен выполняться контроль полета.
+ * на сервере СУПА и получает от него миссию. После получения миссии и запроса на арминг от автопилота, запрашивает разрешение
+ * на взлет у сервера СУПА. При его получении подает питание на двигатели. Далее должен выполняться контроль полета.
  * \return Возвращает 1 при завершении без ошибок.
  */
 int main(void) {

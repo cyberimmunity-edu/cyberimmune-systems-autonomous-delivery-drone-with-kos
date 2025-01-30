@@ -3,12 +3,12 @@
  * \~English
  * \brief Implementation of methods for RSA message signature check.
  * \details The file contains implementation of methods, that check
- * the authenticity of messages received from the ATM server.
+ * the authenticity of messages received from the VMS server.
  *
  * \~Russian
- * \brief Реализация методов для проверки RSA-подписей сообщений от сервера ОРВД.
+ * \brief Реализация методов для проверки RSA-подписей сообщений от сервера СУПА.
  * \details В файле реализованы методы для проверки аутентичности сообщений,
- * полученных от сервера ОРВД.
+ * полученных от сервера СУПА.
  */
 
 #include "../include/credential_manager.h"
@@ -53,7 +53,7 @@ uint8_t hexCharToInt(char c) {
 
 /**
  * \~English Converts a hexadecimal string into a decimal array.
- * \details The method is designed to convert an RSA signature received from the ATM server,
+ * \details The method is designed to convert an RSA signature received from the VMS server,
  * and therefore it is designed to work with strings no longer than 256 characters.
  * \param[in] source Pointer to a hexadecimal string.
  * \param[in] sourceSize Length of the given hexadecimal string.
@@ -61,7 +61,7 @@ uint8_t hexCharToInt(char c) {
  * \param[out] destination Pointer to an array to write decimal result.
  * \param[in] destinationSize Size of an array to write the result. At least 128 bytes is expected.
  * \~Russian Переводит 16-ричную строку в 10-ричный массив.
- * \details Метод предназначен для перевода RSA-подписей, полученных от сервера ОРВД,
+ * \details Метод предназначен для перевода RSA-подписей, полученных от сервера СУПА,
  * поэтому рассчитан на работу со строками не длиннее 256 символов.
  * \param[in] source Указатель на 16-ричную строку.
  * \param[in] sourceSize Длина поданной 16-ричной строки. Если длина меньше 256 символов,

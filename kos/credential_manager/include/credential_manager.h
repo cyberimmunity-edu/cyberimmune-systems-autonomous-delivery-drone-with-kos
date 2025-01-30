@@ -11,7 +11,7 @@
  * \brief Объявление методов для работы с RSA-подписями.
  * \details В файле объявлены публичныe методы, необходимые
  * для подписи сообщений модуля безопасности, а также для проверки
- * аутентичности сообщений сервера ОРВД.
+ * аутентичности сообщений сервера СУПА.
  * Эти методы полагаются на библиотеку MbedTLS.
  */
 
@@ -31,7 +31,7 @@
 int generateRsaKey();
 /**
  * \~English Sets the private part of the RSA key for future message signing
- * and the public part for exchange with the ATM server.
+ * and the public part for exchange with the VMS server.
  * \param[in] N RSA key shared part, that belongs both to public and open parts.
  * \param[in] D RSA key private part, known only by owner.
  * \param[in] n RSA key shared part, that belongs both to public and open parts.
@@ -41,7 +41,7 @@ int generateRsaKey();
  * \param[in] eLen Length of RSA key e part.
  * \return Returns 1 on successful key parts set, 0 otherwise.
  * \~Russian Устанавливает закрытую часть RSA-ключа для использования в дальнейшей подписи сообщений и
- * открытую часть для обмена с сервером ОРВД.
+ * открытую часть для обмена с сервером СУПА.
  * \param[in] N Общая часть RSA-ключа, входящая и в закрытую, и в открытую части.
  * \param[in] D Закрытая часть RSA-ключа, имеющаяся только у владельца.
  * \param[in] n Общая часть RSA-ключа, входящая и в закрытую, и в открытую части.
@@ -53,12 +53,12 @@ int generateRsaKey();
  */
 int loadRsaKey(uint8_t* N, uint8_t* D, char* n, char* e, uint32_t nLen, uint32_t eLen);
 /**
- * \~English Exchanges RSA key public parts with the ATM server.
+ * \~English Exchanges RSA key public parts with the VMS server.
  * \return Returns 1 on successful exchange, 0 otherwise.
- * \note The keys are exchanged with a request to the ATM server through ServerConnector component.
- * \~Russian Производит обмен открытыми частями RSA-ключей с сервером ОРВД.
+ * \note The keys are exchanged with a request to the VMS server through ServerConnector component.
+ * \~Russian Производит обмен открытыми частями RSA-ключей с сервером СУПА.
  * \return Возвращает 1 при успешном обмене, 0 -- иначе.
- * \note Обмен ключами происходит при помощи запроса на сервер ОРВД через компонент ServerConnector.
+ * \note Обмен ключами происходит при помощи запроса на сервер СУПА через компонент ServerConnector.
  */
 int shareRsaKey();
 
@@ -73,10 +73,10 @@ int shareRsaKey();
  */
 int getRsaKey();
 /**
- * \~English Sets a public part of the ATM server RSA key for future check of received messages authenticity.
+ * \~English Sets a public part of the VMS server RSA key for future check of received messages authenticity.
  * \param[in] key String with a public part of key. Requires "$Key: n-key_part e-key_part" format.
  * \return Returns 1 on successful key set, 0 otherwise.
- * \~Russian Устанавливает открытую часть RSA-ключа сервера ОРВД для дальнейшего
+ * \~Russian Устанавливает открытую часть RSA-ключа сервера СУПА для дальнейшего
  * использования в проверке аутентичности получаемых сообщений.
  * \param[in] key Строка с открытой частью ключа. Требуемый формат строки: "$Key: n-часть_ключа e-часть_ключа".
  * \return Возвращает 1, если ключ был успешно установлен, иначе -- 0.
@@ -95,11 +95,11 @@ int setRsaKey(char* key);
  */
 int getMessageSignature(char* message, char* sign);
 /**
- * \~English Checks the authenticity of an ATM server message.
+ * \~English Checks the authenticity of an VMS server message.
  * \param[in] message Message to check authenticity. Requires "message#signature" format.
  * \param[out] authenticity Message authenticity check result.
  * \return Returns 1 on authenticity check (not confirmation), 0 otherwise.
- * \~Russian Проверяет аутентичность сообщения, полученного от сервера ОРВД.
+ * \~Russian Проверяет аутентичность сообщения, полученного от сервера СУПА.
  * \param[in] message Сообщение, аутентичность которого необходимо проверить. Требуемый формат сообщения: "сообщение#подпись".
  * \param[out] authenticity Результат проверки аутентичности сообщения.
  * \return Возвращает 1, если аутентичность была проверена (но не обязательно подтверждена), иначе -- 0.

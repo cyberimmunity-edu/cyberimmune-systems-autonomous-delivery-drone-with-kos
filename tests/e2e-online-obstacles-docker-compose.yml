@@ -58,12 +58,12 @@ services:
       cyberimmune:
         ipv4_address: 172.28.0.3
 #################################################
-  orvd:
+  supa:
     image: orvd
     build:
       context: .
       dockerfile: ./orvd.Dockerfile
-    container_name: orvd
+    container_name: supa
     working_dir: /home/user/orvd
     restart: always
     networks:
