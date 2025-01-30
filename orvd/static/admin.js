@@ -25,6 +25,9 @@ document.getElementById('mission_checkbox').onclick = mission_decision;
 document.getElementById('kill_switch').onclick = kill_switch;
 document.getElementById('fly_accept_checkbox').onclick = fly_accept;
 document.getElementById('forbidden_zones_checkbox').onclick = toggleForbiddenZones;
+document.getElementById('revised-mission-accept').onclick = () => revised_mission_decision(0);
+document.getElementById('revised-mission-decline').onclick = () => revised_mission_decision(1);
+document.getElementById('monitoring-checkbox').onclick = () => toggle_display_mode();
 
 ol.proj.useGeographic()
 const place = [142.812588, 46.617637];
@@ -328,6 +331,41 @@ async function mission_decision() {
   }
 }
 
+async function revised_mission_decision(decision) {
+  const revisedMissionBlock = document.getElementById('revised-mission-block');
+  revisedMissionBlock.style.visibility = 'hidden';
+  const query_str = `admin/revise_mission_decision?id=${active_id}&decision=${decision}&token=${access_token}`;
+  let mission_resp = await fetch(query_str);
+  let mission_text = await mission_resp.text();
+  console.log(mission_text);
+}
+
+async function toggle_display_mode() {
+  const query_str = `admin/toggle_display_mode?token=${access_token}`;
+  await fetch(query_str);
+  const $monitoringCheckbox = document.getElementById('monitoring-checkbox')
+  const $mainButtons = document.getElementById('main-buttons');
+  if($monitoringCheckbox.checked) {
+    $mainButtons.style.visibility = 'hidden';
+  } else {
+    $mainButtons.style.visibility = 'visible';
+  }
+}
+
+async function get_display_mode() {
+  const delay_resp = await fetch(`admin/get_display_mode?token=${access_token}`);
+  const delay_text = await delay_resp.text();
+  const $monitoringCheckbox = document.getElementById('monitoring-checkbox')
+  const $mainButtons = document.getElementById('main-buttons');
+  if (delay_text === '0') {
+    $monitoringCheckbox.checked = true;
+    $mainButtons.style.visibility = 'hidden';
+  } else {
+    $monitoringCheckbox.checked = false;
+    $mainButtons.style.visibility = 'visible';
+  }
+}
+
 async function fly_accept() {
   let fly_accept_checkbox = document.getElementById('fly_accept_checkbox');
   if (active_id == null || current_state == "Kill switch ON") {
@@ -352,7 +390,7 @@ async function status_change() {
   let state_text = await state_resp.text();
   document.getElementById("status").innerHTML="Статус: " + state_text;
   current_state = state_text;
-  if (state_text == 'В полете') {
+  if (state_text == 'В поездке') {
     document.getElementById('fly_accept_checkbox').checked = true;
   } else {
     document.getElementById('fly_accept_checkbox').checked = false;
@@ -455,6 +493,12 @@ async function get_mission_state() {
   let mission_state_text = await mission_state_resp.text();
   if (mission_state_text == '0') {
     document.getElementById('mission_checkbox').checked = true;
+  } else if (mission_state_text == '1')  {
+    document.getElementById('mission_checkbox').checked = false;
+  } else if (mission_state_text == '2') {
+    document.getElementById('mission_checkbox').checked = false;
+    const revisedMissionBlock = document.getElementById('revised-mission-block');
+    revisedMissionBlock.style.visibility = 'visible';
   } else {
     document.getElementById('mission_checkbox').checked = false;
   }
@@ -530,6 +574,7 @@ async function get_delay() {
 
 setInterval(async function() {
   get_ids();
+  get_display_mode();
   if (active_id != null) {
     status_change();
     waiters_change();

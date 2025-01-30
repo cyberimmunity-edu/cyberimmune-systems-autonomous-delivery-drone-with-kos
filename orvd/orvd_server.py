@@ -26,21 +26,29 @@ def create_app():
     
     MQTT_BROKER = 'localhost'
     MQTT_PORT = 1883
-    MQTT_TOPIC = 'api/telemetry'
+    MQTT_TELEMETRY_TOPIC = 'api/telemetry'
+    MQTT_MISSION_TOPIC = 'api/mission'
     mqtt_client = mqtt.Client()
     def on_connect(client, userdata, flags, rc):
-        client.subscribe(MQTT_TOPIC)
-
-    def on_message(client, userdata, msg):
+        client.subscribe(MQTT_TELEMETRY_TOPIC)
+        client.subscribe(MQTT_MISSION_TOPIC)
+        
+    def on_telemetry_message(client, userdata, msg):
         query_string = msg.payload.decode()
         query_params = parse_qs(query_string)
         single_value_params = {k: v[0] for k, v in query_params.items()}
         with app.app_context():
             regular_request(handler_func=telemetry_handler, **single_value_params)
+            
+    def on_mission_message(client, userdata, msg):
+        payload = json.loads(msg.payload.decode())
+        with app.app_context():
+            regular_request(handler_func=fmission_ms_handler, **payload)
 
 
     mqtt_client.on_connect = on_connect
-    mqtt_client.on_message = on_message
+    mqtt_client.message_callback_add(MQTT_TELEMETRY_TOPIC, on_telemetry_message)
+    mqtt_client.message_callback_add(MQTT_MISSION_TOPIC, on_mission_message)
     mqtt_client.connect(MQTT_BROKER, MQTT_PORT, 60)
     with app.app_context():
         mqtt_client.loop_start()

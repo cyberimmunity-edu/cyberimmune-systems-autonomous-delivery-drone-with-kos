@@ -387,7 +387,7 @@ def get_mission_state():
         description: Токен аутентификации.
     responses:
       200:
-        description: Текущее состояние миссии (0 - принята, 1 - не принята, $-1 - не найдена).
+        description: Текущее состояние миссии (0 - принята, 1 - не принята, , 2 - нужна повторная проверка, $-1 - не найдена).
         schema:
           type: string
           example: "0"
@@ -887,6 +887,22 @@ def get_logs():
     else:
         return bad_request('Wrong id')
 
+@bp.route('/api/nmission')
+def revise_mission():
+  """_summary_
+
+  Returns:
+      _type_: _description_
+  """
+  id = cast_wrapper(request.args.get('id'), str)
+  mission = cast_wrapper(request.args.get('mission'), str)
+  sig = request.args.get('sig')
+  if id:
+      return signed_request(handler_func=revise_mission_handler, verifier_func=mock_verifier, signer_func=sign,
+                            query_str=f'/api/nmission?id={id}&mission={mission}', key_group=f'kos{id}', sig=sig, id=id, mission=mission)
+  else:
+      return bad_request('Wrong id')
+  
 
 @bp.route('/api/logs')
 def save_logs():
@@ -1137,8 +1153,8 @@ def auth():
         description: Ошибка проверки подписи.
     """
     id = cast_wrapper(request.args.get('id'), str)
-    sig = request.args.get('sig')
-    if id:
+    if id is not None:
+        sig = request.args.get('sig')
         return signed_request(handler_func=auth_handler, verifier_func=verify, signer_func=sign,
                           query_str=f'/api/auth?id={id}', key_group=f'kos{id}', sig=sig, id=id)
     else:
@@ -1676,3 +1692,26 @@ def set_delay():
         return authorized_request(handler_func=set_delay_handler, token=token, id=id, delay=delay)
     else:
         return bad_request('Wrong id/delay')
+      
+      
+@bp.route('/admin/revise_mission_decision')
+def revise_mission_decision():
+    id = cast_wrapper(request.args.get('id'), str)
+    decision = cast_wrapper(request.args.get('decision'), int)
+    token = request.args.get('token')
+    if id is not None and decision is not None:
+        return authorized_request(handler_func=revise_mission_decision_handler, token=token, id=id, decision=decision)
+    else:
+        return bad_request('Wrong id/decision')
+      
+      
+@bp.route('/admin/get_display_mode')
+def get_display_mode():
+    token = request.args.get('token')
+    return authorized_request(handler_func=get_display_mode_handler, token=token)
+      
+
+@bp.route('/admin/toggle_display_mode')
+def toggle_display_mode():
+    token = request.args.get('token')
+    return authorized_request(handler_func=toggle_display_mode_handler, token=token)
