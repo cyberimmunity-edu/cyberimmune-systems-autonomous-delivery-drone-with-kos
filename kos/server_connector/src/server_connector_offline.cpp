@@ -1,9 +1,9 @@
 /**
  * \file
  * \~English
- * \brief Implementation of methods for VMS server communication simulation.
+ * \brief Implementation of methods for AFCS server communication simulation.
  * \details The file contains implementation of methods, that simulate
- * requests to an VMS server send and received responses process.
+ * requests to an AFCS server send and received responses process.
  *
  * \~Russian
  * \brief Реализация методов для имитации общения с сервером СУПА.

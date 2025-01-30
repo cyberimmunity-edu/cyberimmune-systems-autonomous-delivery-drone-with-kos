@@ -1,9 +1,9 @@
 /**
  * \file
  * \~English
- * \brief Implementation of methods for communication with the VMS server.
+ * \brief Implementation of methods for communication with the AFCS server.
  * \details The file contains implementation of methods
- * for requests to an VMS server send and for received responses process.
+ * for requests to an AFCS server send and for received responses process.
  *
  * \~Russian
  * \brief Реализация методов для общения с сервером СУПА.

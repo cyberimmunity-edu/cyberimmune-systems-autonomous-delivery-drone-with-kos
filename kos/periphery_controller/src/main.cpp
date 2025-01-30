@@ -23,7 +23,7 @@
  * Then the program enters a loop, where it receives IPC messages from other security module components,
  * performs the requested actions and sends IPC responses. In parallel with the main loop,
  * the other process is executed. If the motors are supplied with the power, than this process constantly
- * asks (2 time per second) the VMS server whether the power supply is allowed. Requests are signed and sent
+ * asks (2 time per second) the AFCS server whether the power supply is allowed. Requests are signed and sent
  * through the CredentialManager and ServerConnector components respectively.
  * \~Russian \brief Точка входа в основную программу компонента PeripheryController.
  * \details Сначала производится ожидание инициализации компонента Logger. После этого подготавливаются интерфейсы

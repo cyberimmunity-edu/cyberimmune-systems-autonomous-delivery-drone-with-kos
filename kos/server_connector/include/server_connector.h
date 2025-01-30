@@ -1,9 +1,9 @@
 /**
  * \file
  * \~English
- * \brief Declaration of methods for the VMS server communication.
+ * \brief Declaration of methods for the AFCS server communication.
  * \details The file contains declaration of methods, that provide
- * interaction between the security module and the VMS server.
+ * interaction between the security module and the AFCS server.
  *
  * \~Russian
  * \brief Объявление методов для взаимодействия с сервером СУПА.
@@ -17,7 +17,7 @@
 
 /**
  * \~English Initializes softwate and hardware components required
- * for the VMS server communication establishment.
+ * for the AFCS server communication establishment.
  * \return Returns 1 on successful initialization, 0 otherwise.
  * \~Russian Производит инициализацию программных и аппаратных компонентов, необходимых
  * для установки связи с сервером СУПА.
@@ -41,12 +41,12 @@ void setBoardName(char* id);
 char* getBoardName();
 
 /**
- * \~English Requests the VMS server and receives a response from it.
- * \param[in] query Request to the VMS server.
- * \param[out] response Response from the VMS server. Only a meaningful part of the response is returned. If connection is timed
+ * \~English Requests the AFCS server and receives a response from it.
+ * \param[in] query Request to the AFCS server.
+ * \param[out] response Response from the AFCS server. Only a meaningful part of the response is returned. If connection is timed
  * out, response will contain "TIMEOUT" string.
  * \param[in] responseSize Size of output response buffer.
- * \return Returns 1 on successful message exchange with the VMS server or on connection timeout, 0 otherwise.
+ * \return Returns 1 on successful message exchange with the AFCS server or on connection timeout, 0 otherwise.
  * \~Russian Отправляет запрос на сервер СУПА и получает от него ответ.
  * \param[in] query Запрос к серверу СУПА.
  * \param[out] response Ответ от сервера СУПА. Возвращается лишь значимая часть ответа. Если истекло время ожидания подключения

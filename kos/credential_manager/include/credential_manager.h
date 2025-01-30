@@ -31,7 +31,7 @@
 int generateRsaKey();
 /**
  * \~English Sets the private part of the RSA key for future message signing
- * and the public part for exchange with the VMS server.
+ * and the public part for exchange with the AFCS server.
  * \param[in] N RSA key shared part, that belongs both to public and open parts.
  * \param[in] D RSA key private part, known only by owner.
  * \param[in] n RSA key shared part, that belongs both to public and open parts.
@@ -53,9 +53,9 @@ int generateRsaKey();
  */
 int loadRsaKey(uint8_t* N, uint8_t* D, char* n, char* e, uint32_t nLen, uint32_t eLen);
 /**
- * \~English Exchanges RSA key public parts with the VMS server.
+ * \~English Exchanges RSA key public parts with the AFCS server.
  * \return Returns 1 on successful exchange, 0 otherwise.
- * \note The keys are exchanged with a request to the VMS server through ServerConnector component.
+ * \note The keys are exchanged with a request to the AFCS server through ServerConnector component.
  * \~Russian Производит обмен открытыми частями RSA-ключей с сервером СУПА.
  * \return Возвращает 1 при успешном обмене, 0 -- иначе.
  * \note Обмен ключами происходит при помощи запроса на сервер СУПА через компонент ServerConnector.
@@ -73,7 +73,7 @@ int shareRsaKey();
  */
 int getRsaKey();
 /**
- * \~English Sets a public part of the VMS server RSA key for future check of received messages authenticity.
+ * \~English Sets a public part of the AFCS server RSA key for future check of received messages authenticity.
  * \param[in] key String with a public part of key. Requires "$Key: n-key_part e-key_part" format.
  * \return Returns 1 on successful key set, 0 otherwise.
  * \~Russian Устанавливает открытую часть RSA-ключа сервера СУПА для дальнейшего
@@ -95,7 +95,7 @@ int setRsaKey(char* key);
  */
 int getMessageSignature(char* message, char* sign);
 /**
- * \~English Checks the authenticity of an VMS server message.
+ * \~English Checks the authenticity of an AFCS server message.
  * \param[in] message Message to check authenticity. Requires "message#signature" format.
  * \param[out] authenticity Message authenticity check result.
  * \return Returns 1 on authenticity check (not confirmation), 0 otherwise.

@@ -22,7 +22,7 @@
  */
 int signMessage(char* message, char* signature, uint32_t signatureSize);
 /**
- * \~English Checks the authenticity of a message received from the VMS server.
+ * \~English Checks the authenticity of a message received from the AFCS server.
  * \param[in] message Message to check authenticity. Requires "message#signature" format.
  * \param[out] authenticity Message authenticity check result.
  * \return Returns 1 on authenticity check (not confirmation), 0 otherwise.

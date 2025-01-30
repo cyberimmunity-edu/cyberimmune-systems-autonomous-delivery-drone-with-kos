@@ -18,7 +18,7 @@
 
 /**
  * \~English \brief ServerConnector component main program entry point.
- * \details First, waits for the Logger component to initialize. After that, the connection to the VMS server
+ * \details First, waits for the Logger component to initialize. After that, the connection to the AFCS server
  * is established and the unique drone ID is determined. Then the program enters a loop,
  * where it receives IPC messages from other security module components,
  * \~Russian \brief Точка входа в основную программу компонента ServerConnector.

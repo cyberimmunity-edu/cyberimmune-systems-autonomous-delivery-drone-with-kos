@@ -3,9 +3,9 @@
  * \~English
  * \brief Implementation of methods for managing security module RSA keys.
  * \details The file contains implementation of methods, that read/write RSA key from/to a file,
- * generate the key and sign messages for the VMS server.
+ * generate the key and sign messages for the AFCS server.
  * message authenticity check. These methods are intended for offline build,
- * where there is no connection with the VMS server, and therefore any message is considered authentic.
+ * where there is no connection with the AFCS server, and therefore any message is considered authentic.
  *
  * \~Russian
  * \brief Реализация методов для работы с RSA-ключами модуля безопасности.
@@ -34,7 +34,7 @@ char keyD[257] = {0};
 
 /**
  * \~English Converts a decimal array into a hexadecimal string.
- * \details The method is designed to convert a message sign, that will be sent to the VMS server,
+ * \details The method is designed to convert a message sign, that will be sent to the AFCS server,
  * and therefore it is designed to work with arrays no longer than 128 bytes.
  * If the length is less than 128 bytes, the missing zeros are assumed to precede the array.
  * \param[in] source Pointer to a decimal array.

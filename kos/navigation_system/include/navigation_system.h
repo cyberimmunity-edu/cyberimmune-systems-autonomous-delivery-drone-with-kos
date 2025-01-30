@@ -62,7 +62,7 @@ bool hasPosition();
  */
 void getSensors();
 /**
- * \~English Procedure that transmits drone position to the VMS server. Signs and transmits messages through
+ * \~English Procedure that transmits drone position to the AFCS server. Signs and transmits messages through
  * CredentialManager and ServerConnector components respectively. It is assumed that this procedure
  * is looped and is performed in a parallel thread.
  * \~Russian Процедура, выполняющая передачу данных о местоположении дрона на сервер СУПА. Подписывает сообщения и передает

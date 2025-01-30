@@ -21,12 +21,12 @@
  */
 int getBoardId(char* id);
 /**
- * \~English Performs a request-response procedure with the VMS server.
- * \param[in] query Request to the VMS server. Requires only a meaningful signed part of the request.
- * \param[out] response Response from the VMS server. Only a meaningfuд part of the received response is returned. If connection
+ * \~English Performs a request-response procedure with the AFCS server.
+ * \param[in] query Request to the AFCS server. Requires only a meaningful signed part of the request.
+ * \param[out] response Response from the AFCS server. Only a meaningfuд part of the received response is returned. If connection
  * is timed out, response will contain "TIMEOUT" string.
  * \param[in] responseSize Size of output response buffer.
- * \return Returns 1 on successful message exchange with the VMS server or on connection timeout, 0 otherwise.
+ * \return Returns 1 on successful message exchange with the AFCS server or on connection timeout, 0 otherwise.
  * \~Russian Выполняет процедуру отправки запроса -- получения ответа с сервером СУПА.
  * \param[in] query Запрос к серверу СУПА. Ожидается только значимая подписанная часть запроса.
  * \param[out] response Ответ от сервера СУПА. Возвращается лишь значимая часть ответа, полученного от сервера СУПА. Если

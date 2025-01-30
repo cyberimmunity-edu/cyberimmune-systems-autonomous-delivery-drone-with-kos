@@ -4,7 +4,7 @@
  * \brief Implementation of methods for RSA message signature check simulation.
  * \details The file contains implementation of methods, that simulate
  * message authenticity check. These methods are intended for offline build,
- * where there is no connection with the VMS server, and therefore any message is considered authentic.
+ * where there is no connection with the AFCS server, and therefore any message is considered authentic.
  *
  * \~Russian
  * \brief Реализация методов для имитации проверки RSA-подписей сообщений.

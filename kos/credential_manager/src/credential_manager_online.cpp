@@ -3,7 +3,7 @@
  * \~English
  * \brief Implementation of methods for RSA message signature check.
  * \details The file contains implementation of methods, that check
- * the authenticity of messages received from the VMS server.
+ * the authenticity of messages received from the AFCS server.
  *
  * \~Russian
  * \brief Реализация методов для проверки RSA-подписей сообщений от сервера СУПА.
@@ -53,7 +53,7 @@ uint8_t hexCharToInt(char c) {
 
 /**
  * \~English Converts a hexadecimal string into a decimal array.
- * \details The method is designed to convert an RSA signature received from the VMS server,
+ * \details The method is designed to convert an RSA signature received from the AFCS server,
  * and therefore it is designed to work with strings no longer than 256 characters.
  * \param[in] source Pointer to a hexadecimal string.
  * \param[in] sourceSize Length of the given hexadecimal string.

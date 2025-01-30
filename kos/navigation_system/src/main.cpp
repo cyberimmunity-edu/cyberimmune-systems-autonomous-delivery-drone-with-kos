@@ -29,7 +29,7 @@ std::thread senderThread;
  * enters a loop, where it receives IPC messages from other security module components,
  * performs the requested actions and sends IPC responses. In parallel with the main loop,
  * two processes are executed. In the first one, the current position data is constantly updated.
- * In the second process, current location are sent (2 times per second) to the VMS server.
+ * In the second process, current location are sent (2 times per second) to the AFCS server.
  * Signing and sending are done through CredentialManager and ServerConnector components respectively.
  * \~Russian \brief Точка входа в основную программу компонента NavigationSystem.
  * \details Сначала производится ожидание инициализации компонента Logger. После этого подготавливаются интерфейсы

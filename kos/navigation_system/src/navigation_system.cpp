@@ -3,7 +3,7 @@
  * \~English
  * \brief Implementation of methods for drone position update and transmit.
  * \details The file contains implementation of methods, that update, store and
- * transmit current drone position to the VMS server.
+ * transmit current drone position to the AFCS server.
  *
  * \~Russian
  * \brief Реализация методов для обновления и передачи данных о местоположении дрона.
