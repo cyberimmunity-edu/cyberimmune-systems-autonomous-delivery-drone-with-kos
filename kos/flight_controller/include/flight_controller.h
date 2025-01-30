@@ -265,8 +265,8 @@ struct NoFlightArea {
 };
 
 /**
- * \~English Converts a mission received from the VMS server into an array of commands of \ref MissionCommand type.
- * \param[in] mission Mission from the VMS server. Expected form is "$FlightMission mission#".
+ * \~English Converts a mission received from the AFCS server into an array of commands of \ref MissionCommand type.
+ * \param[in] mission Mission from the AFCS server. Expected form is "$FlightMission mission#".
  * \return Returns 1 on successful conversion, 0 otherwise.
  * \~Russian Преобразует миссию, полученную от сервера СУПА, в массив команд типа \ref MissionCommand.
  * \param[in] mission Миссия, пришедшая от сервера СУПА. Ожидается в виде "$FlightMission миссия#".
@@ -289,17 +289,57 @@ void printMission();
 MissionCommand* getMissionCommands(int &num);
 
 /**
- * \~English Converts a no-flight areas string received from the VMS server into an array of areas of \ref NoFlightArea type.
- * \param[in] areas String from the VMS server. Expected form is "$ForbiddenZones areas#".
+ * \~English Converts an array of commands to a string, that can be recognised by the AFCS server.
+ * \param[in] commands Array of commands to convert.
+ * \param[in] num Number of commands to convert.
+ * \param[in, out] string String, where the converted commands will be stored.
+ * \param[in] len Length of string to write converted commands.
  * \return Returns 1 on successful conversion, 0 otherwise.
- * \~Russian Преобразует строку с бесполетным зонами, полученную от сервера СУПА, в массив зон типа \ref NoFlightArea.
+ * \~Russian Преобразует массив команд в строку, распознаваемую сервером СУПА.
+ * \param[in] commands Массив команд, которые будут конвертированы.
+ * \param[in] num Количество конвертируемых команд.
+ * \param[in, out] string Строка, куда будут записаны конвертированные команды.
+ * \param[in] len Длина строки для записи результата.
+ * \return Возвращает 1 при успешном преобразовании, иначе -- 0.
+ */
+int missionToString(MissionCommand* commands, uint8_t num, char* string, uint32_t len);
+/**
+ * \~English Converts an array of commands to a byte array, that can be recognised by the autopilot firmware.
+ * \param[in] commands Array of commands to convert.
+ * \param[in] num Number of commands to convert.
+ * \param[out] bytes Byte array, where the converted commands will be stored.
+ * \return Returns 1 on successful conversion, 0 otherwise.
+ * \~Russian Преобразует массив команд в массив байтов, распознаваемый прошивкой автопилота.
+ * \param[in] commands Массив команд, которые будут конвертированы.
+ * \param[in] num Количество конвертируемых команд.
+ * \param[out] bytes Массив байтов, куда будут записаны конвертированные команды.
+ * \return Возвращает 1 при успешном преобразовании, иначе -- 0.
+ */
+int missionToBytes(MissionCommand* commands, uint8_t num, uint8_t* bytes);
+/**
+ * \~English Calculates a size of array to store mission in raw bytes format.
+ * \param[in] commands Array of mission commands.
+ * \param[in] num Number of mission commands.
+ * \return Returns the size required to store the mission.
+ * \~Russian Вычисляет размер массива для хранения миссии в виде массива необработанных байтов.
+ * \param[in] commands Массив команд миссии.
+ * \param[in] num Количество команд миссии.
+ * \return Возвращает размер массива, требуемого для хранения миссии.
+ */
+uint32_t getMissionBytesSize(MissionCommand* commands, uint8_t num);
+
+/**
+ * \~English Converts a no-flight areas string received from the AFCS server into an array of areas of \ref NoFlightArea type.
+ * \param[in] areas String from the AFCS server. Expected form is "$ForbiddenZones areas#".
+ * \return Returns 1 on successful conversion, 0 otherwise.
+ * \~Russian Преобразует строку с бесполетными зонами, полученную от сервера СУПА, в массив зон типа \ref NoFlightArea.
  * \param[in] areas Строка, пришедшая от сервера СУПА. Ожидается в виде "$ForbiddenZones зоны#".
  * \return Возвращает 1, если зоны были успешно распознаны, иначе -- 0.
  */
 int loadNoFlightAreas(char* areas);
 /**
- * \~English Converts a string with changes in no-flight areas received from the VMS server, and updates current no-flight areas array.
- * \param[in] areas String from the VMS server. Expected form is "$ForbiddenZonesDelta changes#".
+ * \~English Converts a string with changes in no-flight areas received from the AFCS server, and updates current no-flight areas array.
+ * \param[in] areas String from the AFCS server. Expected form is "$ForbiddenZonesDelta changes#".
  * \return Returns 1 on successful conversion, 0 otherwise.
  * \~Russian Преобразует строку с изменениями бесполетных зон, полученную от сервера СУПА, и обновляет массив бесполетных зон.
  * \param[in] areas Строка, пришедшая от сервера СУПА. Ожидается в виде "$ForbiddenZonesDelta изменения#".
@@ -334,11 +374,11 @@ NoFlightArea* getNoFlightAreas(int &num);
  */
 char* getNoFlightAreasHash();
 /**
- * \~English Extracts hash from the string received from the VMS server.
- * \param[in] response String from the VMS server. Substring "$ForbiddenZonesHash hash$" is expected.
+ * \~English Extracts hash from the string received from the AFCS server.
+ * \param[in] response String from the AFCS server. Substring "$ForbiddenZonesHash hash$" is expected.
  * \param[out] hash String to write hash.
  * \param[in] hashLen Length of the string to write hash
- * \~Russian Извлекает хэш из стркои, полученной от сервера СУПА.
+ * \~Russian Извлекает хэш из строки, полученной от сервера СУПА.
  * \param[in] response Строка, пришедшая от сервера СУПА. Ожидается наличие подстроки "$ForbiddenZonesHash хэш$".
  * \param[out] hash Строка, куда будет записан хэш.
  * \param[in] hashLen Длина строки, куда будет записан хэш.
@@ -346,11 +386,11 @@ char* getNoFlightAreasHash();
 void parseNoFlightAreasHash(char* response, char* hash, uint8_t hashLen);
 
 /**
- * \~English Extracts hash from the string received from the VMS server.
- * \param[in] response String from the VMS server. Substring "$Delay delay#" is expected.
+ * \~English Extracts hash from the string received from the AFCS server.
+ * \param[in] response String from the AFCS server. Substring "$Delay delay#" is expected.
  * \return Returns delay until next communication session in seconds.
  * \param[in] hashLen Length of the string to write hash
- * \~Russian Извлекает задержку до следующего сеанса связи из стркои, полученной от сервера СУПА.
+ * \~Russian Извлекает задержку до следующего сеанса связи из строки, полученной от сервера СУПА.
  * \param[in] response Строка, пришедшая от сервера СУПА. Ожидается наличие подстроки "$Delay задержка#".
  * \return Возвращает задержку до следующего сеанса связи в секундах.
  */

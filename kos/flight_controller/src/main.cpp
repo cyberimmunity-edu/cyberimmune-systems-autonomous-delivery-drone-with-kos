@@ -32,9 +32,9 @@ std::thread sessionThread;
 /** \endcond */
 
 /**
- * \~English Auxiliary procedure. Adds drone ID to request and signs it, sends message to the VMS server
+ * \~English Auxiliary procedure. Adds drone ID to request and signs it, sends message to the AFCS server
  * and checks the authenticity of the received response.
- * \param[in] method Request to the VMS server. "/api/query&param=value" form is expected/
+ * \param[in] method Request to the AFCS server. "/api/method" form is expected.
  * Drone ID and signature will be added.
  * \param[out] response Significant part of the response from the server. Authenticity is checked.
  * \param[in] errorMessage String identifier of request. This will be displayed in error text on occured error in the procedure.
@@ -42,7 +42,7 @@ std::thread sessionThread;
  * \return Returns 1 on successful send, 0 otherwise.
  * \~Russian Вспомогательная процедура. Снабжает запрос идентификатором дрона,
  * подписывает его, отправляет на сервер СУПА и проверяет аутентичность полученного ответа.
- * \param[in] method Запрос к серверу СУПА. Ожидается вид "/api/query&param=value".
+ * \param[in] method Запрос к серверу СУПА. Ожидается вид "/api/method".
  * Идентификатор дрона и подпись будут добавлены.
  * \param[out] response Значимая часть ответа от сервера. Аутентичность проверена.
  * \param[in] errorMessage Строковый идентификатор отправляемого запроса, который будет отображен в тексте ошибки при
@@ -80,7 +80,7 @@ int sendSignedMessage(char* method, char* response, char* errorMessage, uint8_t 
 }
 
 /**
- * \~English Procedure that checks the flight status at the VMS server. Check includes permission to continue flight, changes in
+ * \~English Procedure that checks the flight status at the AFCS server. Check includes permission to continue flight, changes in
  * no-flight areas and time until next communication session.
  * \~Russian Процедура, запрашивающая статус полета от сервера СУПА. Статус включает в себя разрешение на продолжение полета,
  * изменения в бесполетных зонах и время до следующей коммуникации с сервером.
@@ -137,9 +137,56 @@ void serverSession() {
 }
 
 /**
+ * \~English Auxiliary procedure. Asks the AFCS server to approve new mission and parses its response.
+ * \param[in] mission New mission in string format.
+ * \param[out] result AFCS server response: 1 if mission approved, 0 otherwise.
+ * \return Returns 1 on successful send, 0 otherwise.
+ * \~Russian Вспомогательная процедура. Просит у сервера СУПА одобрения новой миссии и обрабатывает ответ.
+ * \param[in] mission Новая миссия в виде строки.
+ * \param[out] result Ответ сервера СУПА: 1 при одобрении миссии, иначе -- 0.
+ * \return Возвращает 1 при успешной отправке, иначе -- 0.
+ */
+int askForMissionApproval(char* mission, int& result) {
+    int requestSize = 512 + strlen(mission);
+
+    char signature[257] = {0};
+    char request[requestSize] = {0};
+    snprintf(request, requestSize, "/api/nmission?id=%s&mission=%s", boardId, mission);
+
+    if (!signMessage(request, signature, 257)) {
+        logEntry("Failed to sign New Mission request at Credential Manager", ENTITY_NAME, LogLevel::LOG_WARNING);
+        return 0;
+    }
+    snprintf(request, 512, "%s&sig=0x%s", request, signature);
+
+    char response[1024] = {0};
+    if (!sendRequest(request, response, 1024)) {
+        logEntry("Failed to send New Mission request through Server Connector", ENTITY_NAME, LogLevel::LOG_WARNING);
+        return 0;
+    }
+
+    uint8_t authenticity = 0;
+    while (!checkSignature(response, authenticity) || !authenticity) {
+        logEntry("Failed to check signature of New Mission request response received through Server Connector", ENTITY_NAME, LogLevel::LOG_WARNING);
+        return 0;
+    }
+
+    if (strstr(response, "$Approve 0#") != NULL)
+        result = 1;
+    else if (strstr(response, "$Approve 1#") != NULL)
+        result = 0;
+    else {
+        logEntry("Failed to parse server response on New Mission request", ENTITY_NAME, LogLevel::LOG_WARNING);
+        return 0;
+    }
+
+    return 1;
+}
+
+/**
  * \~English Security module main loop. Waits for all other components to initialize. Authenticates
- * on the VMS server and receives the mission from it. After a mission and an arm request from the autopilot
- * are received, requests permission to take off from the VMS server. On receive supplies power to motors.
+ * on the AFCS server and receives the mission from it. After a mission and an arm request from the autopilot
+ * are received, requests permission to take off from the AFCS server. On receive supplies power to motors.
  * Then flight control must be performed.
  * \return Returns 1 on completion with no errors.
  * \~Russian Основной цикл модуля безопасности. Ожидает инициализации всех остальных компонентов. Аутентифицируется

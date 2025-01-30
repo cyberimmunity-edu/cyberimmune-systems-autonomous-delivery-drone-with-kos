@@ -11,7 +11,6 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
 
 #define NK_USE_UNQUALIFIED_NAMES
 #include <drone_controller/AutopilotConnector.edl.h>

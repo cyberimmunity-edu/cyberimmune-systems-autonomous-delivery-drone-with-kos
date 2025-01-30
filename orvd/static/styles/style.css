@@ -180,3 +180,7 @@ label {
 .center-title {
   text-align: center;
 }
+
+#revised-mission-block {
+  visibility: hidden;
+}
