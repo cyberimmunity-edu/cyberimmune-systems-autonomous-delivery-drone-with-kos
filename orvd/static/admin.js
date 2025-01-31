@@ -43,14 +43,16 @@ let forbidden_zones_display = false;
 let uav_style = new ol.style.Style({
   image: new ol.style.Icon({
     anchor: [0.5, 0.5],
-    src: 'static/resources/quad_marker.png'
+    src: 'static/resources/vehicle_marker.svg',
+    scale: 0.25
   })
 });
 
 let inactive_uav_style = new ol.style.Style({
   image: new ol.style.Icon({
     anchor: [0.5, 0.5],
-    src: 'static/resources/quad_marker.png',
+    src: 'static/resources/vehicle_marker.svg',
+    scale: 0.25,
     opacity: 0.6
   })
 });
@@ -470,17 +472,17 @@ async function get_mission(id) {
 
 let vehicles = {};
 
-function add_or_update_vehicle_marker(id, lat, lon, alt) {
+function add_or_update_vehicle_marker(id, lat, lon, alt, azimuth, speed) {
   if (!vehicles[id]) {
     let vehicle = new ol.Feature(new ol.geom.Point([lon, lat]));
     vehicle.setId(`uav${id}`);
     vehicle.setStyle(id === active_id ? uav_style : inactive_uav_style);
-    vehicle.set('description', 'Высота: ' + alt);
+    vehicle.set('description', `ID: ${id}\nВысота: ${alt}\nСкорость: ${speed}\nНаправление: ${azimuth}`);
     vehicles[id] = vehicle;
     markers.getSource().addFeature(vehicles[id]);
   } else {
     vehicles[id].getGeometry().setCoordinates([lon, lat]);
-    vehicles[id].set('description', `Высота: ${alt}`);
+    vehicles[id].set('description', `ID: ${id}\nВысота: ${alt}\nСкорость: ${speed}\nНаправление: ${azimuth}`);
     vehicles[id].setStyle(id === active_id ? uav_style : inactive_uav_style);
   }
 }
@@ -501,7 +503,7 @@ async function get_telemetry(id) {
     let speed = parseFloat(telemetry_data.speed);
     document.getElementById("dop").innerHTML = "DOP: " + dop;
     document.getElementById("sats").innerHTML = "SATS: " + sats;
-    add_or_update_vehicle_marker(id, lat, lon, alt);
+    add_or_update_vehicle_marker(id, lat, lon, alt, azimuth, speed);
     if (id === active_id) {
       map.getView().setCenter([lon, lat]);
     }
