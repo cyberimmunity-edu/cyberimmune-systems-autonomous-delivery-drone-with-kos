@@ -473,7 +473,7 @@ async function get_mission(id) {
 let vehicles = {};
 
 function add_or_update_vehicle_marker(id, lat, lon, alt, azimuth, speed) {
-  let rotationInRadians = (90 - azimuth) * Math.PI / 180;
+  let rotationInRadians = azimuth * Math.PI / 180;
   let vehicleStyle = new ol.style.Style({
     image: new ol.style.Icon({
       anchor: [0.5, 0.5],
