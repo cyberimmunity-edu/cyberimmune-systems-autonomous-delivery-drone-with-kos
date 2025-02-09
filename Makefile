@@ -102,7 +102,11 @@ e2e-online-obstacles: docker-image
 	docker-compose -f tests/e2e-online-obstacles-docker-compose.yml up --abort-on-container-exit --exit-code-from mavproxy
 	docker-compose -f tests/e2e-online-obstacles-docker-compose.yml down
 
-e2e-tests: e2e-offline e2e-online
+e2e-no-flight-areas: docker-image
+	docker-compose -f tests/e2e-no-flight-areas-docker-compose.yml up --force-recreate --abort-on-container-exit --exit-code-from mavproxy
+	docker-compose -f tests/e2e-no-flight-areas-docker-compose.yml down
+
+e2e-tests: e2e-offline e2e-online e2e-no-flight-areas
 
 unit-tests: docker-image-simulator
 	docker-compose -f tests/unit-tests-docker-compose.yml up --abort-on-container-exit --exit-code-from kos

@@ -54,7 +54,11 @@ int sendSignedMessage(char* method, char* response, char* errorMessage, uint8_t 
     char logBuffer[256] = {0};
     char signature[257] = {0};
     char request[512] = {0};
-    snprintf(request, 512, "%s?id=%s", method, boardId);
+
+    if (strstr(method, "?"))
+        snprintf(request, 512, "%s&id=%s", method, boardId);
+    else
+        snprintf(request, 512, "%s?id=%s", method, boardId);
 
     while (!signMessage(request, signature, 257)) {
         snprintf(logBuffer, 256, "Failed to sign %s message at Credential Manager. Trying again in %ds", errorMessage, delay);
@@ -113,9 +117,10 @@ void serverSession() {
         if (strcmp(receivedHash, calculatedHash)) {
             logEntry("No-flight areas on the server were updated", ENTITY_NAME, LogLevel::LOG_INFO);
             char hash[65] = {0};
+            char responseDelta[1024] = {0};
             strcpy(hash, receivedHash);
-            sendSignedMessage("/api/get_forbidden_zones_delta", response, "no-flight areas", RETRY_DELAY_SEC);
-            int successful = updateNoFlightAreas(response);
+            sendSignedMessage("/api/get_forbidden_zones_delta", responseDelta, "no-flight areas", RETRY_DELAY_SEC);
+            int successful = updateNoFlightAreas(responseDelta);
             if (successful) {
                 calculatedHash = getNoFlightAreasHash();
                 successful = !strcmp(hash, calculatedHash);
@@ -123,10 +128,78 @@ void serverSession() {
             if (!successful) {
                 logEntry("Completely redownloading no-flight areas", ENTITY_NAME, LogLevel::LOG_INFO);
                 deleteNoFlightAreas();
-                sendSignedMessage("/api/get_all_forbidden_zones", response, "no-flight areas", RETRY_DELAY_SEC);
-                loadNoFlightAreas(response);
+                sendSignedMessage("/api/get_all_forbidden_zones", responseDelta, "no-flight areas", RETRY_DELAY_SEC);
+                loadNoFlightAreas(responseDelta);
             }
             printNoFlightAreas();
+
+#ifdef USE_DEMO_CODE
+            //Check, that current flight does not interect no-flight areas
+            pauseFlight();
+            //Calculate new path
+            sleep(10);
+            //DEMO uses hard-coded example path for any areas
+            int newCommandNum = 6;
+            MissionCommand* newCommands = (MissionCommand*)malloc(newCommandNum * sizeof(MissionCommand));
+
+            newCommands[0].type = CommandType::HOME;
+            newCommands[0].content.waypoint.latitude = 531023682;
+            newCommands[0].content.waypoint.longitude = 1073779464;
+            newCommands[0].content.waypoint.altitude = 84622;
+
+            newCommands[1].type = CommandType::WAYPOINT;
+            newCommands[1].content.waypoint.latitude = 531023102;
+            newCommands[1].content.waypoint.longitude = 1073776701;
+            newCommands[1].content.waypoint.altitude = 500;
+
+            newCommands[2].type = CommandType::WAYPOINT;
+            newCommands[2].content.waypoint.latitude = 531021926;
+            newCommands[2].content.waypoint.longitude = 1073775065;
+            newCommands[2].content.waypoint.altitude = 500;
+
+            newCommands[3].type = CommandType::WAYPOINT;
+            newCommands[3].content.waypoint.latitude = 531020863;
+            newCommands[3].content.waypoint.longitude = 1073774180;
+            newCommands[3].content.waypoint.altitude = 500;
+
+            newCommands[4].type = CommandType::WAYPOINT;
+            newCommands[4].content.waypoint.latitude = 531019446;
+            newCommands[4].content.waypoint.longitude = 1073774394;
+            newCommands[4].content.waypoint.altitude = 500;
+
+            newCommands[5].type = CommandType::LAND;
+            newCommands[5].content.waypoint.latitude = 531019446;
+            newCommands[5].content.waypoint.longitude = 1073774394;
+            newCommands[5].content.waypoint.altitude = 84622;
+
+            //Convert mission to string
+            char newCommandsString[1024] = {0};
+            if (missionToString(newCommands, newCommandNum, newCommandsString, 1024)) {
+                //Build and send request
+                char missionRequest[1024] = {0};
+                char missionResponse[1024] = {0};
+                snprintf(missionRequest, 1024, "/api/nmission?mission=%s", newCommandsString);
+
+                if (sendSignedMessage(missionRequest, missionResponse, "mission", RETRY_DELAY_SEC) && strstr(missionResponse, "$Approve 0#")) {
+                    //Convert mission to byte array
+                    int newCommandBytesSize = getMissionBytesSize(newCommands, newCommandNum);
+                    uint8_t newCommandBytes[newCommandBytesSize] = {0};
+                    if (missionToBytes(newCommands, newCommandNum, newCommandBytes)) {
+                        //Send new mission to the autopilot
+                        if (setMission(newCommandBytes, newCommandBytesSize))
+                            logEntry("Mission is changed", ENTITY_NAME, LogLevel::LOG_INFO);
+                        else
+                            logEntry("Failed to set new mission", ENTITY_NAME, LogLevel::LOG_ERROR);
+                    }
+                    else
+                        logEntry("Failed to convert new mission to byte array", ENTITY_NAME, LogLevel::LOG_ERROR);
+                }
+                else
+                    logEntry("Failed to get new mission approval from the server", ENTITY_NAME, LogLevel::LOG_ERROR);
+            }
+            else
+                logEntry("Failed to convert new mission to string", ENTITY_NAME, LogLevel::LOG_ERROR);
+#endif
         }
 
         //Processing delay until next session

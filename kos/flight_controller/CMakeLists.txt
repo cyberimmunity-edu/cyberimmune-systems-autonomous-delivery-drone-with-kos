@@ -11,5 +11,9 @@ add_executable (FlightController "src/main.cpp" "src/flight_controller.cpp" "../
     "../shared/src/ipc_messages_logger.cpp")
 add_dependencies (FlightController flight_controller_edl_files)
 
+if (USE_DEMO_CODE)
+    add_compile_definitions(USE_DEMO_CODE)
+endif ()
+
 target_compile_definitions (FlightController PRIVATE ENTITY_NAME="Flight Controller")
 target_link_libraries (FlightController MbedTLS::mbedtls ${CMAKE_THREAD_LIBS_INIT})

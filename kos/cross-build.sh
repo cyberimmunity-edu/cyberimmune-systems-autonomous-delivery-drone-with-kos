@@ -21,6 +21,7 @@ UNIT_TESTS=""
 PAL_TESTS=""
 SIMULATOR_IP="10.0.2.2"
 SERVER_IP="10.0.2.2"
+USE_DEMO_CODE="FALSE"
 
 set -eu
 
@@ -110,6 +111,9 @@ do
                 exit 1
             fi
             ;;
+        --demo)
+            USE_DEMO_CODE="TRUE"
+            ;;
         -*)
             echo "Invalid option: $key"
             exit 1
@@ -146,6 +150,7 @@ fi
       -D BOARD_ID="$BOARD_ID" \
       -D SIMULATOR_IP=$SIMULATOR_IP \
       -D SERVER_IP=$SERVER_IP \
+      -D USE_DEMO_CODE=$USE_DEMO_CODE \
       -D CMAKE_BUILD_TYPE:STRING=Debug \
       -D CMAKE_INSTALL_PREFIX:STRING="$INSTALL_PREFIX" \
       -D CMAKE_FIND_ROOT_PATH="${SDK_PREFIX}/sysroot-$TARGET" \
