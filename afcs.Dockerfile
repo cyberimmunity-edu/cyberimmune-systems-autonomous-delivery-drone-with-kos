@@ -28,9 +28,9 @@ RUN apt-get update && \
         python3-paho-mqtt && \
         mkdir -p /var/www/orvd
 
-COPY ./orvd/default.conf /etc/mosquitto/conf.d/default.conf
-COPY ./orvd /var/www/orvd
-COPY ./orvd.conf.docker /etc/apache2/sites-available/orvd.conf
+COPY ./afcs/default.conf /etc/mosquitto/conf.d/default.conf
+COPY ./afcs /var/www/orvd
+COPY ./afcs.conf.docker /etc/apache2/sites-available/orvd.conf
 
 RUN cd /var/www/orvd \
     && a2ensite orvd.conf \

@@ -42,22 +42,22 @@ GNU make и [Makefile](https://gitflic.ru/project/learning-cyberimmunity/cyberim
 ```bash
 docker: docker-image
 
-docker-image: docker-image-simulator docker-image-orvd
+docker-image: docker-image-simulator docker-image-afcs
 
 docker-image-simulator:
     docker build ./ -t simulator
 
-docker-image-orvd:
-    docker build -f orvd.Dockerfile -t orvd ./
+docker-image-afcs:
+    docker build -f afcs.Dockerfile -t afcs ./
 ```
 
 Для сборки этих образов достаточно запустить `make docker`, что автоматически запустит:
 
 - правила для `docker-image` из [Makefile](https://gitflic.ru/project/learning-cyberimmunity/cyberimmune-systems-autonomous-delivery-drone-with-kos/blob/?file=Makefile&branch=rover)
-  - которые выполнят `docker-image-simulator` и `docker-image-orvd`
+  - которые выполнят `docker-image-simulator` и `docker-image-afcs`
   - а те запустят:
     - `docker build ./ -t simulator`
-    - и `docker build -f orvd.Dockerfile -t orvd ./`
+    - и `docker build -f afcs.Dockerfile -t afcs ./`
 
 ### Docker
 
@@ -70,7 +70,7 @@ Docker позволяет создавать и запускать легков�
 Например:
 
 - `docker build ./ -t simulator` создаст образ simulator, используя описание из файла [Dockerfile](https://gitflic.ru/project/learning-cyberimmunity/cyberimmune-systems-autonomous-delivery-drone-with-kos/blob?file=Dockerfile&branch=rover).
-- `docker build -f orvd.Dockerfile -t orvd ./` создаст образ orvd, используя описания из файла [orvd.Dockerfile](https://gitflic.ru/project/learning-cyberimmunity/cyberimmune-systems-autonomous-delivery-drone-with-kos/blob?file=orvd.Dockerfile&branch=rover).
+- `docker build -f afcs.Dockerfile -t afcs ./` создаст образ afcs, используя описания из файла [afcs.Dockerfile](https://gitflic.ru/project/learning-cyberimmunity/cyberimmune-systems-autonomous-delivery-drone-with-kos/blob?file=afcs.Dockerfile&branch=rover).
 
 Когда образ готов, можно запустить на его базе контейнер и работать уже в нём.
 Например:

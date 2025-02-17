@@ -314,7 +314,7 @@ int main(void) {
     if (!enableBuzzer())
         logEntry("Failed to enable buzzer at Periphery Controller", ENTITY_NAME, LogLevel::LOG_WARNING);
 
-    //Copter need to be registered at ORVD
+    //Copter need to be registered at AFCS
     sendSignedMessage("/api/auth", responseBuffer, "authentication", RETRY_DELAY_SEC);
     logEntry("Successfully authenticated on the server", ENTITY_NAME, LogLevel::LOG_INFO);
 
@@ -350,7 +350,7 @@ int main(void) {
         }
         logEntry("Received arm request. Notifying the server", ENTITY_NAME, LogLevel::LOG_INFO);
 
-        //When autopilot asked for arm, we need to receive permission from ORVD
+        //When autopilot asked for arm, we need to receive permission from AFCS
         sendSignedMessage("/api/arm", responseBuffer, "arm", RETRY_DELAY_SEC);
 
         if (strstr(responseBuffer, "$Arm 0$")) {
@@ -365,7 +365,7 @@ int main(void) {
                 logEntry("Failed to permit arm through Autopilot Connector", ENTITY_NAME, LogLevel::LOG_WARNING);
             //Get time until next session
             sessionDelay = parseDelay(strstr(responseBuffer, "$Delay "));
-            //Start ORVD connection thread
+            //Start AFCS connection thread
             sessionThread = std::thread(serverSession);
             break;
         }

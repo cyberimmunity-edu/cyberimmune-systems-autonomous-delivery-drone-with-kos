@@ -1,0 +1,11 @@
+
+services:
+#################################################
+  supa:
+    image: afcs
+    build:
+      context: .
+      dockerfile: ./afcs.Dockerfile
+    container_name: supa
+    command: /var/www/afcs/run_tests.sh
+    working_dir: /var/www/afcs

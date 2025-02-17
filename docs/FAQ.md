@@ -133,7 +133,7 @@ ERROR: Pool overlaps with other one on this address space
 ```
 
 ```text
-ERROR: for orvd  Cannot start service orvd: network a8cff278b3a741b9b3ae96395e1f238eb3400f9ec371eb4690c79e9d43421e7d not found
+ERROR: for afcs  Cannot start service afcs: network a8cff278b3a741b9b3ae96395e1f238eb3400f9ec371eb4690c79e9d43421e7d not found
 ```
 
 и разные их вариации.

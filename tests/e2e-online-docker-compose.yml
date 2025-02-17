@@ -59,12 +59,12 @@ services:
         ipv4_address: 172.28.0.3
 #################################################
   supa:
-    image: orvd
+    image: afcs
     build:
       context: .
-      dockerfile: ./orvd.Dockerfile
+      dockerfile: ./afcs.Dockerfile
     container_name: supa
-    working_dir: /home/user/orvd
+    working_dir: /home/user/afcs
     restart: always
     networks:
       cyberimmune:

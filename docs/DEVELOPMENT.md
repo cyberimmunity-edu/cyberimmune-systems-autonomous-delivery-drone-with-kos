@@ -136,7 +136,7 @@ cd cyberimmune-systems-autonomous-delivery-drone-with-kos
 Установка необходимых пакетов:
 
 ```bash
-cd ./cyberimmune-systems-autonomous-delivery-drone-with-kos/orvd
+cd ./cyberimmune-systems-autonomous-delivery-drone-with-kos/afcs
 sudo chmod +x install.sh update.sh restart.sh
 sudo ./install.sh
 ```

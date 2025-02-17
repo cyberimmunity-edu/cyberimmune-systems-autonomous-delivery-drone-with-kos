@@ -7,7 +7,7 @@ OUTPUT_LANGUAGE = Russian
 # The necessary stuff!
 GENERATE_XML = YES
 XML_OUTPUT = xml
-INPUT = kos orvd
+INPUT = kos afcs
 RECURSIVE = YES
 FILE_PATTERNS = *.h *.hpp *.cpp *.md *.py
 EXAMPLE_PATH = src-other
