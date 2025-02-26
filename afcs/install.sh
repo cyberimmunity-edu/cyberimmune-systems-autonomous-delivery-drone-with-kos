@@ -38,6 +38,8 @@ export ADMIN_LOGIN=admin
 export ADMIN_PASSW=passw
 cp ./afcs.conf /etc/apache2/sites-available/orvd.conf
 cp ./ports.conf /etc/apache2/ports.conf
+a2enmod proxy
+a2enmod proxy_http
 a2ensite orvd.conf
 rm /etc/apache2/sites-available/000-default.conf
 chmod -R 777 /var/www
