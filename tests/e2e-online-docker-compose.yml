@@ -58,12 +58,12 @@ services:
       cyberimmune:
         ipv4_address: 172.28.0.3
 #################################################
-  supa:
+  afcs:
     image: afcs
     build:
       context: .
       dockerfile: ./afcs.Dockerfile
-    container_name: supa
+    container_name: afcs
     working_dir: /home/user/afcs
     restart: always
     networks:
