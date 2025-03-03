@@ -39,9 +39,6 @@ git clone https://gitflic.ru/project/learning-cyberimmunity/cyberimmune-systems-
 
 # Размещение KasperskyOS CE SDK 1.2.0.89 в папке проекта (копия репозитория)
 cp ~/Downloads/KasperskyOS-Community-Edition-1.2.0.89_en.deb cyberimmune-systems-autonomous-delivery-drone-with-kos/
-
-# Размещение KasperskyOS CE SDK 1.2.0.45 в папке проекта (копия репозитория)
-cp ~/Downloads/KasperskyOS-Community-Edition-1.2.0.45.zip cyberimmune-systems-autonomous-delivery-drone-with-kos/
 ```
 
 Запуск цифрового двойника:
@@ -98,7 +95,7 @@ git clone https://gitflic.ru/project/learning-cyberimmunity/cyberimmune-systems-
 cd cyberimmune-systems-autonomous-delivery-drone-with-kos
 ```
 
-1. Разместить KasperskyOS-Community-Edition-1.2.0.89_en.deb и KasperskyOS-Community-Edition-1.2.0.45.zip в скачанной папке
+1. Разместить KasperskyOS-Community-Edition-1.2.0.89_en.deb в скачанной папке
 
 1. Установить необходимые для работы компоненты, запустив скрипт `install_dependencies.sh`
 

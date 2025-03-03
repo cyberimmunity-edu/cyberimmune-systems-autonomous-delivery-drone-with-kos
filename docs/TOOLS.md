@@ -17,9 +17,8 @@
 
 [Документация KasperskyOS Community Edition SDK](https://support.kaspersky.ru/help/KCE/1.1/ru-RU/whats_new.htm) (на данный момент более свежая документация недоступна).
 
-В цифровом двойнике используется версия KasperskyOS Community Edition SDK 1.2.0.89 и некоторые библиотеки из версии 1.2.0.45.
-Наличие пакета с обеими версиями SDK требуется для запуска цифрового двойника.
-Пакет SDK версии 1.2.0.89 представляет собой Debian-пакет с именем KasperskyOS-Community-Edition-1.2.0.89_en.deb и размещается в корне проекта. Пакет SDK версии 1.2.0.45 представляет собой zip-архив с именем KasperskyOS-Community-Edition-1.2.0.45.zip и также размещается в корне проекта.
+В цифровом двойнике используется версия KasperskyOS Community Edition SDK 1.2.0.89.
+Пакет SDK версии 1.2.0.89 представляет собой Debian-пакет с именем KasperskyOS-Community-Edition-1.2.0.89_en.deb и размещается в корне проекта.
 
 ### QEMU - эмулятор вычислительной машины
 
