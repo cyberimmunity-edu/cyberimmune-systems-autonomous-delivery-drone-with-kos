@@ -7,6 +7,6 @@ expect "AP: ArduPilot Ready" { send "wp load /home/user/ardupilot/exampleMission
 expect "Got MISSION_ACK: TYPE_MISSION: ACCEPTED" { send "arm throttle\r" }
 expect "AP: EKF3 IMU0 is using GPS" { send "arm throttle\r" }
 expect "ARMED" { send "mode auto\r" }
-expect "AP: Mission: 1 Takeoff" { send "long MAV_CMD_MISSION_START\r" }
+expect "AP: Mission: 1 WP" { send "long MAV_CMD_MISSION_START\r" }
 expect "AP: Mission Complete" { send "disarm\r" }
 expect "DISARMED" { exit }

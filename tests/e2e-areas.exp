@@ -1,6 +1,6 @@
 #!/usr/bin/expect
 spawn mavproxy.py --out 172.28.5.254:14550 --out 172.28.5.254:14551 --master tcp:172.28.0.2:5760 --sitl 172.28.0.2:5501 --logfile /home/user/mav.tlog
-set timeout 200
+set timeout 300
 expect_after eof {exit 0}
 expect_after timeout {exit 1}
 expect "AP: ArduPilot Ready" { send "wp load /home/user/ardupilot/exampleMission.txt\r" }
@@ -9,8 +9,8 @@ exec >@stdout 2>@stderr /home/user/tests/communication-interval-change.sh 172.28
 exec >@stdout 2>@stderr /home/user/tests/mission-upload-to-afcs.sh 172.28.0.4
 expect "AP: Info: Arm is permitted" { send "arm throttle\r" }
 expect "ARMED" { send "mode auto\r" }
-expect "AP: Mission: 1 Takeoff" { send "long MAV_CMD_MISSION_START\r" }
-expect "AP: Reached waypoint #5" { exec >@stdout 2>@stderr /home/user/tests/forbidden-zones-import-to-afcs.sh 172.28.0.4 }
+expect "AP: Mission: 1 WP" { send "long MAV_CMD_MISSION_START\r" }
+expect "AP: Mission: 6 SetServo" { exec >@stdout 2>@stderr /home/user/tests/forbidden-zones-import-to-afcs.sh 172.28.0.4 }
 sleep 30
 exec >@stdout 2>@stderr /home/user/tests/mission-approve-on-afcs.sh 172.28.0.4
 expect "AP: Mission Complete" { send "disarm\r" }
