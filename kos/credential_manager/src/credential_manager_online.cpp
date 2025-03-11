@@ -13,8 +13,8 @@
 
 #include "../include/credential_manager.h"
 
-#include <mbedtls_v3/rsa.h>
-#include <mbedtls_v3/sha256.h>
+#include <mbedtls/rsa.h>
+#include <mbedtls/sha256.h>
 
 #include <fcntl.h>
 #include <unistd.h>

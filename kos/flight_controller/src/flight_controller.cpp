@@ -12,7 +12,7 @@
 #include <string.h>
 #include <ctype.h>
 
-#include <mbedtls_v3/sha256.h>
+#include <mbedtls/sha256.h>
 
 /** \cond */
 #define COMMAND_MAX_STRING_LEN 32
