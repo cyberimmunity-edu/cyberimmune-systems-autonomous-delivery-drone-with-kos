@@ -45,6 +45,8 @@ include_directories (${MbedTLS_INCLUDE})
 
 set (fmt_USE_STATIC ON)
 set (spdlog_USE_STATIC ON)
+set (fdn_USE_STATIC ON)
+set (logger_USE_STATIC ON)
 find_package (spdlog REQUIRED)
 include_directories (${koslogger_INCLUDE})
 find_package (logger REQUIRED)
@@ -73,8 +75,8 @@ else ()
 endif ()
 
 add_compile_options (-Wall -Wextra -Wconversion
-                     -fPIE -pie -D_FORTIFY_SOURCE=2 -O2
-                     -fstack-protector-strong -fstack-clash-protection
+                     -fPIE -D_FORTIFY_SOURCE=2 -O2
+                     -fstack-protector-strong
                      -mbranch-protection=standard
                      -Wsign-conversion -Wformat=2 -Wformat-security -Werror=format-security
                      -fsanitize=undefined -fsanitize-undefined-trap-on-error)
