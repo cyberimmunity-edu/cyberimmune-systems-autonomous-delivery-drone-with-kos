@@ -66,7 +66,7 @@ if (SERVER)
             DEPENDS_ON_ENTITY "${precompiled_vfsVfsSdCardFs};${precompiled_vfsVfsNet}"
             EXTRA_CONNECTIONS "\
         - target: kl.VfsNet
-           id: kl.VfsNet"
+          id: kl.VfsNet"
             EXTRA_ENV "\
             VFS_FILESYSTEM_BACKEND: client{fs->net}:kl.VfsSdCardFs
             VFS_NETWORK_BACKEND: client:kl.VfsNet"
