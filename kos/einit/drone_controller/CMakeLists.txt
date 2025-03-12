@@ -5,14 +5,30 @@ include (${KL_SDK_ROOT_PATH}/common/build-sd-image.cmake)
 
 project_header_default ("STANDARD_GNU_11:YES" "STRICT_WARNINGS:YES")
 
-set (ENTITIES AutopilotConnector CredentialManager FlightController NavigationSystem PeripheryController
-    ServerConnector Logger ${precompiled_vfsVfsSdCardFs})
+set (ENTITIES
+        AutopilotConnector
+        CredentialManager
+        FlightController
+        NavigationSystem
+        PeripheryController
+        ServerConnector
+        Logger
+        ${precompiled_vfsVfsSdCardFs})
 set (FILES)
 
 set_target_properties (${precompiled_vfsVfsSdCardFs} PROPERTIES
     EXTRA_ARGS "\
     - -l
     - devfs /dev devfs 0")
+
+set (DHCPCD_ENV "
+    VFS_FILESYSTEM_BACKEND: client{fs->net}:kl.VfsSdCardFs
+    VFS_NETWORK_BACKEND: client:kl.VfsNet")
+
+set (DHCPCD_ARGS "\
+    - '-4'
+    - '-f'
+    - /etc/dhcpcd.conf")
 
 if (SIMULATION OR SERVER)
     set_target_properties (${precompiled_vfsVfsNet} PROPERTIES
@@ -22,37 +38,44 @@ if (SIMULATION OR SERVER)
         - -l
         - ramfs /tmp ramfs rw
         - -l
-        - romfs /etc romfs ro")
-    set_target_properties (${rump_DHCPCD_ENTITY} PROPERTIES
-        DEPENDS_ON_ENTITY ""
-        EXTRA_CONNECTIONS "\
-      - target: kl.VfsNet
-        id: kl.VfsNet"
-        EXTRA_ENV "\
-        VFS_FILESYSTEM_BACKEND: client:kl.VfsNet
-        VFS_NETWORK_BACKEND: client:kl.VfsNet"
+        - romfs /etc romfs ro
+        - -l
+        - ramfs /var ramfs rw")
+     set_target_properties (${precompiled_vfsVfsSdCardFs} PROPERTIES
         EXTRA_ARGS "\
-        - '-4'
-        - -f
-        - /etc/dhcpcd.conf")
-    list(APPEND ENTITIES ${precompiled_vfsVfsNet} ${rump_DHCPCD_ENTITY})
-    list(APPEND FILES ${CMAKE_SOURCE_DIR}/resources/hdd/etc/dhcpcd.conf)
+        - -l
+        - devfs /dev devfs rw
+        - -l
+        - ramfs /tmp ramfs rw
+        - -l
+        - romfs /etc romfs ro
+        - -l
+        - ramfs /var ramfs rw")
+
+    set_target_properties (${rump_DHCPCD_ENTITY} PROPERTIES
+        DEPENDS_ON_ENTITY "${precompiled_vfsVfsSdCardFs};${precompiled_vfsVfsNet}"
+        EXTRA_ENV ${DHCPCD_ENV}
+        EXTRA_ARGS ${DHCPCD_ARGS})
+    list(APPEND ENTITIES ${precompiled_vfsVfsSdCardFs} ${precompiled_vfsVfsNet} ${rump_DHCPCD_ENTITY})
+    list(APPEND FILES ${CMAKE_SOURCE_DIR}/resources/hdd/etc/dhcpcd.conf ${CMAKE_SOURCE_DIR}/resources/hdd/var/db/dhcpcd/.gitkeep)
 endif ()
 
-if ((NOT SIMULATION) AND SERVER)
-    set_target_properties (${wpa_SUPPLICANT_ENTITY} PROPERTIES
-        DEPENDS_ON_ENTITY ""
-        EXTRA_CONNECTIONS "\
-      - target: kl.VfsNet
-        id: kl.VfsNet"
-        EXTRA_ENV "\
-        VFS_FILESYSTEM_BACKEND: client:kl.VfsNet
-        VFS_NETWORK_BACKEND: client:kl.VfsNet"
-        EXTRA_ARGS "\
-        - '-ien1'
-        - '-c/etc/wpa_supplicant.conf'")
-    list(APPEND ENTITIES ${wpa_SUPPLICANT_ENTITY})
-    list(APPEND FILES ${CMAKE_SOURCE_DIR}/resources/hdd/etc/wpa_supplicant.conf)
+if (SERVER)
+    if (NOT SIMULATION)
+        set_target_properties (${wpa_SUPPLICANT_ENTITY} PROPERTIES
+            DEPENDS_ON_ENTITY "${precompiled_vfsVfsSdCardFs};${precompiled_vfsVfsNet}"
+            EXTRA_CONNECTIONS "\
+        - target: kl.VfsNet
+           id: kl.VfsNet"
+            EXTRA_ENV "\
+            VFS_FILESYSTEM_BACKEND: client{fs->net}:kl.VfsSdCardFs
+            VFS_NETWORK_BACKEND: client:kl.VfsNet"
+            EXTRA_ARGS "\
+            - '-ien1'
+            - '-c/etc/wpa_supplicant.conf'")
+        list(APPEND ENTITIES ${wpa_SUPPLICANT_ENTITY})
+        list(APPEND FILES ${CMAKE_SOURCE_DIR}/resources/hdd/etc/wpa_supplicant.conf)
+    endif()
 endif ()
 
 if (SIMULATION)
@@ -84,7 +107,7 @@ else ()
 endif()
 
 if (SIMULATION)
-    set (QEMU_FLAGS "--nographic -monitor none -netdev user,id=net0,dhcpstart=10.0.2.15 -drive file=${FS_IMAGE},if=sd,format=raw")
+    set (QEMU_FLAGS "-drive file=${FS_IMAGE},if=sd,format=raw")
     set (QEMU_ENV "QEMU_AUDIO_DRV=none")
     build_kos_qemu_image (kos-qemu-image
                         EINIT_ENTITY EinitQemu

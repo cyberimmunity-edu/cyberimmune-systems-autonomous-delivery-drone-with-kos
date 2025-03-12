@@ -48,7 +48,7 @@ function help
              Connection mode: online or offline
 
   Examples:
-      bash cross-build.sh -s /opt/KasperskyOS-Community-Edition-1.2.0.89
+      bash cross-build.sh -s /opt/KasperskyOS-Community-Edition-RaspberryPi4b-1.3.0.166
 
 EOF
 }
