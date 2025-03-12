@@ -23,6 +23,8 @@ setup(
         ('share/' + package_name + '/launch', ['launch/gazebo.launch.py']),
         ('share/' + package_name + '/launch', ['launch/bridges.launch.py']),
         ('share/' + package_name + '/launch', ['launch/mavros.launch.py']),
+        ('share/' + package_name + '/launch', ['launch/camera.launch.py']),
+        ('share/' + package_name + '/launch', ['launch/lidar.launch.py']),
         ('share/' + package_name + '/launch', ['launch/combined.launch.py']),
     ] +
     generate_data_files('models', 'models') + 
@@ -36,7 +38,9 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'rover_controller = rover_mavros.rover_mavros:main'
+            'rover_controller = rover_mavros.rover_mavros:main',
+            'camera = rover_mavros.camera:main',
+            'lidar = rover_mavros.lidar:main'
         ],
     },
 )

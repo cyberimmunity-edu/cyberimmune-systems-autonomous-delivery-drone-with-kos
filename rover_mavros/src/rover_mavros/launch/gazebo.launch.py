@@ -8,8 +8,6 @@ def generate_launch_description():
     package_share = get_package_share_directory('rover_mavros')
     local_models_path = os.path.join(package_share, 'models')
     local_worlds_path = os.path.join(package_share, 'worlds')
-    print(local_models_path)
-    print(local_worlds_path)
 
     resource_path = f'{local_models_path}:{local_worlds_path}'
 

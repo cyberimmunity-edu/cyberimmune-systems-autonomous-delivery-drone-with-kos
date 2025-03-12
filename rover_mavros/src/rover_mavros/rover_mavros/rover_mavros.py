@@ -69,10 +69,6 @@ class MavrosToGazebo(Node):
             
             max_correction = MAX_SPEED / 2
             correction = -clamp(k_p * yaw_error, -max_correction, max_correction)
-            print(f'mav jaw = {self.last_mav_yaw}')
-            print(f'model jaw = {self.last_model_yaw}')
-            print(f'correction = {correction}')
-            print('==============')
             
             left_velocity -= correction
             right_velocity += correction

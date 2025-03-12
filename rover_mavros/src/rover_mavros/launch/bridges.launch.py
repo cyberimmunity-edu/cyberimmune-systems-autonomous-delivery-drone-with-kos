@@ -66,4 +66,22 @@ def generate_launch_description():
             ],
             output='screen'
         ),
+        Node(
+            package='ros_gz_bridge',
+            executable='parameter_bridge',
+            name='camera_bridge',
+            arguments=[
+                '/camera@sensor_msgs/msg/Image@gz.msgs.Image'
+            ],
+            output='screen'
+        ),
+        Node(
+            package='ros_gz_bridge',
+            executable='parameter_bridge',
+            name='lidar_bridge',
+            arguments=[
+                '/lidar@sensor_msgs/msg/LaserScan@gz.msgs.LaserScan'
+            ],
+            output='screen',
+        )
     ])

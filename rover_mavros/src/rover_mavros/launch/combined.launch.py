@@ -11,6 +11,8 @@ def generate_launch_description():
     bridges_launch_path = os.path.join(pkg_share, 'launch', 'bridges.launch.py')
     mavros_launch_path = os.path.join(pkg_share, 'launch', 'mavros.launch.py')
     gazebo_launch_path = os.path.join(pkg_share, 'launch', 'gazebo.launch.py')
+    camera_launch_path = os.path.join(pkg_share, 'launch', 'camera.launch.py')
+    lidar_launch_path = os.path.join(pkg_share, 'launch', 'lidar.launch.py')
     
     include_bridges = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(bridges_launch_path)
@@ -21,9 +23,17 @@ def generate_launch_description():
     include_gazebo = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(gazebo_launch_path)
     )
+    include_camera = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(camera_launch_path)
+    )
+    include_lidar = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(lidar_launch_path)
+    )
 
     return LaunchDescription([
         include_bridges,
         include_mavros,
         include_gazebo,
+        include_camera,
+        include_lidar
     ])

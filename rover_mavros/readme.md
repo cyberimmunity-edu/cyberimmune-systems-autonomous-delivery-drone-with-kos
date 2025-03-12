@@ -34,7 +34,7 @@ colcon build
 source install/setup.bash
 ```
 
-Запуск вспомогательных нод (мосты до газебо, маврос и газебо):
+Запуск вспомогательных нод (мосты до газебо, маврос, газебо, камера и лидар):
 ```
 source install/setup.bash
 ros2 launch rover_mavros combined.launch.py
@@ -62,7 +62,19 @@ source install/setup.bash
 ros2 launch rover_mavros gazebo.launch.py
 ```
 
-Настроить параметры вспомогательных нод можно в ./src/rover_mavros/launch/
+Запуск ноды камеры (сохраняет изображения с камеры в папку captured_images, `/src/rover_mavros/rover_mavros/camera.py`):
+```
+source install/setup.bash
+ros2 launch rover_mavros camera.launch.py
+```
+
+Запуск ноды лидара (`/src/rover_mavros/rover_mavros/lidar.py`):
+```
+source install/setup.bash
+ros2 launch rover_mavros camera.launch.py
+```
+
+Настроить параметры вспомогательных нод можно в `./src/rover_mavros/launch/`
 
 ---
 
