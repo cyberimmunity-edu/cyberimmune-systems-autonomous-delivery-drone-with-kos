@@ -46,7 +46,7 @@ int writeIntValue(int32_t value) {
     char logBuffer[256] = {0};
     Retcode rc = UartWrite(autopilotUartHandler, (uint8_t*)(&value), expectedSize, NULL, &writtenBytes);
     if (rc != rcOk) {
-        snprintf(logBuffer, 256, "Failed to write to UART %s ("RETCODE_HR_FMT")", autopilotUart, RETCODE_HR_PARAMS(rc));
+        snprintf(logBuffer, 256, "Failed to write to UART %s (" RETCODE_HR_FMT ")", autopilotUart, RETCODE_HR_PARAMS(rc));
         logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
         return 0;
     }
@@ -80,25 +80,25 @@ int initAutopilotConnector() {
     char logBuffer[256] = {0};
     Retcode rc = BspInit(NULL);
     if (rc != rcOk) {
-        snprintf(logBuffer, 256, "Failed to initialize BSP ("RETCODE_HR_FMT")", RETCODE_HR_PARAMS(rc));
+        snprintf(logBuffer, 256, "Failed to initialize BSP (" RETCODE_HR_FMT ")", RETCODE_HR_PARAMS(rc));
         logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_ERROR);
         return 0;
     }
     rc = BspEnableModule(autopilotUart);
     if (rc != rcOk) {
-        snprintf(logBuffer, 256, "Failed to enable UART %s ("RETCODE_HR_FMT")", autopilotUart, RETCODE_HR_PARAMS(rc));
+        snprintf(logBuffer, 256, "Failed to enable UART %s (" RETCODE_HR_FMT ")", autopilotUart, RETCODE_HR_PARAMS(rc));
         logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_ERROR);
         return 0;
     }
     rc = BspSetConfig(autopilotUart, autopilotConfig);
     if (rc != rcOk) {
-        snprintf(logBuffer, 256, "Failed to set BSP config for UART %s ("RETCODE_HR_FMT")", autopilotUart, RETCODE_HR_PARAMS(rc));
+        snprintf(logBuffer, 256, "Failed to set BSP config for UART %s (" RETCODE_HR_FMT ")", autopilotUart, RETCODE_HR_PARAMS(rc));
         logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_ERROR);
         return 0;
     }
     rc = UartInit();
     if (rc != rcOk) {
-        snprintf(logBuffer, 256, "Failed to initialize UART ("RETCODE_HR_FMT")", RETCODE_HR_PARAMS(rc));
+        snprintf(logBuffer, 256, "Failed to initialize UART (" RETCODE_HR_FMT ")", RETCODE_HR_PARAMS(rc));
         logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_ERROR);
         return 0;
     }
@@ -110,7 +110,7 @@ int initConnection() {
     Retcode rc = UartOpenPort(autopilotUart, &autopilotUartHandler);
     if (rc != rcOk) {
         char logBuffer[256] = {0};
-        snprintf(logBuffer, 256, "Failed to open UART %s ("RETCODE_HR_FMT")", autopilotUart, RETCODE_HR_PARAMS(rc));
+        snprintf(logBuffer, 256, "Failed to open UART %s (" RETCODE_HR_FMT ")", autopilotUart, RETCODE_HR_PARAMS(rc));
         logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
         return 0;
     }
@@ -124,7 +124,7 @@ int getAutopilotCommand(uint8_t& command) {
     for (int i = 0; i < AUTOPILOT_COMMAND_MESSAGE_HEAD_SIZE; i++) {
         Retcode rc = UartReadByte(autopilotUartHandler, message + i);
         if (rc != rcOk) {
-            snprintf(logBuffer, 256, "Failed to read from UART %s ("RETCODE_HR_FMT")", autopilotUart, RETCODE_HR_PARAMS(rc));
+            snprintf(logBuffer, 256, "Failed to read from UART %s (" RETCODE_HR_FMT ")", autopilotUart, RETCODE_HR_PARAMS(rc));
             logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
             return 0;
         }
@@ -140,7 +140,7 @@ int getAutopilotCommand(uint8_t& command) {
     Retcode rc = UartRead(autopilotUartHandler, (rtl_uint8_t*)(message + AUTOPILOT_COMMAND_MESSAGE_HEAD_SIZE),
         expectedSize, NULL, &readBytes);
     if (rc != rcOk) {
-        snprintf(logBuffer, 256, "Failed to read from UART %s ("RETCODE_HR_FMT")", autopilotUart, RETCODE_HR_PARAMS(rc));
+        snprintf(logBuffer, 256, "Failed to read from UART %s (" RETCODE_HR_FMT ")", autopilotUart, RETCODE_HR_PARAMS(rc));
         logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
         return 0;
     }
@@ -162,7 +162,7 @@ int sendAutopilotCommand(AutopilotCommand command) {
     char logBuffer[256] = {0};
     Retcode rc = UartWrite(autopilotUartHandler, (uint8_t*)(&message), expectedSize, NULL, &writtenBytes);
     if (rc != rcOk) {
-        snprintf(logBuffer, 256, "Failed to write to UART %s ("RETCODE_HR_FMT")", autopilotUart, RETCODE_HR_PARAMS(rc));
+        snprintf(logBuffer, 256, "Failed to write to UART %s (" RETCODE_HR_FMT ")", autopilotUart, RETCODE_HR_PARAMS(rc));
         logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
         return 0;
     }
