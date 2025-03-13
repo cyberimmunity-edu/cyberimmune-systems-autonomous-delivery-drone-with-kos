@@ -87,6 +87,10 @@ else ()
     nk_build_edl_files (server_connector_edl_files IDL_TARGET server_connector_idl_files NK_MODULE "drone_controller" EDL "resources/ServerConnector.edl")
 
     nk_build_edl_files (flight_controller_edl_files DEPENDS autopilot_connector_idl_files DEPENDS credential_manager_idl_files DEPENDS navigation_system_idl_files DEPENDS periphery_controller_idl_files DEPENDS server_connector_idl_files NK_MODULE "drone_controller" EDL "resources/FlightController.edl")
+
+    nk_build_edl_files (klog_edl_files NK_MODULE "drone_controller" EDL "resources/KlogEntity.edl")
+    nk_build_edl_files (klog_storage_edl_files NK_MODULE "drone_controller" EDL "resources/KlogStorageEntity.edl" NK_FLAGS "--extended-errors")
+
 endif ()
 
 add_compile_options (-Wall -Wextra -Wconversion
