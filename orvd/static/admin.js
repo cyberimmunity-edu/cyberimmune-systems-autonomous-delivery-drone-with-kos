@@ -537,12 +537,12 @@ function add_or_update_vehicle_marker(id, lat, lon, alt, azimuth, speed) {
     let vehicle = new ol.Feature(new ol.geom.Point([lon, lat]));
     vehicle.setId(`uav${id}`);
     vehicle.setStyle(id === active_id ? vehicleStyle : inactiveVehicleStyle);
-    vehicle.set('description', `ID: ${id}\nСкорость: ${speed}\nНаправление: ${azimuth}`);
+    vehicle.set('description', `ID: ${id}\nВысота: ${alt}\nСкорость: ${speed}\nНаправление: ${azimuth}`);
     vehicles[id] = vehicle;
     markers.getSource().addFeature(vehicles[id]);
   } else {
     vehicles[id].getGeometry().setCoordinates([lon, lat]);
-    vehicles[id].set('description', `ID: ${id}\nСкорость: ${speed}\nНаправление: ${azimuth}`);
+    vehicles[id].set('description', `ID: ${id}\nВысота: ${alt}\nСкорость: ${speed}\nНаправление: ${azimuth}`);
     vehicles[id].setStyle(id === active_id ? vehicleStyle : inactiveVehicleStyle);
   }
 }
