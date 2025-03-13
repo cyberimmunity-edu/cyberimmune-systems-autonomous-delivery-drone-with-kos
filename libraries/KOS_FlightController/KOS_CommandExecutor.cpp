@@ -89,26 +89,42 @@ void KOS_CommandExecutor::change_waypoint(int32_t lat, int32_t lng, int32_t alt)
 
 void KOS_CommandExecutor::pause_mission() {
     gcs().send_text(MAV_SEVERITY_INFO, "Info: Request to pause flight");
+    if (current_state == FlightState::FlightState_Paused) {
+        gcs().send_text(MAV_SEVERITY_INFO, "Info: flight is already paused");
+        return;
+    }
 #if APM_BUILD_TYPE(APM_BUILD_ArduCopter)
-    mission_resume_index = mission->get_current_nav_index() - 1;
-    mission->stop();
+    if (current_state == FlightState::FlightState_Active) {
+        mission_resume_index = mission->get_current_nav_index() - 1;
+        mission->stop();
+    }
+    else if (current_state == FlightState::FlightState_Frozen)
+        mission_resume_index = 0;
     copter.set_mode(Mode::Number::LAND, ModeReason::KOS_COMMAND);
-    AP_Mission::Mission_Command cmd;
-    mission->read_cmd_from_storage(mission_resume_index, cmd);
-    cmd.id = MAV_CMD_NAV_TAKEOFF;
-    cmd.content.location.alt = (int32_t)(copter.inertial_nav.get_position_z_up_cm());
-    copter.mode_auto.mission.replace_cmd(mission_resume_index, cmd);
+    if (current_state == FlightState::FlightState_Active) {
+        AP_Mission::Mission_Command cmd;
+        mission->read_cmd_from_storage(mission_resume_index, cmd);
+        cmd.id = MAV_CMD_NAV_TAKEOFF;
+        cmd.content.location.alt = (int32_t)(copter.inertial_nav.get_position_z_up_cm());
+        copter.mode_auto.mission.replace_cmd(mission_resume_index, cmd);
+    }
 #elif APM_BUILD_TYPE(APM_BUILD_Rover)
-    mission_resume_index = mission->get_current_nav_index();
-    mission->stop();
+    if (current_state == FlightState::FlightState_Active) {
+        mission_resume_index = mission->get_current_nav_index();
+        mission->stop();
+    }
+    else if (current_state == FlightState::FlightState_Frozen)
+        mission_resume_index = 0;
     AP_Arming::get_singleton()->disarm(AP_Arming::Method::SCRIPTING, false);
 #else
     gcs().send_text(MAV_SEVERITY_INFO, "Info: Mission pause is not supported for current vehicle type");
+    return;
 #endif
+    current_state = FlightState::FlightState_Paused;
 }
 
 void KOS_CommandExecutor::resume_mission() {
-    if (mission_resume_index) {
+    if ((current_state == FlightState::FlightState_Paused) && mission_resume_index) {
         gcs().send_text(MAV_SEVERITY_INFO, "Info: Request to resume flight");
 #if APM_BUILD_TYPE(APM_BUILD_ArduCopter)
         AP_Arming::get_singleton()->arm(AP_Arming::Method::SCRIPTING, false);
@@ -123,28 +139,62 @@ void KOS_CommandExecutor::resume_mission() {
         mission->start_or_resume();
 #else
         gcs().send_text(MAV_SEVERITY_INFO, "Info: Mission resume is not supported for current vehicle type ");
+        return;
 #endif
         mission_resume_index = 0;
+        current_state = FlightState::FlightState_Paused;
     }
     else
-        gcs().send_text(MAV_SEVERITY_INFO, "Info: Impossible to resume flight - no data about paused flight");
+        gcs().send_text(MAV_SEVERITY_INFO, "Info: Impossible to resume flight: no data about previous flight");
 }
 
-void KOS_CommandExecutor::set_mission(AP_Mission::Mission_Command* commands, int num) {
-#if APM_BUILD_TYPE(APM_BUILD_Rover)
+void KOS_CommandExecutor::abort_mission() {
+    gcs().send_text(MAV_SEVERITY_INFO, "Info: Request to abort flight");
+#if APM_BUILD_TYPE(APM_BUILD_ArduCopter)
     mission_resume_index = 0;
     mission->stop();
     mission->truncate(0);
+    if (current_state != FlightState_Paused)
+        copter.set_mode(Mode::Number::BRAKE, ModeReason::KOS_COMMAND);
+#elif APM_BUILD_TYPE(APM_BUILD_Rover)
+    mission_resume_index = 0;
+    mission->stop();
+    mission->truncate(0);
+    AP_Arming::get_singleton()->disarm(AP_Arming::Method::SCRIPTING, false);
+#else
+    gcs().send_text(MAV_SEVERITY_INFO, "Info: Mission abort is not supported for current vehicle type ");
+    return;
+#endif
+    if (current_state != FlightState_Paused)
+        current_state = FlightState::FlightState_Frozen;
+}
+
+void KOS_CommandExecutor::set_mission(AP_Mission::Mission_Command* commands, int num) {
+#if APM_BUILD_TYPE(APM_BUILD_ArduCopter) || APM_BUILD_TYPE(APM_BUILD_Rover)
+    if (current_state == FlightState_Active)
+        abort_mission();
 #else
     gcs().send_text(MAV_SEVERITY_INFO, "Info: Mission change is not supported for current vehicle type");
     return;
 #endif
+
     for (int i = 0; i < num; i++)
         mission->add_cmd(commands[i]);
+#if APM_BUILD_TYPE(APM_BUILD_ArduCopter)
+    if ((current_state == FlightState_Paused) && !AP_Arming::get_singleton()->is_armed()) {
+        AP_Arming::get_singleton()->arm(AP_Arming::Method::SCRIPTING, false);
+        copter.set_mode(Mode::Number::AUTO, ModeReason::KOS_COMMAND);
+        copter.set_auto_armed(true);
+    }
+    else if (current_state == FlightState_Frozen)
+        copter.set_mode(Mode::Number::AUTO, ModeReason::KOS_COMMAND);
+#elif APM_BUILD_TYPE(APM_BUILD_Rover)
     if (!AP_Arming::get_singleton()->is_armed())
         AP_Arming::get_singleton()->arm(AP_Arming::Method::SCRIPTING, false);
+#endif
     mission->reset();
     mission->start();
+    current_state = FlightState::FlightState_Active;
     gcs().send_text(MAV_SEVERITY_INFO, "Info: Mission was successfully updated");
 }
 
@@ -159,6 +209,7 @@ KOS_CommandExecutor::KOS_CommandExecutor() {
     gcs().send_text(MAV_SEVERITY_INFO, "Info: Current vehicle is not supported by KOS FlightController Module");
 #endif
     mission_resume_index = 0;
+    current_state = FlightState::FlightState_Active;
 }
 
 KOS_CommandExecutor* KOS_CommandExecutor::get_singleton() {

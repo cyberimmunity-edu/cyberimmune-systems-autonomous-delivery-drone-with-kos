@@ -1,7 +1,6 @@
 #include "KOS_Interaction.h"
 #include <KOS_FlightController/KOS_CommandExecutor.h>
 #include <AP_SerialManager/AP_SerialManager.h>
-#include <AP_Arming/AP_Arming.h>
 #include <GCS_MAVLink/GCS.h>
 
 static const uint8_t kos_message_head[KOS_MESSAGE_HEAD_SIZE] = { 0x7a, 0xfe, 0xf0, 0x0d };
@@ -85,17 +84,15 @@ void KOS_InteractionModule::receive_KOS_message() {
             gcs().send_text(MAV_SEVERITY_INFO, "Info: Arm is forbidden");
             break;
         case KOS_Command::Command_PauseFlight: {
-            if (AP_Arming::get_singleton()->is_armed())
-                KOS_CommandExecutor::get_singleton()->pause_mission();
-            else
-                gcs().send_text(MAV_SEVERITY_INFO, "Info: Impossible to pause flight - copter is disarmed");
+            KOS_CommandExecutor::get_singleton()->pause_mission();
             break;
         }
         case KOS_Command::Command_ResumeFlight: {
-            if (AP_Arming::get_singleton()->is_armed())
-                gcs().send_text(MAV_SEVERITY_INFO, "Info: Impossible to resume flight - copter is armed");
-            else
-                KOS_CommandExecutor::get_singleton()->resume_mission();
+            KOS_CommandExecutor::get_singleton()->resume_mission();
+            break;
+        }
+        case KOS_Command::Command_AbortMission: {
+            KOS_CommandExecutor::get_singleton()->abort_mission();
             break;
         }
         case KOS_Command::Command_SetMission: {

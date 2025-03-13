@@ -16,6 +16,7 @@ public:
         Command_ChangeWaypoint = 0x10,
         Command_ChangeSpeed = 0xEE,
         Command_ChangeAltitude = 0xA1,
+        Command_AbortMission = 0x21,
         Command_SetMission = 0x42
     };
 

@@ -3,10 +3,17 @@
 
 class KOS_CommandExecutor {
 private:
+    enum FlightState {
+        FlightState_Active,
+        FlightState_Paused,
+        FlightState_Frozen
+    };
+
     static KOS_CommandExecutor* _singleton;
     AP_Mission* mission;
 
     uint16_t mission_resume_index;
+    FlightState current_state;
 
     void drop_cargo();
     void change_speed(int32_t speed);
@@ -15,6 +22,7 @@ private:
 
     void pause_mission();
     void resume_mission();
+    void abort_mission();
     void set_mission(AP_Mission::Mission_Command* commands, int num);
 
 public:
