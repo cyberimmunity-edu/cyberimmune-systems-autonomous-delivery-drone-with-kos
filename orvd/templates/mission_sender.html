@@ -1,20 +1,37 @@
 <!DOCTYPE html>
-<html>
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Mission Sender</title>
-      <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
-      </head>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mission Sender</title>
+    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/style.css') }}">
+</head>
 <body>
-<script type="module" src="{{ url_for('static',filename='mission_sender.js') }}"> </script>
+    <header>
+        <h1>Mission Sender</h1>
+    </header>
 
-<h1>Mission sender</h1>
+    <main>
+      <div class="flex flexColumn alignItemsCenter">
+        <div id="mission-sender-form">
+          <div class="form-group">
+              <label for="id">ID:</label>
+              <input type="text" id="id" name="id" class="form-control">
+          </div>
+          <div class="form-group">
+              <label for="myfile">Миссия:</label>
+              <input type="file" id="myfile" name="myfile" class="form-control">
+          </div>
+          <button type="submit" id="mission-sender-submit" class="form-button">Отправить</button>
+        </div>
+      </div>
+    </main>
 
-<label for="id">ID:</label>
-<input id="id" type="text" name="id" /><br><br>
-<label for="myfile">Миссия:</label>
-<input type="file" id="myfile" name="myfile"><br><br>
-<input id="submit" type="submit">
+    <footer>
+        <p></p>
+    </footer>
+
+    <script type="module" src="{{ url_for('static',filename='mission_sender.js') }}"> </script>
 </body>
 </html>

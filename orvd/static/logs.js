@@ -5,9 +5,17 @@ document.getElementById('submit-events').onclick = submitEvents;
 
 let chartInstance = null;
 
+function toggleContainers(logsVisible, chartVisible, eventsVisible) {
+    document.getElementById('logs-container').classList.toggle('hidden', !logsVisible);
+    document.getElementById('speed-chart-container').classList.toggle('hidden', !chartVisible);
+    document.getElementById('events-container').classList.toggle('hidden', !eventsVisible);
+}
+
+
 async function submit() {
     let id = document.getElementById('id').value;
     if (id != null && id !== '') {
+        toggleContainers(true, false, false);
         document.getElementById('events-container').innerHTML = "";
         let chartContainer = document.getElementById('speed-chart').getContext('2d');
         chartContainer.clearRect(0, 0, chartContainer.canvas.width, chartContainer.canvas.height);
@@ -35,8 +43,7 @@ async function submit() {
 async function submitSpeed() {
     let id = document.getElementById('id').value;
     if (id != null && id !== '') {
-        document.getElementById('logs-container').innerHTML = "";
-        document.getElementById('events-container').innerHTML = "";
+        toggleContainers(false, true, false);
 
         let response = await fetch('logs/get_telemetry_csv?id=' + id);
         let csv = await response.text();
@@ -57,18 +64,19 @@ async function submitSpeed() {
 }
 
 async function submitEvents() {
-    document.getElementById('logs-container').innerHTML = "";
-    let chartContainer = document.getElementById('speed-chart').getContext('2d');
-    chartContainer.clearRect(0, 0, chartContainer.canvas.width, chartContainer.canvas.height);
-    if (chartInstance) {
-        chartInstance.destroy();
-        chartInstance = null;
-    }
-
+     let id = document.getElementById('id').value;
     if (id != null && id !== '') {
-        // заглушка
-    } else {
-        alert('Введите серийный номер.')
+      toggleContainers(false, false, true);
+      document.getElementById('logs-container').innerHTML = "";
+      let chartContainer = document.getElementById('speed-chart').getContext('2d');
+      chartContainer.clearRect(0, 0, chartContainer.canvas.width, chartContainer.canvas.height);
+      if (chartInstance) {
+          chartInstance.destroy();
+          chartInstance = null;
+      }
+    }
+    else{
+        alert('Введите серийный номер.');
     }
 }
 
