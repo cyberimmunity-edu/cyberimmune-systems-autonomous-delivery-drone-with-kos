@@ -50,6 +50,14 @@ nk_err_t ResumeFlightImpl(struct AutopilotConnectorInterface *self,
     return NK_EOK;
 }
 
+nk_err_t AbortMissionImpl(struct AutopilotConnectorInterface *self,
+    const AutopilotConnectorInterface_AbortMission_req *req, const struct nk_arena *reqArena,
+    AutopilotConnectorInterface_AbortMission_res *res, struct nk_arena *resArena) {
+    res->success = sendAutopilotCommand(AutopilotCommand::AbortMission);
+
+    return NK_EOK;
+}
+
 nk_err_t ChangeSpeedImpl(struct AutopilotConnectorInterface *self,
                     const AutopilotConnectorInterface_ChangeSpeed_req *req, const struct nk_arena *reqArena,
                     AutopilotConnectorInterface_ChangeSpeed_res *res, struct nk_arena *resArena) {

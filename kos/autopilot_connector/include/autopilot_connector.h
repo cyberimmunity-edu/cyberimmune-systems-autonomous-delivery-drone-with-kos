@@ -80,6 +80,13 @@ enum AutopilotCommand : uint8_t {
      */
     ChangeAltitude = 0xA1,
     /**
+     * \~English Abort mission requirement. Transmitted from the security module to the autopilot during an active flight.
+     * When mission is aborted, the vehicle holds its current position in the air.
+     * \~Russian Требование на отмену миссии. Передается от модуля безопасности в автопилот при активном полете.
+     * При отмене миссии, квадрокоптер зависает в воздухе.
+     */
+    AbortMission = 0x21,
+    /**
      * \~English A requirement to set passed mission.
      * \~Russian Требование изменения миссии на переданную.
      */
