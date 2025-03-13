@@ -135,7 +135,7 @@ void serverSession() {
 
 #ifdef USE_DEMO_CODE
             //Check, that current flight does not interect no-flight areas
-            pauseFlight();
+            abortMission();
             //Calculate new path
             sleep(10);
             //DEMO uses hard-coded example path for any areas
