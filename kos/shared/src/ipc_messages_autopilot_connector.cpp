@@ -82,6 +82,20 @@ int resumeFlight() {
     return ((AutopilotConnectorInterface_ResumeFlight(&proxy.base, &req, NULL, &res, NULL) == rcOk) && res.success);
 }
 
+int abortMission() {
+    NkKosTransport transport;
+    nk_iid_t riid;
+    initSenderInterface("autopilot_connector_connection", "drone_controller.AutopilotConnector.interface", transport, riid);
+
+    struct AutopilotConnectorInterface_proxy proxy;
+    AutopilotConnectorInterface_proxy_init(&proxy, &transport.base, riid);
+
+    AutopilotConnectorInterface_AbortMission_req req;
+    AutopilotConnectorInterface_AbortMission_res res;
+
+    return ((AutopilotConnectorInterface_AbortMission(&proxy.base, &req, NULL, &res, NULL) == rcOk) && res.success);
+}
+
 int changeSpeed(int32_t speed) {
     NkKosTransport transport;
     nk_iid_t riid;

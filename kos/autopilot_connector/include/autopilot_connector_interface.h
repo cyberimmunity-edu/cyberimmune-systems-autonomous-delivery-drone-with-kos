@@ -67,6 +67,13 @@ nk_err_t ResumeFlightImpl(struct AutopilotConnectorInterface *self,
                     const AutopilotConnectorInterface_ResumeFlight_req *req, const struct nk_arena *reqArena,
                     AutopilotConnectorInterface_ResumeFlight_res *res, struct nk_arena *resArena);
 /**
+ * \~English IPC message handler. See \ref abortMission.
+ * \~Russian Обработчик IPC-сообщения. См. \ref abortMission.
+ */
+nk_err_t AbortMissionImpl(struct AutopilotConnectorInterface *self,
+    const AutopilotConnectorInterface_AbortMission_req *req, const struct nk_arena *reqArena,
+    AutopilotConnectorInterface_AbortMission_res *res, struct nk_arena *resArena);
+/**
  * \~English IPC message handler. See \ref changeSpeed.
  * \~Russian Обработчик IPC-сообщения. См. \ref changeSpeed.
  */
@@ -102,7 +109,7 @@ nk_err_t SetMissionImpl(struct AutopilotConnectorInterface *self,
 static struct AutopilotConnectorInterface *CreateAutopilotConnectorInterfaceImpl(void) {
     static const struct AutopilotConnectorInterface_ops Ops = {
         .WaitForArmRequest = WaitForArmRequestImpl, .PermitArm = PermitArmImpl, .ForbidArm = ForbidArmImpl,
-        .PauseFlight = PauseFlightImpl, .ResumeFlight = ResumeFlightImpl,
+        .PauseFlight = PauseFlightImpl, .ResumeFlight = ResumeFlightImpl, .AbortMission = AbortMissionImpl,
         .ChangeSpeed = ChangeSpeedImpl, .ChangeAltitude = ChangeAltitudeImpl, .ChangeWaypoint = ChangeWaypointImpl,
         .SetMission = SetMissionImpl
     };
