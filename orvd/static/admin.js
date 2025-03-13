@@ -32,7 +32,7 @@ document.getElementById('copy-id').onclick = () => copy_current_id();
 
 
 ol.proj.useGeographic()
-const place = [59.932100, 30.292907];
+const place = [30.292907, 59.932100];
 
 let ids = [];
 let active_id = null;
