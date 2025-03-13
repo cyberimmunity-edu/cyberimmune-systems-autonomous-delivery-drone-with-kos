@@ -26,6 +26,7 @@ RUN apt-get update && \
         parted \
         fdisk \
         dosfstools \
+        jq \
         && adduser --disabled-password --gecos "" user \
         && echo 'user ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers
 
