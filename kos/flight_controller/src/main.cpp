@@ -135,42 +135,56 @@ void serverSession() {
 
 #ifdef USE_DEMO_CODE
             //Check, that current flight does not interect no-flight areas
-            pauseFlight();
+            abortMission();
             //Calculate new path
             sleep(10);
             //DEMO uses hard-coded example path for any areas
-            int newCommandNum = 6;
+            int newCommandNum = 9;
             MissionCommand* newCommands = (MissionCommand*)malloc(newCommandNum * sizeof(MissionCommand));
 
             newCommands[0].type = CommandType::HOME;
-            newCommands[0].content.waypoint.latitude = 531023682;
-            newCommands[0].content.waypoint.longitude = 1073779464;
-            newCommands[0].content.waypoint.altitude = 84622;
+            getCoords(newCommands[0].content.waypoint.latitude, newCommands[0].content.waypoint.longitude,
+                newCommands[0].content.waypoint.altitude);
 
             newCommands[1].type = CommandType::WAYPOINT;
-            newCommands[1].content.waypoint.latitude = 531023102;
-            newCommands[1].content.waypoint.longitude = 1073776701;
-            newCommands[1].content.waypoint.altitude = 500;
+            newCommands[1].content.waypoint.latitude = 598815578;
+            newCommands[1].content.waypoint.longitude = 298298905;
+            newCommands[1].content.waypoint.altitude = 0;
 
             newCommands[2].type = CommandType::WAYPOINT;
-            newCommands[2].content.waypoint.latitude = 531021926;
-            newCommands[2].content.waypoint.longitude = 1073775065;
-            newCommands[2].content.waypoint.altitude = 500;
+            newCommands[2].content.waypoint.latitude = 598819192;
+            newCommands[2].content.waypoint.longitude = 298283033;
+            newCommands[2].content.waypoint.altitude = 0;
 
             newCommands[3].type = CommandType::WAYPOINT;
-            newCommands[3].content.waypoint.latitude = 531020863;
-            newCommands[3].content.waypoint.longitude = 1073774180;
-            newCommands[3].content.waypoint.altitude = 500;
+            newCommands[3].content.waypoint.latitude = 598818805;
+            newCommands[3].content.waypoint.longitude = 298280894;
+            newCommands[3].content.waypoint.altitude = 0;
 
             newCommands[4].type = CommandType::WAYPOINT;
-            newCommands[4].content.waypoint.latitude = 531019446;
-            newCommands[4].content.waypoint.longitude = 1073774394;
-            newCommands[4].content.waypoint.altitude = 500;
+            newCommands[4].content.waypoint.latitude = 598818256;
+            newCommands[4].content.waypoint.longitude = 298278943;
+            newCommands[4].content.waypoint.altitude = 0;
 
-            newCommands[5].type = CommandType::LAND;
-            newCommands[5].content.waypoint.latitude = 531019446;
-            newCommands[5].content.waypoint.longitude = 1073774394;
-            newCommands[5].content.waypoint.altitude = 84622;
+            newCommands[5].type = CommandType::WAYPOINT;
+            newCommands[5].content.waypoint.latitude = 598818401;
+            newCommands[5].content.waypoint.longitude = 298278125;
+            newCommands[5].content.waypoint.altitude = 0;
+
+            newCommands[6].type = CommandType::WAYPOINT;
+            newCommands[6].content.waypoint.latitude = 598810601;
+            newCommands[6].content.waypoint.longitude = 298271178;
+            newCommands[6].content.waypoint.altitude = 0;
+
+            newCommands[7].type = CommandType::WAYPOINT;
+            newCommands[7].content.waypoint.latitude = 598805918;
+            newCommands[7].content.waypoint.longitude = 298292381;
+            newCommands[7].content.waypoint.altitude = 0;
+
+            newCommands[8].type = CommandType::WAYPOINT;
+            newCommands[8].content.waypoint.latitude = 598804975;
+            newCommands[8].content.waypoint.longitude = 298291898;
+            newCommands[8].content.waypoint.altitude = 0;
 
             //Convert mission to string
             char newCommandsString[1024] = {0};
@@ -314,7 +328,7 @@ int main(void) {
     if (!enableBuzzer())
         logEntry("Failed to enable buzzer at Periphery Controller", ENTITY_NAME, LogLevel::LOG_WARNING);
 
-    //Copter need to be registered at ORVD
+    //Copter need to be registered at AFCS
     sendSignedMessage("/api/auth", responseBuffer, "authentication", RETRY_DELAY_SEC);
     logEntry("Successfully authenticated on the server", ENTITY_NAME, LogLevel::LOG_INFO);
 
@@ -350,7 +364,7 @@ int main(void) {
         }
         logEntry("Received arm request. Notifying the server", ENTITY_NAME, LogLevel::LOG_INFO);
 
-        //When autopilot asked for arm, we need to receive permission from ORVD
+        //When autopilot asked for arm, we need to receive permission from AFCS
         sendSignedMessage("/api/arm", responseBuffer, "arm", RETRY_DELAY_SEC);
 
         if (strstr(responseBuffer, "$Arm 0$")) {
@@ -365,7 +379,7 @@ int main(void) {
                 logEntry("Failed to permit arm through Autopilot Connector", ENTITY_NAME, LogLevel::LOG_WARNING);
             //Get time until next session
             sessionDelay = parseDelay(strstr(responseBuffer, "$Delay "));
-            //Start ORVD connection thread
+            //Start AFCS connection thread
             sessionThread = std::thread(serverSession);
             break;
         }

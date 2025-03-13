@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Инфо</title>
+    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <script src="{{ url_for('static', filename='external/chart.js') }}"></script>
+    <script src="{{ url_for('static', filename='external/chartjs-adapter-date-fns.js') }}"></script>
+    <style>
+        #speed-chart-container {
+            width: 800px;
+            height: 300px;
+        }
+    </style>
+</head>
+<body>
+<script type="module" src="{{ url_for('static',filename='logs.js') }}"> </script>
+
+<h1>Инфо</h1>
+
+<label for="id">Серийный номер:</label>
+<input id="id" type="text" name="id" /><br>
+<p id="firmware" class="firmware note">Версия прошивки: - </p>
+<input id="submit" type="submit" value="Получить журналы">
+<input id="submit-speed" type="submit" value="Получить график скорости">
+<input id="submit-events" type="submit" value="Получить события">
+<div id="logs-container"></div>
+<div id="speed-chart-container">
+    <canvas id="speed-chart"></canvas>
+</div>
+<div id="events-container"></div>
+
+</body>
+</html>

@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Авторизация</title>
+    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+</head>
+<body>
+<script type="module" src="{{ url_for('static', filename='admin_auth.js') }}"> </script>
+
+<h1>Войдите в систему</h1>
+
+<form id="auth-form">
+    <label for="login">Логин:</label>
+    <input id="login" type="text" name="login" /><br><br>
+    <label for="password">Пароль:</label>
+    <input id="password" type="password" name="password" /><br><br>
+    <input type="hidden" id="next-url" name="next-url" value="{{ next_url }}">
+    <input id="submit" type="submit">
+</form>
+</body>
+</html>

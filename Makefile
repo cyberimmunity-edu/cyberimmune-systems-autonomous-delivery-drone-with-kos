@@ -5,13 +5,13 @@ docs:
 
 docker: docker-image
 
-docker-image: docker-image-simulator docker-image-orvd
+docker-image: docker-image-simulator docker-image-afcs
 
 docker-image-simulator:
 	docker build ./ -t simulator
 
-docker-image-orvd:
-	docker build -f orvd.Dockerfile -t orvd ./
+docker-image-afcs:
+	docker build -f afcs.Dockerfile -t afcs ./
 
 clean-docker-compose:
 	docker-compose -f docker-compose-offline.yml down
@@ -80,11 +80,11 @@ shell-mavproxy:
 shell-mavproxy-real:
 	docker run --volume="`pwd`:/home/user/" --name mavproxy -w /home/user/mavproxy --user user --net simulator --ip 172.28.0.3 -it --rm simulator /bin/bash -i
 
-shell-orvd:
-	docker run --name orvd -w /home/user/orvd --net simulator -p 8080:8080 --ip 172.28.0.4 -it --rm orvd /bin/bash -i
+shell-afcs:
+	docker run --name afcs -w /home/user/afcs --net simulator -p 8080:8080 --ip 172.28.0.4 -it --rm afcs /bin/bash -i
 
-shell-orvd-real:
-	docker run --volume="`pwd`:/home/user/" --name orvd -w /home/user/orvd --net simulator -p 8080:8080 --ip 172.28.0.4 -it --rm orvd /bin/bash -i
+shell-afcs-real:
+	docker run --volume="`pwd`:/home/user/" --name afcs -w /home/user/afcs --net simulator -p 8080:8080 --ip 172.28.0.4 -it --rm afcs /bin/bash -i
 
 e2e-offline: docker-image
 	docker-compose -f tests/e2e-offline-docker-compose.yml up --abort-on-container-exit --exit-code-from mavproxy
@@ -112,12 +112,12 @@ unit-tests: docker-image-simulator
 	docker-compose -f tests/unit-tests-docker-compose.yml up --abort-on-container-exit --exit-code-from kos
 	docker-compose -f tests/unit-tests-docker-compose.yml down
 
-unit-orvd-tests: docker-image-orvd
-	docker-compose -f tests/unit-orvd-tests-docker-compose.yml up --abort-on-container-exit --exit-code-from orvd
-	docker-compose -f tests/unit-orvd-tests-docker-compose.yml down
+unit-afcs-tests: docker-image-afcs
+	docker-compose -f tests/unit-afcs-tests-docker-compose.yml up --abort-on-container-exit --exit-code-from afcs
+	docker-compose -f tests/unit-afcs-tests-docker-compose.yml down
 
 pal-tests: docker-image
 	docker-compose -f tests/pal-tests-docker-compose.yml up --abort-on-container-exit --exit-code-from kos
 	docker-compose -f tests/pal-tests-docker-compose.yml down
 
-all-tests: e2e-tests unit-tests unit-orvd-tests pal-tests
+all-tests: e2e-tests unit-tests unit-afcs-tests pal-tests

@@ -1,5 +1,5 @@
 #
-# Load mission to ORVD step by step
+# Load mission to AFCS step by step
 #
 HOST="${1:-"127.0.0.1"}"
 PORT="8080"

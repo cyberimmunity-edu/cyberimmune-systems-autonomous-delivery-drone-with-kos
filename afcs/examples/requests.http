@@ -1,0 +1,125 @@
+@baseUrl = http://localhost:8080
+
+### Главная страница
+GET {{baseUrl}}/
+
+### Список доступных оффлайн тайлов карты
+GET {{baseUrl}}/tiles/index
+
+### Страница администратора
+GET {{baseUrl}}/admin?token=ADMIN_TOKEN
+
+### Аутентификация администратора
+GET {{baseUrl}}/admin/auth?login=admin&password=passw
+
+### Страница аутентификации администратора
+GET {{baseUrl}}/admin/auth_page
+
+### Решение об арме БПЛА
+GET {{baseUrl}}/admin/arm_decision?id=1&decision=0&token=ADMIN_TOKEN
+
+### Решение о миссии
+GET {{baseUrl}}/admin/mission_decision?id=1&decision=0&token=ADMIN_TOKEN
+
+### Принудительный дизарм БПЛА
+GET {{baseUrl}}/admin/force_disarm?id=1&token=ADMIN_TOKEN
+
+### Принудительный дизарм всех БПЛА
+GET {{baseUrl}}/admin/force_disarm_all?token=ADMIN_TOKEN
+
+### Аварийное выключение БПЛА
+GET {{baseUrl}}/admin/kill_switch?id=1&token=ADMIN_TOKEN
+
+### Получение состояния БПЛА
+GET {{baseUrl}}/admin/get_state?id=1&token=ADMIN_TOKEN
+
+### Получение состояния миссии БПЛА
+GET {{baseUrl}}/admin/get_mission_state?id=1&token=ADMIN_TOKEN
+
+### Получение полетного задания БПЛА
+GET {{baseUrl}}/admin/get_mission?id=1&token=ADMIN_TOKEN
+
+### Получение телеметрии БПЛА
+GET {{baseUrl}}/admin/get_telemetry?id=1&token=ADMIN_TOKEN
+
+### Количество ожидающих арма БПЛА
+GET {{baseUrl}}/admin/get_waiter_number?token=ADMIN_TOKEN
+
+### Список идентификаторов всех БПЛА
+GET {{baseUrl}}/admin/get_id_list?token=ADMIN_TOKEN
+
+### Изменение разрешения на полет БПЛА
+GET {{baseUrl}}/admin/change_fly_accept?id=1&decision=0&token=ADMIN_TOKEN
+
+### Получение информации о запрещенной зоне
+GET {{baseUrl}}/admin/get_forbidden_zone?name=zone_name&token=ADMIN_TOKEN
+
+### Список имен всех запрещенных зон
+GET {{baseUrl}}/admin/get_forbidden_zones_names?token=ADMIN_TOKEN
+
+### Установка запрещенной зоны
+POST {{baseUrl}}/admin/set_forbidden_zone
+Content-Type: application/json
+
+{
+  "geometry": [[100, 50], [100, 0]],
+  "name": "zone_name",
+  "token": "ADMIN_TOKEN"
+}
+
+### Удаление запрещенной зоны
+DELETE {{baseUrl}}/admin/delete_forbidden_zone?name=zone_name&token=ADMIN_TOKEN
+
+### Страница управления запрещенными зонами
+GET {{baseUrl}}/admin/forbidden_zones?token=ADMIN_TOKEN
+
+### Страница логов
+GET {{baseUrl}}/logs
+
+### Получение логов БПЛА
+GET {{baseUrl}}/logs/get_logs?id=1
+
+### Сохранение логов БПЛА
+GET {{baseUrl}}/api/logs?id=1&log=log_content
+
+### Страница отправки миссии
+GET {{baseUrl}}/mission_sender
+
+### Отправка миссии от Mission Sender
+POST {{baseUrl}}/mission_sender/fmission_ms?id=1&sig=signature
+Content-Type: text/plain
+
+mission_string
+
+### Обмен ключами с Mission Sender
+GET {{baseUrl}}/mission_sender/key?id=1
+
+### Обмен ключами с БПЛА
+GET {{baseUrl}}/api/key?id=1&n=n_value&e=e_value
+
+### Запрос на арм от БПЛА
+GET {{baseUrl}}/api/arm?id=1&sig=signature
+
+### Аутентификация от БПЛА
+GET {{baseUrl}}/api/auth?id=1&sig=signature
+
+### Разрешение полета от БПЛА
+GET {{baseUrl}}/api/fly_accept?id=1&sig=signature
+
+### Получение телеметрии от БПЛА
+GET {{baseUrl}}/api/telemetry?id=1&lat=100&lon=50&alt=10&azimuth=1&dop=1.5&sats=12&sig=signature
+
+### Аварийное выключение от БПЛА
+GET {{baseUrl}}/api/kill_switch?id=1&sig=signature
+
+### Получение миссии от БПЛА
+GET {{baseUrl}}/api/fmission_kos?id=1&sig=signature
+
+### Получение всех запрещенных зон для БПЛА
+GET {{baseUrl}}/api/get_all_forbidden_zones?id=1&sig=signature
+
+### Получение дельты изменений в запрещенных зонах
+GET {{baseUrl}}/api/get_forbidden_zones_delta?id=1&sig=signature
+
+### Получение хэша запрещенных зон
+GET {{baseUrl}}/api/forbidden_zones_hash?id=1&sig=signature

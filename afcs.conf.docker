@@ -1,0 +1,24 @@
+<VirtualHost *:8080>
+ServerName orvd.com
+DocumentRoot /var/www/orvd/
+
+WSGIDaemonProcess app user=www-data group=www-data threads=5 home=/var/www/orvd
+WSGIScriptAlias / /var/www/orvd/orvd_server.wsgi process-group=app application-group=%{GLOBAL}
+
+ErrorLog /dev/stderr
+CustomLog /dev/stdout combined
+
+<Directory /var/www/orvd>
+<Files orvd_server.wsgi>
+    Order allow,deny
+    Allow from all
+</Files>
+</Directory>
+Alias /static /var/www/orvd/static
+<Directory /var/www/orvd/static/>
+    Order allow,deny
+    Allow from all
+</Directory>
+LogLevel warn
+</VirtualHost>
+

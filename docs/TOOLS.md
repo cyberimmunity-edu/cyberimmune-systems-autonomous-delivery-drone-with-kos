@@ -17,9 +17,8 @@
 
 [Документация KasperskyOS Community Edition SDK](https://support.kaspersky.ru/help/KCE/1.1/ru-RU/whats_new.htm) (на данный момент более свежая документация недоступна).
 
-В цифровом двойнике используется версия KasperskyOS Community Edition SDK 1.2.0.89 и некоторые библиотеки из версии 1.2.0.45.
-Наличие пакета с обеими версиями SDK требуется для запуска цифрового двойника.
-Пакет SDK версии 1.2.0.89 представляет собой Debian-пакет с именем KasperskyOS-Community-Edition-1.2.0.89_en.deb и размещается в корне проекта. Пакет SDK версии 1.2.0.45 представляет собой zip-архив с именем KasperskyOS-Community-Edition-1.2.0.45.zip и также размещается в корне проекта.
+В цифровом двойнике используется версия KasperskyOS Community Edition SDK 1.2.0.89.
+Пакет SDK версии 1.2.0.89 представляет собой Debian-пакет с именем KasperskyOS-Community-Edition-1.2.0.89_en.deb и размещается в корне проекта.
 
 ### QEMU - эмулятор вычислительной машины
 
@@ -42,22 +41,22 @@ GNU make и [Makefile](https://gitflic.ru/project/learning-cyberimmunity/cyberim
 ```bash
 docker: docker-image
 
-docker-image: docker-image-simulator docker-image-orvd
+docker-image: docker-image-simulator docker-image-afcs
 
 docker-image-simulator:
     docker build ./ -t simulator
 
-docker-image-orvd:
-    docker build -f orvd.Dockerfile -t orvd ./
+docker-image-afcs:
+    docker build -f afcs.Dockerfile -t afcs ./
 ```
 
 Для сборки этих образов достаточно запустить `make docker`, что автоматически запустит:
 
 - правила для `docker-image` из [Makefile](https://gitflic.ru/project/learning-cyberimmunity/cyberimmune-systems-autonomous-delivery-drone-with-kos/blob/?file=Makefile&branch=rover)
-  - которые выполнят `docker-image-simulator` и `docker-image-orvd`
+  - которые выполнят `docker-image-simulator` и `docker-image-afcs`
   - а те запустят:
     - `docker build ./ -t simulator`
-    - и `docker build -f orvd.Dockerfile -t orvd ./`
+    - и `docker build -f afcs.Dockerfile -t afcs ./`
 
 ### Docker
 
@@ -70,7 +69,7 @@ Docker позволяет создавать и запускать легков�
 Например:
 
 - `docker build ./ -t simulator` создаст образ simulator, используя описание из файла [Dockerfile](https://gitflic.ru/project/learning-cyberimmunity/cyberimmune-systems-autonomous-delivery-drone-with-kos/blob?file=Dockerfile&branch=rover).
-- `docker build -f orvd.Dockerfile -t orvd ./` создаст образ orvd, используя описания из файла [orvd.Dockerfile](https://gitflic.ru/project/learning-cyberimmunity/cyberimmune-systems-autonomous-delivery-drone-with-kos/blob?file=orvd.Dockerfile&branch=rover).
+- `docker build -f afcs.Dockerfile -t afcs ./` создаст образ afcs, используя описания из файла [afcs.Dockerfile](https://gitflic.ru/project/learning-cyberimmunity/cyberimmune-systems-autonomous-delivery-drone-with-kos/blob?file=afcs.Dockerfile&branch=rover).
 
 Когда образ готов, можно запустить на его базе контейнер и работать уже в нём.
 Например:
