@@ -5,6 +5,20 @@ include (${KL_SDK_ROOT_PATH}/common/build-sd-image.cmake)
 
 project_header_default ("STANDARD_GNU_11:YES" "STRICT_WARNINGS:YES")
 
+find_package(kss REQUIRED)
+
+nk_build_edl_files (klog_edl_files
+                    NK_MODULE "drone_controller"
+                    EDL "../../resources/KlogEntity.edl")
+
+add_executable (KlogEntityHw "../../klog/src/klog_entity.c")
+target_link_libraries (KlogEntityHw ${klog_SYSTEM_AUDIT_LIB})
+add_dependencies (KlogEntityHw klog_edl_files)
+
+add_executable (KlogEntityQemu "../../klog/src/klog_entity.c")
+target_link_libraries (KlogEntityQemu ${klog_SYSTEM_AUDIT_LIB})
+add_dependencies (KlogEntityQemu klog_edl_files)
+
 set (ENTITIES
         AutopilotConnector
         CredentialManager
@@ -13,7 +27,8 @@ set (ENTITIES
         PeripheryController
         ServerConnector
         Logger
-        ${precompiled_vfsVfsSdCardFs})
+        ${precompiled_vfsVfsSdCardFs}
+        KlogStorageEntity)
 set (FILES)
 
 set_target_properties (${precompiled_vfsVfsSdCardFs} PROPERTIES
@@ -107,6 +122,7 @@ else ()
 endif()
 
 if (SIMULATION)
+    set (INIT_KlogEntity_PATH "KlogEntityQemu")
     set (QEMU_FLAGS "-drive file=${FS_IMAGE},if=sd,format=raw")
     set (QEMU_ENV "QEMU_AUDIO_DRV=none")
     build_kos_qemu_image (kos-qemu-image
@@ -116,11 +132,16 @@ if (SIMULATION)
                         QEMU_DEPENDENCIES ${FS_IMAGE}
                         CONNECTIONS_CFG ${CONNECITONS_FILE}
                         SECURITY_PSL ${SECURITY_FILE}
+                        KLOG_ENTITY KlogEntityQemu
                         IMAGE_FILES ${ENTITIES} ${FILES})
+    target_link_libraries (KlogEntityQemu kssaudit)
 else ()
+    set (INIT_KlogEntity_PATH "KlogEntityHw")
     build_kos_hw_image (kos-image
                         EINIT_ENTITY EinitHw
                         CONNECTIONS_CFG ${CONNECITONS_FILE}
                         SECURITY_PSL ${SECURITY_FILE}
+                        KLOG_ENTITY KlogEntityHw
                         IMAGE_FILES ${ENTITIES} ${FILES})
+    target_link_libraries (KlogEntityHw kssaudit)
 endif()

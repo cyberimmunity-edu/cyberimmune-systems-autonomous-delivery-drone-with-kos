@@ -1,0 +1,6 @@
+entity drone_controller.KlogStorageEntity
+
+components
+{
+    klogStorage : kl.KlogStorage
+}

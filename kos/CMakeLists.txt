@@ -11,6 +11,17 @@ endif ()
 include (platform/nk)
 include (platform/install)
 
+set (RESOURCES ${CMAKE_SOURCE_DIR}/resources)
+
+# Add a package importing components for building an audit program and
+# connecting to it.
+find_package (klog REQUIRED)
+include_directories (${klog_INCLUDE})
+
+# Add the package that imports klog_storage_entity.
+find_package (klog_storage REQUIRED)
+include_directories (${klog_storage_INCLUDE})
+
 find_package (vfs REQUIRED)
 include_directories (${vfs_INCLUDE})
 find_package (precompiled_vfs REQUIRED)
@@ -100,6 +111,7 @@ else ()
     add_subdirectory (periphery_controller)
     add_subdirectory (server_connector)
     add_subdirectory (flight_controller)
+    add_subdirectory (klog_storage)
     if (PAL_TESTS)
         add_subdirectory (einit/pal_tests)
     else ()
