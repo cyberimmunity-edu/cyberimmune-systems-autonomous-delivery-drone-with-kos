@@ -1715,3 +1715,8 @@ def get_display_mode():
 def toggle_display_mode():
     token = request.args.get('token')
     return authorized_request(handler_func=toggle_display_mode_handler, token=token)
+  
+@bp.route('/admin/get_all_data')
+def get_all_data():
+    token = request.args.get('token')
+    return authorized_request(handler_func=get_all_data_handler, token=token)

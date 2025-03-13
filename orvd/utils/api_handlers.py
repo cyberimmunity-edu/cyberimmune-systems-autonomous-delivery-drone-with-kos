@@ -1055,3 +1055,38 @@ def get_display_mode_handler():
 def toggle_display_mode_handler():
     modes['display_only'] = not modes['display_only']
     return OK
+
+def get_all_data_handler():
+    all_data = {}
+
+    uav_entities = Uav.query.order_by(Uav.created_date).all()
+    all_data['ids'] = [uav.id for uav in uav_entities]
+
+    all_data['waiters'] = str(len(arm_queue))
+
+    all_data['uav_data'] = {}
+    for uav in uav_entities:
+        uav_data = {}
+        
+        uav_data['state'] = uav.state
+
+        uav_telemetry_entity = get_entities_by_field_with_order(UavTelemetry, UavTelemetry.uav_id, uav.id, UavTelemetry.record_time.desc()).first()
+        if uav_telemetry_entity:
+            uav_data['telemetry'] = {
+                'lat': uav_telemetry_entity.lat,
+                'lon': uav_telemetry_entity.lon,
+                'alt': uav_telemetry_entity.alt,
+                'azimuth': uav_telemetry_entity.azimuth,
+                'dop': uav_telemetry_entity.dop,
+                'sats': uav_telemetry_entity.sats,
+                'speed': uav_telemetry_entity.speed
+            }
+        else:
+            uav_data['telemetry'] = None
+
+        uav_data['mission_state'] = get_mission_state_handler(uav.id)
+
+        uav_data['delay'] = str(uav.delay)
+
+        all_data['uav_data'][uav.id] = uav_data
+    return jsonify(all_data)

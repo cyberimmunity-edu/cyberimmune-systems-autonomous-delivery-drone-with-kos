@@ -145,6 +145,7 @@ footer {
   bottom: 0px;
   left: 0px;
   width: 20%;
+  min-width: 300px;
 }
 
 .horizontal-center {
