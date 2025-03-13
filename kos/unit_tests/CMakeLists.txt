@@ -2,7 +2,7 @@ project (UnitTests)
 
 include (platform/nk)
 
-project_header_default ("STANDARD_GNU_11:YES" "STRICT_WARNINGS:NO")
+project_header_default ("STANDARD_GNU_14:YES" "STRICT_WARNINGS:NO")
 
 set (CREDENTIAL_MANAGER_DIR ${CMAKE_SOURCE_DIR}/credential_manager)
 set (LOGGER_DIR ${CMAKE_SOURCE_DIR}/logger)
