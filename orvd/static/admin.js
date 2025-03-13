@@ -28,6 +28,8 @@ document.getElementById('forbidden_zones_checkbox').onclick = toggleForbiddenZon
 document.getElementById('revised-mission-accept').onclick = () => revised_mission_decision(0);
 document.getElementById('revised-mission-decline').onclick = () => revised_mission_decision(1);
 document.getElementById('monitoring-checkbox').onclick = () => toggle_display_mode();
+document.getElementById('copy-id').onclick = () => copy_current_id();
+
 
 ol.proj.useGeographic()
 const place = [142.812588, 46.617637];
@@ -39,6 +41,44 @@ let uav = null;
 let access_token = params.token;
 var current_state = null;
 let forbidden_zones_display = false;
+
+async function copyToClipboard(textToCopy) {
+  if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(textToCopy);
+  } else {
+      const textArea = document.createElement("textarea");
+      textArea.value = textToCopy;
+          
+      textArea.style.position = "absolute";
+      textArea.style.left = "-999999px";
+          
+      document.body.prepend(textArea);
+      textArea.select();
+
+      try {
+          document.execCommand('copy');
+      } catch (error) {
+          console.error(error);
+      } finally {
+          textArea.remove();
+      }
+  }
+}
+
+async function copy_current_id() {
+  if (active_id !== null) {
+    try {
+      await copyToClipboard(active_id);
+      console.log('Current ID copied to clipboard:', active_id);
+      alert("ID " + active_id + " copied to clipboard!");
+    } catch (err) {
+      console.error('Failed to copy ID:', err);
+    }
+  } else {
+    console.log('No active ID to copy.');
+    alert("No active ID to copy.");
+  }
+}
 
 let uav_style = new ol.style.Style({
   image: new ol.style.Icon({

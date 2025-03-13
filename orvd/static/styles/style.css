@@ -184,3 +184,17 @@ label {
 #revised-mission-block {
   visibility: hidden;
 }
+
+.id-container {
+  display: flex;
+  flex-direction: row;
+  height: 20px;
+  align-items: center;
+  margin-top: 20px;
+  gap: 5px;
+}
+
+#id_select {
+  flex-grow: 1;
+  margin-left: 0px !important;
+}
