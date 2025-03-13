@@ -236,7 +236,7 @@ def arm_handler(id: str):
             commit_changes()
             decision = _arm_wait_decision(id)
             if decision == ARMED:
-                uav_entity.state = 'В поездке'
+                uav_entity.state = 'В полете'
             else:
                 uav_entity.state = 'В сети'
             commit_changes()
@@ -551,7 +551,7 @@ def revise_mission_decision_handler(id: str, decision: int):
         mission_entity = get_entity_by_key(Mission, id)
         if decision == 0:
             uav_entity.is_armed = True
-            uav_entity.state = 'В поездке'
+            uav_entity.state = 'В полете'
             mission_entity.is_accepted = True
         else:
             uav_entity.is_armed = False
@@ -873,7 +873,7 @@ def change_fly_accept_handler(id: str, decision: int):
     if uav_entity:
         if decision == 0:
             uav_entity.is_armed = True
-            uav_entity.state = 'В поездке'
+            uav_entity.state = 'В полете'
         else:
             uav_entity.is_armed = False
             uav_entity.state = 'В сети'

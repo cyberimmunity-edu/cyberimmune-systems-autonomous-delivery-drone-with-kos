@@ -440,7 +440,7 @@ async function status_change() {
   let state_text = await state_resp.text();
   document.getElementById("status").innerHTML="Статус: " + state_text;
   current_state = state_text;
-  if (state_text == 'В поездке') {
+  if (state_text == 'В полете') {
     document.getElementById('fly_accept_checkbox').checked = true;
   } else {
     document.getElementById('fly_accept_checkbox').checked = false;
