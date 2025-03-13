@@ -10,6 +10,7 @@ MQTT_TELEMETRY_TOPIC = "api/telemetry"
 MQTT_MISSION_TOPIC = 'api/mission'
 TIMEOUT = 5
 
+@pytest.mark.skip(reason="local mosquitto test")
 class TestMQTTPublish:
     @pytest.fixture(scope="function")
     def mqtt_client(self):
