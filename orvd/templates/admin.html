@@ -7,6 +7,9 @@
   <script src="{{ url_for('static',filename='ol/dist/ol.js') }}"></script>
   <link rel= "stylesheet" type= "text/css" href= "{{ url_for('static',filename='ol/ol.css') }}">
   <link rel= "stylesheet" type= "text/css" href= "{{ url_for('static',filename='styles/style.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles/fontawesome.min.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles/solid.min.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles/brands.min.css') }}">
   <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
   </head>
   <body>
@@ -20,7 +23,7 @@
           <p id="id" class="id note">ID:</p>
           <select id="id_select" style="display:inline-block;margin-left:10px;">
           </select>
-          <button id="copy-id" type="button">Copy</button>
+          <div id="copy-id" class="interactable-icon" title="Copy current ID"><i class="fa-solid fa-copy"></i></div>
         </div>
         <p></p>
         <label>

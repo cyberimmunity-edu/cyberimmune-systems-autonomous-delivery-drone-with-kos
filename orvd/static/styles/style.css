@@ -427,3 +427,12 @@ box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
 #mission-sender-form {
   width: 350px;
 }
+
+.interactable-icon {
+  display: inline-block;
+  cursor: pointer;
+  font-size: 20px;
+  padding: 3px 5px;
+  transition: 0.3s;
+  color: #383838;
+}
