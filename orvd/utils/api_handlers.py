@@ -1,8 +1,47 @@
+import socket
+import time
+from threading import Thread
 from flask import jsonify
 from utils.db_utils import *
 from utils.utils import *
 
+ENABLE_MAVLINK = False
+MAVLINK_CONNECTIONS_NUMBER = 10
+OUT_ADDR = 'localhost'
+
 arm_queue = set()
+revise_mission_queue = set()
+modes = {
+    "display_only": False
+}
+
+if ENABLE_MAVLINK:
+    from pymavlink import mavutil
+    
+    def mavlink_handler(in_port: int, out_port: int, out_addr: str = 'localhost'):
+        mavlink_connection = mavutil.mavlink_connection(f'udp:0.0.0.0:{in_port}')
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+
+        while True:
+            msg = mavlink_connection.recv_msg()
+            if msg:
+                data = msg.get_msgbuf()
+                sock.sendto(data, (out_addr, out_port))
+            time.sleep(1e-4)
+
+    def start_mavlink_connections(connections):
+        for conn in connections:
+            in_port, out_port, out_addr = conn
+            thread = Thread(
+                name=f"mav_thread_{in_port}_{out_port}",
+                target=mavlink_handler,
+                args=(in_port, out_port, out_addr),
+                daemon=True
+            )
+            thread.start()
+            
+    connections = [(in_port, in_port + 20, OUT_ADDR) for in_port in range(14551, 14551 + MAVLINK_CONNECTIONS_NUMBER)]
+    start_mavlink_connections(connections)
 
 def bad_request(message: str):
     """
@@ -307,6 +346,10 @@ def telemetry_handler(id: str, lat: float, lon: float, alt: float,
         str: Статус арма БПЛА.
     """
     uav_entity = get_entity_by_key(Uav, id)
+    if not uav_entity and modes['display_only']:
+        uav_entity = Uav(id=id, is_armed=False, state='В сети', kill_switch_state=False)
+        add_and_commit(uav_entity)
+        
     if not uav_entity:
         return NOT_FOUND
     else:
@@ -444,6 +487,11 @@ def fmission_ms_handler(id: str, mission_str: str):
     mission_list, mission_verification_status = read_mission(mission_str)
     
     if mission_verification_status == MissionVerificationStatus.OK:
+        uav_entity = get_entity_by_key(Uav, id)
+        if not uav_entity and modes['display_only']:
+            uav_entity = Uav(id=id, is_armed=False, state='В сети', kill_switch_state=False)
+            add_and_commit(uav_entity)
+            
         mission_entity = get_entity_by_key(Mission, id)
         if mission_entity:
             get_entities_by_field(MissionStep, MissionStep.mission_id, id).delete()
@@ -459,6 +507,61 @@ def fmission_ms_handler(id: str, mission_str: str):
         commit_changes()
         
     return mission_verification_status
+
+
+def revise_mission_handler(id: str, mission: str):
+    mission_list = mission.split('*')
+    
+    mission_entity = get_entity_by_key(Mission, id)
+    if mission_entity:
+        get_entities_by_field(MissionStep, MissionStep.mission_id, id).delete()
+        delete_entity(mission_entity)
+        commit_changes()
+    
+    mission_entity = Mission(uav_id=id, is_accepted=False)
+    add_changes(mission_entity)
+    for idx, cmd in enumerate(mission_list):
+        mission_step_entity = MissionStep(mission_id=id, step=idx, operation=cmd)
+        add_changes(mission_step_entity)
+    commit_changes()
+    
+    uav_entity = get_entity_by_key(Uav, id)
+    if uav_entity:
+        uav_entity.is_armed = False
+        uav_entity.state = 'Ожидает'
+        commit_changes()
+        
+    revise_mission_queue.add(id)
+    while id in revise_mission_queue:
+        time.sleep(0.1)
+        
+    mission_entity = get_entity_by_key(Mission, id)
+    if mission_entity:
+        if mission_entity.is_accepted:
+            return '$Approve 0'
+        else:
+            return '$Approve 1'
+
+
+def revise_mission_decision_handler(id: str, decision: int):
+    uav_entity = get_entity_by_key(Uav, id)
+    if not uav_entity:
+        return NOT_FOUND
+    elif id in revise_mission_queue:
+        mission_entity = get_entity_by_key(Mission, id)
+        if decision == 0:
+            uav_entity.is_armed = True
+            uav_entity.state = 'В полете'
+            mission_entity.is_accepted = True
+        else:
+            uav_entity.is_armed = False
+            uav_entity.state = 'В сети'
+            mission_entity.is_accepted = False
+        commit_changes()
+        revise_mission_queue.remove(id)
+        return f'$Arm: {decision}'
+    else:
+        return f'$Arm: -1'
 
 
 def get_logs_handler(id: str):
@@ -742,6 +845,8 @@ def get_mission_state_handler(id: str):
     Returns:
         str: Состояние миссии (принята/не принята) или NOT_FOUND.
     """
+    if id in revise_mission_queue:
+        return '2'
     uav_entity = get_entity_by_key(Uav, id)
     if uav_entity:
         mission = get_entity_by_key(Mission, id)
@@ -942,3 +1047,46 @@ def set_delay_handler(id: str, delay: int):
         uav_entity.delay = delay
         commit_changes()
         return OK
+    
+    
+def get_display_mode_handler():
+    return '0' if modes['display_only'] else '1'
+
+def toggle_display_mode_handler():
+    modes['display_only'] = not modes['display_only']
+    return OK
+
+def get_all_data_handler():
+    all_data = {}
+
+    uav_entities = Uav.query.order_by(Uav.created_date).all()
+    all_data['ids'] = [uav.id for uav in uav_entities]
+
+    all_data['waiters'] = str(len(arm_queue))
+
+    all_data['uav_data'] = {}
+    for uav in uav_entities:
+        uav_data = {}
+        
+        uav_data['state'] = uav.state
+
+        uav_telemetry_entity = get_entities_by_field_with_order(UavTelemetry, UavTelemetry.uav_id, uav.id, UavTelemetry.record_time.desc()).first()
+        if uav_telemetry_entity:
+            uav_data['telemetry'] = {
+                'lat': uav_telemetry_entity.lat,
+                'lon': uav_telemetry_entity.lon,
+                'alt': uav_telemetry_entity.alt,
+                'azimuth': uav_telemetry_entity.azimuth,
+                'dop': uav_telemetry_entity.dop,
+                'sats': uav_telemetry_entity.sats,
+                'speed': uav_telemetry_entity.speed
+            }
+        else:
+            uav_data['telemetry'] = None
+
+        uav_data['mission_state'] = get_mission_state_handler(uav.id)
+
+        uav_data['delay'] = str(uav.delay)
+
+        all_data['uav_data'][uav.id] = uav_data
+    return jsonify(all_data)
