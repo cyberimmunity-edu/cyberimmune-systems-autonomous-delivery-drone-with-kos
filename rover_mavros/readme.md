@@ -34,49 +34,22 @@ colcon build
 source install/setup.bash
 ```
 
-Запуск вспомогательных нод (мосты до газебо, маврос, газебо, камера и лидар):
+Запуск вспомогательных нод (мосты до газебо, маврос, газебо):
 ```
 source install/setup.bash
 ros2 launch rover_mavros combined.launch.py
 ```
 
----
+Запуск вспомогательных нод с камерой:
 
-Вспомогательные ноды можно запустить и по отдельности. 
-
-Запуск ноды мостов (соединяют топики ros2 и gz):
 ```
 source install/setup.bash
-ros2 launch rover_mavros bridges.launch.py
+ros2 launch rover_mavros combined.launch.py launch_camera:=true
 ```
 
-Запуск ноды мавроса (парсит входящий mavlink поток):
-```
-source install/setup.bash
-ros2 launch rover_mavros mavros.launch.py
-```
-
-Запуск ноды газебо (запускает gz с нужным миром):
-```
-source install/setup.bash
-ros2 launch rover_mavros gazebo.launch.py
-```
-
-Запуск ноды камеры (сохраняет изображения с камеры в папку captured_images, `/src/rover_mavros/rover_mavros/camera.py`):
-```
-source install/setup.bash
-ros2 launch rover_mavros camera.launch.py
-```
-
-Запуск ноды лидара (`/src/rover_mavros/rover_mavros/lidar.py`):
-```
-source install/setup.bash
-ros2 launch rover_mavros camera.launch.py
-```
+Снимки камеры по умолчанию будут сохранены в captured_images.
 
 Настроить параметры вспомогательных нод можно в `./src/rover_mavros/launch/`
-
----
 
 Запуск основной управляющей ноды (на основе RC каналов из mavlink потока управляет ровером):
 ```
@@ -86,18 +59,27 @@ ros2 run rover_mavros rover_controller
 
 ## Интеграция
 
-Для тестирования можно запустить напрямую с ardupilot:
+1. Для тестирования можно запустить напрямую с ardupilot:
 ```
 ~/ardupilot/Tools/autotest/sim_vehicle.py -v Rover -f rover-skid --console --map --out 127.0.0.1:14571
 ```
 
-Для интеграции с СУПА (в локальной сети) нужно удостовериться, что установлен pymavlink, и поменять значения переменных в afcs/utils/api_handlers:
+2. Если СУПА развернут локально, то нужно удостовериться, что установлен pymavlink, и поменять значения переменных в afcs/utils/api_handlers:
 
 `ENABLE_MAVLINK` сменить на `True`
 
 `MAVLINK_CONNECTIONS_NUMBER` сменить на `1`
 
+Если включен ufw, то прописать:
+
+```
+sudo ufw allow 14551/udp
+sudo ufw allow 14571/udp
+```
+
 И перезапустить сервер с СУПА.
+
+3. Если СУПА развернут в docker-контейнере, запускаемом через make online, то в ./src/rover_mavros/launch/mavros.launch.py изменить fcu_url на udp://:14551@localhost:14551 и пересобрать ноды через colcon.
 
 ## Проблемы
 

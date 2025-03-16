@@ -34,7 +34,7 @@ class MavrosToGazebo(Node):
             10
         )
         
-        qos_profile = QoSProfile(depth=10, reliability=ReliabilityPolicy.BEST_AVAILABLE)
+        qos_profile = QoSProfile(depth=10, reliability=ReliabilityPolicy.SYSTEM_DEFAULT)
         self.imu_subscription = self.create_subscription(
             Imu,
             '/mavros/imu/data',
