@@ -82,7 +82,17 @@ async function copy_current_id() {
 let uav_style = new ol.style.Style({
   image: new ol.style.Icon({
     anchor: [0.5, 0.5],
-    src: 'static/resources/quad_marker.png'
+    src: 'static/resources/vehicle_marker.svg',
+    scale: 0.25
+  })
+});
+
+let inactive_uav_style = new ol.style.Style({
+  image: new ol.style.Icon({
+    anchor: [0.5, 0.5],
+    src: 'static/resources/vehicle_marker.svg',
+    scale: 0.25,
+    opacity: 0.6
   })
 });
 
@@ -202,7 +212,6 @@ async function createGeoJSONLayer() {
     style: styleFunction
   });
 
-  // Добавляем имя зоны в свойство description каждой фичи
   geoJSONLayer.getSource().getFeatures().forEach(feature => {
     feature.set('description', `Запрещенная зона: ${feature.get('name')}`);
   });
@@ -261,7 +270,8 @@ map.getTargetElement().addEventListener('pointerleave', function () {
 function clear_markers() {
   var features = markers.getSource().getFeatures();
     features.forEach((feature) => {
-      if(feature.getId() != 'uav') {
+      const feature_id = feature.getId();
+      if(feature_id === undefined || !feature.getId().includes('uav')) {
         markers.getSource().removeFeature(feature);
       }
     });
@@ -450,8 +460,8 @@ async function waiters_change() {
   }
 }
 
-async function get_mission() {
-  let mission_resp = await fetch("admin/get_mission?id=" + active_id + "&token=" + access_token);
+async function get_mission(id) {
+  let mission_resp = await fetch("admin/get_mission?id=" + id + "&token=" + access_token);
   let mission_text = await mission_resp.text();
   if (mission_text == '$-1') {
     current_mission = mission_text;
@@ -472,7 +482,7 @@ async function get_mission() {
           var alt = mission_list[idx][3];
           add_marker(lat, lon, alt, 'home');
           mission_path.push([lon, lat]);
-          map.getView().setCenter([lon, lat]);
+          // map.getView().setCenter([lon, lat]);
       }
       else if (mission_list[idx][0] == 'W') {
           var lat = parseFloat(mission_list[idx][1]);
@@ -499,8 +509,45 @@ async function get_mission() {
   }
 }
 
-async function get_telemetry() {
-  let telemetry_resp = await fetch("admin/get_telemetry?id=" + active_id + "&token=" + access_token);
+let vehicles = {};
+
+function add_or_update_vehicle_marker(id, lat, lon, alt, azimuth, speed) {
+  let rotationInRadians = azimuth * Math.PI / 180;
+  let vehicleStyle = new ol.style.Style({
+    image: new ol.style.Icon({
+      anchor: [0.5, 0.5],
+      src: 'static/resources/vehicle_marker.svg',
+      scale: 0.25,
+      rotation: rotationInRadians
+    })
+  });
+  
+  let inactiveVehicleStyle = new ol.style.Style({
+      image: new ol.style.Icon({
+        anchor: [0.5, 0.5],
+        src: 'static/resources/vehicle_marker.svg',
+        scale: 0.25,
+        opacity: 0.6,
+        rotation: rotationInRadians
+      })
+    });
+
+  if (!vehicles[id]) {
+    let vehicle = new ol.Feature(new ol.geom.Point([lon, lat]));
+    vehicle.setId(`uav${id}`);
+    vehicle.setStyle(id === active_id ? vehicleStyle : inactiveVehicleStyle);
+    vehicle.set('description', `ID: ${id}\nСкорость: ${speed}\nНаправление: ${azimuth}`);
+    vehicles[id] = vehicle;
+    markers.getSource().addFeature(vehicles[id]);
+  } else {
+    vehicles[id].getGeometry().setCoordinates([lon, lat]);
+    vehicles[id].set('description', `ID: ${id}\nСкорость: ${speed}\nНаправление: ${azimuth}`);
+    vehicles[id].setStyle(id === active_id ? vehicleStyle : inactiveVehicleStyle);
+  }
+}
+
+async function get_telemetry(id) {
+  let telemetry_resp = await fetch("admin/get_telemetry?id=" + id + "&token=" + access_token);
   if (telemetry_resp.ok) {
     let telemetry_data = await telemetry_resp.json();
     if ('error' in telemetry_data) {
@@ -515,20 +562,17 @@ async function get_telemetry() {
     let speed = parseFloat(telemetry_data.speed);
     document.getElementById("dop").innerHTML = "DOP: " + dop;
     document.getElementById("sats").innerHTML = "SATS: " + sats;
-    if (uav == null) {
-      add_marker(lat, lon, alt, 'uav');
-    } else {
-      uav.getGeometry().setCoordinates([lon, lat]);
-      uav.set('description', `Высота: ${alt}\nСкорость: ${speed}`);
+    add_or_update_vehicle_marker(id, lat, lon, alt, azimuth, speed);
+    if (id === active_id) {
+      map.getView().setCenter([lon, lat]);
     }
-    map.getView().setCenter([lon, lat]);
   } else {
     console.error("Failed to fetch telemetry data");
   }
 }
 
-async function get_mission_state() {
-  let mission_state_resp = await fetch("admin/get_mission_state?id=" + active_id + "&token=" + access_token);
+async function get_mission_state(id) {
+  let mission_state_resp = await fetch("admin/get_mission_state?id=" + id + "&token=" + access_token);
   let mission_state_text = await mission_state_resp.text();
   if (mission_state_text == '0') {
     document.getElementById('mission_checkbox').checked = true;
@@ -548,9 +592,11 @@ async function change_active_id(new_id) {
   current_mission = null;
   clear_markers()
   status_change();
-  get_mission();
-  get_telemetry();
-  get_mission_state();
+  get_mission(new_id);
+  for(let idx = 0; idx < ids.length; idx++) {
+    get_telemetry(ids[idx]);
+  }
+  get_mission_state(new_id);
   get_delay();
 }
 
@@ -617,9 +663,11 @@ setInterval(async function() {
   if (active_id != null) {
     status_change();
     waiters_change();
-    get_mission();
-    get_telemetry();
-    get_mission_state();
+    get_mission(active_id);
+    for(let idx = 0; idx < ids.length; idx++) {
+      get_telemetry(ids[idx]);
+    }
+    get_mission_state(active_id);
     get_delay();
   }
   if (forbidden_zones_display) {
