@@ -54,7 +54,10 @@ int sendSignedMessage(char* method, char* response, char* errorMessage, uint8_t 
     char logBuffer[256] = {0};
     char signature[257] = {0};
     char request[512] = {0};
-    snprintf(request, 512, "%s?id=%s", method, boardId);
+    if (strstr(method, "?"))
+        snprintf(request, 512, "%s&id=%s", method, boardId);
+    else
+        snprintf(request, 512, "%s?id=%s", method, boardId);
 
     while (!signMessage(request, signature, 257)) {
         snprintf(logBuffer, 256, "Failed to sign %s message at Credential Manager. Trying again in %ds", errorMessage, delay);
@@ -113,9 +116,10 @@ void serverSession() {
         if (strcmp(receivedHash, calculatedHash)) {
             logEntry("No-flight areas on the server were updated", ENTITY_NAME, LogLevel::LOG_INFO);
             char hash[65] = {0};
+            char responseDelta[1024] = {0};
             strcpy(hash, receivedHash);
-            sendSignedMessage("/api/get_forbidden_zones_delta", response, "no-flight areas", RETRY_DELAY_SEC);
-            int successful = updateNoFlightAreas(response);
+            sendSignedMessage("/api/get_forbidden_zones_delta", responseDelta, "no-flight areas", RETRY_DELAY_SEC);
+            int successful = updateNoFlightAreas(responseDelta);
             if (successful) {
                 calculatedHash = getNoFlightAreasHash();
                 successful = !strcmp(hash, calculatedHash);
@@ -123,8 +127,8 @@ void serverSession() {
             if (!successful) {
                 logEntry("Completely redownloading no-flight areas", ENTITY_NAME, LogLevel::LOG_INFO);
                 deleteNoFlightAreas();
-                sendSignedMessage("/api/get_all_forbidden_zones", response, "no-flight areas", RETRY_DELAY_SEC);
-                loadNoFlightAreas(response);
+                sendSignedMessage("/api/get_all_forbidden_zones", responseDelta, "no-flight areas", RETRY_DELAY_SEC);
+                loadNoFlightAreas(responseDelta);
             }
             printNoFlightAreas();
         }
