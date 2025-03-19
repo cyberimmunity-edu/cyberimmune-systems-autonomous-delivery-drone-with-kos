@@ -4,6 +4,7 @@ use drone_controller._
 @INIT_EXTERNAL_ENTITIES@
 
 /* Request messages */
+
 request {
     match src=Einit { grant () }
     match src=kl.core.Core { grant () }
@@ -15,19 +16,30 @@ request {
         match src=drone_controller.PeripheryController { grant () }
         match src=drone_controller.ServerConnector { grant () }
         match src=drone_controller.Logger { grant () }
+        match src=kl.VfsSdCardFs { grant () }
+        match src=kl.VfsNet { grant () }
+        match src=kl.EntropyEntity { grant () }
+        match src=kl.drivers.SDCard { grant () }
+        match src=kl.drivers.BSP { grant () }
     }
     match dst=kl.VfsNet {
         match src=drone_controller.AutopilotConnector { grant () }
         match src=drone_controller.NavigationSystem { grant () }
         match src=drone_controller.PeripheryController { grant () }
+        match src=drone_controller.ServerConnector { grant() }
     }
     match dst=kl.VfsSdCardFs {
+        match src=kl.rump.Dhcpcd { grant () }
+        match src=drone_controller.AutopilotConnector { grant () }
         match src=drone_controller.CredentialManager { grant () }
         match src=drone_controller.Logger { grant () }
+        match src=drone_controller.NavigationSystem { grant () }
+        match src=drone_controller.PeripheryController { grant () }
     }
 }
 
 /* Response messages */
+
 response {
     match dst=Einit { grant () }
     match dst=kl.core.Core { grant () }
@@ -39,14 +51,46 @@ response {
         match dst=drone_controller.PeripheryController { grant () }
         match dst=drone_controller.ServerConnector { grant () }
         match dst=drone_controller.Logger { grant () }
+        match dst=kl.VfsSdCardFs { grant () }
+        match dst=kl.VfsNet { grant () }
+        match dst=kl.EntropyEntity { grant () }
+        match dst=kl.drivers.SDCard { grant () }
+        match dst=kl.drivers.DNetSrv { grant () }
+        match dst=kl.drivers.BSP { grant () }
     }
     match src=kl.VfsNet {
         match dst=drone_controller.AutopilotConnector { grant () }
         match dst=drone_controller.NavigationSystem { grant () }
         match dst=drone_controller.PeripheryController { grant () }
+        match dst=drone_controller.ServerConnector { grant() }
     }
     match src=kl.VfsSdCardFs {
+        match dst=kl.rump.Dhcpcd { grant () }
+        match dst=kl.drivers.SDCard { grant () }
+        match dst=drone_controller.AutopilotConnector { grant () }
         match dst=drone_controller.CredentialManager { grant () }
         match dst=drone_controller.Logger { grant () }
+        match dst=drone_controller.NavigationSystem { grant () }
+        match dst=drone_controller.PeripheryController { grant () }
     }
 }
+
+/* We declare the profile for audit. */
+audit profile trace = {
+    /* Complete silence. */
+    0: {},
+    /* Only denied by kss. */
+    1: {
+        base: { kss: [ "granted" ] },
+    },
+    /* Only denied from everyone. */
+    2: {
+        base: { kss: [ "denied" ] },
+    },
+    /* All listening. */
+    3: {
+        base: { kss: [ "granted", "denied" ] },
+    }
+}
+/* We assign the level of the audit profile used by default. */
+audit default = trace 2

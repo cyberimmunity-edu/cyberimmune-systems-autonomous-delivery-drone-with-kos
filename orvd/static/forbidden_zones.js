@@ -2,7 +2,7 @@ const TILES_URL = "https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}";
 const TILES_LOCAL_PATH = "static/resources/tiles";
 
 ol.proj.useGeographic();
-const place = [142.812588, 46.617637];
+const place = [30.292907, 59.932100];
 
 let availableTiles = [];
 
@@ -84,7 +84,6 @@ function createDrawInteraction() {
     });
 
     draw.on('drawstart', function(event) {
-        // Удаляем предыдущий незавершенный полигон, если он есть
         vectorSource.getFeatures().forEach(function(feature) {
             if (!feature.get('name')) {
                 vectorSource.removeFeature(feature);
@@ -101,14 +100,12 @@ function createDrawInteraction() {
         if (isSelfIntersecting(coordinates)) {
             alert('Самопересекающиеся полигоны запрещены. Пожалуйста, нарисуйте полигон заново.');
             
-            // Используем setTimeout для асинхронного удаления фичи
             setTimeout(() => {
                 vectorSource.removeFeature(feature);
-                vectorLayer.changed(); // Принудительно обновляем слой
+                vectorLayer.changed();
                 currentDrawnFeature = null;
             }, 0);
     
-            // Перезапускаем инструмент рисования
             map.removeInteraction(draw);
             createDrawInteraction();
         } else {
@@ -121,7 +118,6 @@ function createDrawInteraction() {
 }
 
 async function createVectorLayer() {
-    // Удаляем текущий vectorLayer, если он существует
     if (vectorLayer) {
         map.removeLayer(vectorLayer);
     }
@@ -157,7 +153,6 @@ async function createVectorLayer() {
 
     map.addLayer(vectorLayer);
 
-    // Создаем взаимодействия после инициализации vectorSource
     if (draw) map.removeInteraction(draw);
     if (modify) map.removeInteraction(modify);
     if (snap) map.removeInteraction(snap);
@@ -176,7 +171,6 @@ const displayFeatureInfo = function (pixel, target) {
     const feature = target.closest('.ol-control')
         ? undefined
         : map.forEachFeatureAtPixel(pixel, function (feature) {
-            // Проверяем, что это полигон (зона), а не инструмент рисования
             if (feature.getGeometry().getType() === 'Polygon') {
             return feature;
             }

@@ -82,6 +82,20 @@ int resumeFlight() {
     return ((AutopilotConnectorInterface_ResumeFlight(&proxy.base, &req, NULL, &res, NULL) == rcOk) && res.success);
 }
 
+int abortMission() {
+    NkKosTransport transport;
+    nk_iid_t riid;
+    initSenderInterface("autopilot_connector_connection", "drone_controller.AutopilotConnector.interface", transport, riid);
+
+    struct AutopilotConnectorInterface_proxy proxy;
+    AutopilotConnectorInterface_proxy_init(&proxy, &transport.base, riid);
+
+    AutopilotConnectorInterface_AbortMission_req req;
+    AutopilotConnectorInterface_AbortMission_res res;
+
+    return ((AutopilotConnectorInterface_AbortMission(&proxy.base, &req, NULL, &res, NULL) == rcOk) && res.success);
+}
+
 int changeSpeed(int32_t speed) {
     NkKosTransport transport;
     nk_iid_t riid;
@@ -130,4 +144,28 @@ int changeWaypoint(int32_t latitude, int32_t longitude, int32_t altitude) {
     req.altitude = altitude;
 
     return ((AutopilotConnectorInterface_ChangeWaypoint(&proxy.base, &req, NULL, &res, NULL) == rcOk) && res.success);
+}
+
+int setMission(uint8_t* mission, uint32_t missionSize) {
+    NkKosTransport transport;
+    nk_iid_t riid;
+    initSenderInterface("autopilot_connector_connection", "drone_controller.AutopilotConnector.interface", transport, riid);
+
+    struct AutopilotConnectorInterface_proxy proxy;
+    AutopilotConnectorInterface_proxy_init(&proxy, &transport.base, riid);
+
+    AutopilotConnectorInterface_SetMission_req req;
+    AutopilotConnectorInterface_SetMission_res res;
+
+    req.size = missionSize;
+    char reqBuffer[AutopilotConnectorInterface_SetMission_req_arena_size];
+    struct nk_arena reqArena = NK_ARENA_INITIALIZER(reqBuffer, reqBuffer + sizeof(reqBuffer));
+    nk_arena_reset(&reqArena);
+
+    nk_ptr_t* msg = nk_arena_alloc(nk_ptr_t, &reqArena, &(req.mission), missionSize);
+    if ((msg == NULL) || (missionSize > AutopilotConnectorInterface_SetMission_req_arena_size))
+        return 0;
+    memcpy(msg, mission, missionSize);
+
+    return ((AutopilotConnectorInterface_SetMission(&proxy.base, &req, &reqArena, &res, NULL) == rcOk) && res.success);
 }

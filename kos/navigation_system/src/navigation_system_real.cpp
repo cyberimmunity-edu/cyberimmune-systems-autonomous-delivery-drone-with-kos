@@ -416,44 +416,44 @@ int initNavigationSystem() {
     char logBuffer[256] = {0};
     Retcode rc = BspInit(NULL);
     if (rc != rcOk) {
-        snprintf(logBuffer, 256, "Failed to initialize BSP ("RETCODE_HR_FMT")", RETCODE_HR_PARAMS(rc));
+        snprintf(logBuffer, 256, "Failed to initialize BSP (" RETCODE_HR_FMT ")", RETCODE_HR_PARAMS(rc));
         logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_ERROR);
         return 0;
     }
     rc = BspEnableModule(gpsUart);
     if (rc != rcOk) {
-        snprintf(logBuffer, 256, "Failed to enable UART %s ("RETCODE_HR_FMT")", RETCODE_HR_PARAMS(rc));
+        snprintf(logBuffer, 256, "Failed to enable UART %s (" RETCODE_HR_FMT ")", RETCODE_HR_PARAMS(rc));
         logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_ERROR);
         return 0;
     }
     rc = BspSetConfig(gpsUart, gpsConfig);
     if (rc != rcOk) {
-        snprintf(logBuffer, 256, "Failed to set BSP config for UART %s ("RETCODE_HR_FMT")", gpsUart, RETCODE_HR_PARAMS(rc));
+        snprintf(logBuffer, 256, "Failed to set BSP config for UART %s (" RETCODE_HR_FMT ")", gpsUart, RETCODE_HR_PARAMS(rc));
         logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_ERROR);
         return 0;
     }
     rc = UartInit();
     if (rc != rcOk) {
-        snprintf(logBuffer, 256, "Failed to initialize UART ("RETCODE_HR_FMT")", RETCODE_HR_PARAMS(rc));
+        snprintf(logBuffer, 256, "Failed to initialize UART (" RETCODE_HR_FMT ")", RETCODE_HR_PARAMS(rc));
         logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_ERROR);
         return 0;
     }
 
     rc = BspEnableModule(barometerI2C);
     if (rc != rcOk) {
-        snprintf(logBuffer, 256, "Failed to enable I2C %s ("RETCODE_HR_FMT")", barometerI2C, RETCODE_HR_PARAMS(rc));
+        snprintf(logBuffer, 256, "Failed to enable I2C %s (" RETCODE_HR_FMT ")", barometerI2C, RETCODE_HR_PARAMS(rc));
         logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_ERROR);
         return 0;
     }
     rc = BspSetConfig(barometerI2C, barometerConfig);
     if (rc != rcOk) {
-        snprintf(logBuffer, 256, "Failed to set BSP config for I2C %s ("RETCODE_HR_FMT")", barometerI2C, RETCODE_HR_PARAMS(rc));
+        snprintf(logBuffer, 256, "Failed to set BSP config for I2C %s (" RETCODE_HR_FMT ")", barometerI2C, RETCODE_HR_PARAMS(rc));
         logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_ERROR);
         return 0;
     }
     rc = I2cInit();
     if (rc != rcOk) {
-        snprintf(logBuffer, 256, "Failed to initialize I2C ("RETCODE_HR_FMT")", RETCODE_HR_PARAMS(rc));
+        snprintf(logBuffer, 256, "Failed to initialize I2C (" RETCODE_HR_FMT ")", RETCODE_HR_PARAMS(rc));
         logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_ERROR);
         return 0;
     }
@@ -465,7 +465,7 @@ int initSensors() {
     char logBuffer[256] = {0};
     Retcode rc = UartOpenPort(gpsUart, &gpsUartHandler);
     if (rc != rcOk) {
-        snprintf(logBuffer, 256, "Failed to open UART %s ("RETCODE_HR_FMT")", gpsUart, RETCODE_HR_PARAMS(rc));
+        snprintf(logBuffer, 256, "Failed to open UART %s (" RETCODE_HR_FMT ")", gpsUart, RETCODE_HR_PARAMS(rc));
         logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
         return 0;
     }
@@ -477,7 +477,7 @@ int initSensors() {
     ssize_t expectedSize = sizeof(gnssNmea);
     rc = UartWrite(gpsUartHandler, gnssNmea, expectedSize, NULL, &writtenBytes);
     if (rc != rcOk) {
-        snprintf(logBuffer, 256, "Failed to write configuration message to GPS ("RETCODE_HR_FMT")", RETCODE_HR_PARAMS(rc));
+        snprintf(logBuffer, 256, "Failed to write configuration message to GPS (" RETCODE_HR_FMT ")", RETCODE_HR_PARAMS(rc));
         logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
         return 0;
     }
@@ -495,7 +495,7 @@ int initSensors() {
     expectedSize = sizeof(gnssSystems);
     rc = UartWrite(gpsUartHandler, gnssSystems, expectedSize, NULL, &writtenBytes);
     if (rc != rcOk) {
-        snprintf(logBuffer, 256, "Failed to write configuration message to GPS ("RETCODE_HR_FMT")", RETCODE_HR_PARAMS(rc));
+        snprintf(logBuffer, 256, "Failed to write configuration message to GPS (" RETCODE_HR_FMT ")", RETCODE_HR_PARAMS(rc));
         logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
         return 0;
     }
@@ -507,7 +507,7 @@ int initSensors() {
 
     rc = I2cOpenChannel(barometerI2C, &barometerHandler);
     if (rc != rcOk) {
-        snprintf(logBuffer, 256, "Failed to open I2C %s ("RETCODE_HR_FMT")", barometerI2C, RETCODE_HR_PARAMS(rc));
+        snprintf(logBuffer, 256, "Failed to open I2C %s (" RETCODE_HR_FMT ")", barometerI2C, RETCODE_HR_PARAMS(rc));
         logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
         return 0;
     }

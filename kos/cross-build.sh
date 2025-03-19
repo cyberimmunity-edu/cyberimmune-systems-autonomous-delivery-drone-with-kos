@@ -6,7 +6,7 @@ BUILD="${SCRIPT_DIR}/build"
 export LANG=C
 export TARGET="aarch64-kos"
 export PKG_CONFIG=""
-export SDK_PREFIX="/opt/KasperskyOS-Community-Edition-1.2.0.89"
+export SDK_PREFIX="/opt/KasperskyOS-Community-Edition-RaspberryPi4b-1.3.0.166"
 export INSTALL_PREFIX="$BUILD/../install"
 export PATH="$SDK_PREFIX/toolchain/bin:$PATH"
 
@@ -48,7 +48,7 @@ function help
              Connection mode: online or offline
 
   Examples:
-      bash cross-build.sh -s /opt/KasperskyOS-Community-Edition-1.2.0.89
+      bash cross-build.sh -s /opt/KasperskyOS-Community-Edition-RaspberryPi4b-1.3.0.166
 
 EOF
 }
@@ -150,4 +150,4 @@ fi
       -D CMAKE_INSTALL_PREFIX:STRING="$INSTALL_PREFIX" \
       -D CMAKE_FIND_ROOT_PATH="${SDK_PREFIX}/sysroot-$TARGET" \
       -D CMAKE_TOOLCHAIN_FILE="$SDK_PREFIX/toolchain/share/toolchain-$TARGET$TOOLCHAIN_SUFFIX.cmake" \
-      "$SCRIPT_DIR/" && "$SDK_PREFIX/toolchain/bin/cmake" --build "$BUILD" --target "$KOS_TARGET"
+      "$SCRIPT_DIR/" && "$SDK_PREFIX/toolchain/bin/cmake" --build "$BUILD" --target "$KOS_TARGET" --verbose

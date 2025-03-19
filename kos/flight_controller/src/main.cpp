@@ -34,7 +34,7 @@ std::thread sessionThread;
 /**
  * \~English Auxiliary procedure. Adds drone ID to request and signs it, sends message to the ATM server
  * and checks the authenticity of the received response.
- * \param[in] method Request to the ATM server. "/api/query&param=value" form is expected/
+ * \param[in] method Request to the ATM server. "/api/method" form is expected.
  * Drone ID and signature will be added.
  * \param[out] response Significant part of the response from the server. Authenticity is checked.
  * \param[in] errorMessage String identifier of request. This will be displayed in error text on occured error in the procedure.
@@ -42,7 +42,7 @@ std::thread sessionThread;
  * \return Returns 1 on successful send, 0 otherwise.
  * \~Russian Вспомогательная процедура. Снабжает запрос идентификатором дрона,
  * подписывает его, отправляет на сервер ОРВД и проверяет аутентичность полученного ответа.
- * \param[in] method Запрос к серверу ОРВД. Ожидается вид "/api/query&param=value".
+ * \param[in] method Запрос к серверу ОРВД. Ожидается вид "/api/method".
  * Идентификатор дрона и подпись будут добавлены.
  * \param[out] response Значимая часть ответа от сервера. Аутентичность проверена.
  * \param[in] errorMessage Строковый идентификатор отправляемого запроса, который будет отображен в тексте ошибки при
@@ -54,7 +54,10 @@ int sendSignedMessage(char* method, char* response, char* errorMessage, uint8_t 
     char logBuffer[256] = {0};
     char signature[257] = {0};
     char request[512] = {0};
-    snprintf(request, 512, "%s?id=%s", method, boardId);
+    if (strstr(method, "?"))
+        snprintf(request, 512, "%s&id=%s", method, boardId);
+    else
+        snprintf(request, 512, "%s?id=%s", method, boardId);
 
     while (!signMessage(request, signature, 257)) {
         snprintf(logBuffer, 256, "Failed to sign %s message at Credential Manager. Trying again in %ds", errorMessage, delay);
@@ -113,9 +116,10 @@ void serverSession() {
         if (strcmp(receivedHash, calculatedHash)) {
             logEntry("No-flight areas on the server were updated", ENTITY_NAME, LogLevel::LOG_INFO);
             char hash[65] = {0};
+            char responseDelta[1024] = {0};
             strcpy(hash, receivedHash);
-            sendSignedMessage("/api/get_forbidden_zones_delta", response, "no-flight areas", RETRY_DELAY_SEC);
-            int successful = updateNoFlightAreas(response);
+            sendSignedMessage("/api/get_forbidden_zones_delta", responseDelta, "no-flight areas", RETRY_DELAY_SEC);
+            int successful = updateNoFlightAreas(responseDelta);
             if (successful) {
                 calculatedHash = getNoFlightAreasHash();
                 successful = !strcmp(hash, calculatedHash);
@@ -123,8 +127,8 @@ void serverSession() {
             if (!successful) {
                 logEntry("Completely redownloading no-flight areas", ENTITY_NAME, LogLevel::LOG_INFO);
                 deleteNoFlightAreas();
-                sendSignedMessage("/api/get_all_forbidden_zones", response, "no-flight areas", RETRY_DELAY_SEC);
-                loadNoFlightAreas(response);
+                sendSignedMessage("/api/get_all_forbidden_zones", responseDelta, "no-flight areas", RETRY_DELAY_SEC);
+                loadNoFlightAreas(responseDelta);
             }
             printNoFlightAreas();
         }
@@ -134,6 +138,56 @@ void serverSession() {
 
         sleep(sessionDelay);
     }
+}
+
+/**
+ * \~English Auxiliary procedure. Asks the ATM server to approve new mission and parses its response.
+ * \param[in] mission New mission in string format.
+ * \param[out] result ATM server response: 1 if mission approved, 0 otherwise.
+ * \return Returns 1 on successful send, 0 otherwise.
+ * \~Russian Вспомогательная процедура. Просит у сервера ОРВД одобрения новой миссии и обрабатывает ответ.
+ * \param[in] mission Новая миссия в виде строки.
+ * \param[out] result Ответ сервера ОРВД: 1 при одобрении миссии, иначе -- 0.
+ * \return Возвращает 1 при успешной отправке, иначе -- 0.
+ */
+int askForMissionApproval(char* mission, int& result) {
+    int requestSize = 512 + strlen(mission);
+
+    char signature[257] = {0};
+    char *request = (char*)malloc(requestSize);
+    snprintf(request, requestSize, "/api/nmission?id=%s&mission=%s", boardId, mission);
+
+    if (!signMessage(request, signature, 257)) {
+        logEntry("Failed to sign New Mission request at Credential Manager", ENTITY_NAME, LogLevel::LOG_WARNING);
+        free(request);
+        return 0;
+    }
+    snprintf(request, 512, "%s&sig=0x%s", request, signature);
+
+    char response[1024] = {0};
+    if (!sendRequest(request, response, 1024)) {
+        logEntry("Failed to send New Mission request through Server Connector", ENTITY_NAME, LogLevel::LOG_WARNING);
+        free(request);
+        return 0;
+    }
+    free(request);
+
+    uint8_t authenticity = 0;
+    while (!checkSignature(response, authenticity) || !authenticity) {
+        logEntry("Failed to check signature of New Mission request response received through Server Connector", ENTITY_NAME, LogLevel::LOG_WARNING);
+        return 0;
+    }
+
+    if (strstr(response, "$Approve 0#") != NULL)
+        result = 1;
+    else if (strstr(response, "$Approve 1#") != NULL)
+        result = 0;
+    else {
+        logEntry("Failed to parse server response on New Mission request", ENTITY_NAME, LogLevel::LOG_WARNING);
+        return 0;
+    }
+
+    return 1;
 }
 
 /**

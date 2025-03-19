@@ -17,6 +17,7 @@
 
 #include "../../shared/include/ipc_messages_logger.h"
 #include <stdint.h>
+#include <unistd.h>
 
 /** \cond */
 #define AUTOPILOT_COMMAND_MESSAGE_HEAD_SIZE 4
@@ -77,7 +78,19 @@ enum AutopilotCommand : uint8_t {
      * \~English A requirement to change current flight altitude. Transmitted from the security module to the autopilot during a paused flight.
      * \~Russian Требование на изменение высоты полета. Передается от модуля безопасности в автопилот при активном полете.
      */
-    ChangeAltitude = 0xA1
+    ChangeAltitude = 0xA1,
+    /**
+     * \~English Abort mission requirement. Transmitted from the security module to the autopilot during an active flight.
+     * When mission is aborted, the vehicle holds its current position in the air.
+     * \~Russian Требование на отмену миссии. Передается от модуля безопасности в автопилот при активном полете.
+     * При отмене миссии, квадрокоптер зависает в воздухе.
+     */
+    AbortMission = 0x21,
+    /**
+     * \~English A requirement to set passed mission.
+     * \~Russian Требование изменения миссии на переданную.
+     */
+    SetMission = 0x42
 };
 
 /**
@@ -150,6 +163,18 @@ int initConnection();
  */
 int getAutopilotCommand(uint8_t& command);
 /**
+ * \~English Sends raw bytes to the autopilot.
+ * \param[in] bytes Pointer to byte array.
+ * \param[in] size Size of byte array to send.
+ * \return Returns 1 on successful send, 0 otherwise.
+ * \~Russian Отправляет массив байтов автопилоту.
+ * \param[in] bytes Указатель на массив байтов.
+ * \param[in] size Размер отправляемого массива.
+ * \return Возвращает 1 при успешном получении сообщения, 0 -- иначе.
+ */
+int sendAutopilotBytes(uint8_t* bytes, ssize_t size);
+
+/**
  * \~English Sends a message to the autopilot. A version without additional data sent.
  * \param[in] command Sent message type.
  * \return Returns 1 on successful message send, 0 otherwise.
@@ -193,3 +218,17 @@ int sendAutopilotCommand(AutopilotCommand command, int32_t value);
  * требуемой точки назначения.
  */
 int sendAutopilotCommand(AutopilotCommand command, int32_t valueFirst, int32_t valueSecond, int32_t valueThird);
+/**
+ * \~English Sends a message to the autopilot. A version with raw bytes.
+ * \param[in] command Sent message type.
+ * \param[in] rawBytes Raw byte array.
+ * \param[in] byteSize Size of byte array.
+ * \note Is expected to send SetMission command and a new mission as raw bytes.
+ * \~Russian Отправляет автопилоту сообщение. Вариант с массивом байтов.
+ * \param[in] command Тип отправляемого сообщения.
+ * \param[in] rawBytes Массив необработанных байтов.
+ * \param[in] byteSize Размер байтового массива.
+ * \return Возвращает 1 при успешной отправке сообщения, 0 -- иначе.
+ * \note Предполагается для отправки команды SetMission и новой миссии, закодированной в байтах.
+ */
+int sendAutopilotCommand(AutopilotCommand command, uint8_t* rawBytes, int32_t byteSize);

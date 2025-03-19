@@ -31,7 +31,7 @@ def test_parse_mission():
 def test_read_mission():
     file_str = "QGC WPL 110\n0\t1\t0\t16\t0\t0\t0\t0\t55.7558\t37.6173\t200\t1\n"
     expected = [['H', '55.7558', '37.6173', '200.0']]
-    assert read_mission(file_str) == expected
+    assert read_mission(file_str)[0] == expected
 
 def test_home_handler():
     lat, lon, alt = 55.7558, 37.6173, 200.0
@@ -44,9 +44,9 @@ def test_takeoff_handler():
     assert takeoff_handler(alt) == expected
 
 def test_waypoint_handler():
-    hold, lat, lon, alt = 10, 55.7558, 37.6173, 150.0
-    expected = ['W', '10', '55.7558', '37.6173', '150.0']
-    assert waypoint_handler(hold, lat, lon, alt) == expected
+    lat, lon, alt = 55.7558, 37.6173, 150.0
+    expected = ['W', '55.7558', '37.6173', '150.0']
+    assert waypoint_handler(lat, lon, alt) == expected
 
 def test_servo_handler():
     number, pwm = 1.0, 1500.0

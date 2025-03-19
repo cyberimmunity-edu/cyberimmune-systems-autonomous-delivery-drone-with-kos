@@ -1,4 +1,4 @@
-document.getElementById('submit').onclick = submit;
+document.getElementById('auth-submit-button').onclick = submit;
 
 async function submit(event) {
     event.preventDefault();

@@ -25,9 +25,14 @@ document.getElementById('mission_checkbox').onclick = mission_decision;
 document.getElementById('kill_switch').onclick = kill_switch;
 document.getElementById('fly_accept_checkbox').onclick = fly_accept;
 document.getElementById('forbidden_zones_checkbox').onclick = toggleForbiddenZones;
+document.getElementById('revised-mission-accept').onclick = () => revised_mission_decision(0);
+document.getElementById('revised-mission-decline').onclick = () => revised_mission_decision(1);
+document.getElementById('monitoring-checkbox').onclick = () => toggle_display_mode();
+document.getElementById('copy-id').onclick = () => copy_current_id();
+
 
 ol.proj.useGeographic()
-const place = [142.812588, 46.617637];
+const place = [30.292907, 59.932100];
 
 let ids = [];
 let active_id = null;
@@ -37,10 +42,58 @@ let access_token = params.token;
 var current_state = null;
 let forbidden_zones_display = false;
 
+async function copyToClipboard(textToCopy) {
+  if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(textToCopy);
+  } else {
+      const textArea = document.createElement("textarea");
+      textArea.value = textToCopy;
+          
+      textArea.style.position = "absolute";
+      textArea.style.left = "-999999px";
+          
+      document.body.prepend(textArea);
+      textArea.select();
+
+      try {
+          document.execCommand('copy');
+      } catch (error) {
+          console.error(error);
+      } finally {
+          textArea.remove();
+      }
+  }
+}
+
+async function copy_current_id() {
+  if (active_id !== null) {
+    try {
+      await copyToClipboard(active_id);
+      console.log('Current ID copied to clipboard:', active_id);
+      alert("ID " + active_id + " copied to clipboard!");
+    } catch (err) {
+      console.error('Failed to copy ID:', err);
+    }
+  } else {
+    console.log('No active ID to copy.');
+    alert("No active ID to copy.");
+  }
+}
+
 let uav_style = new ol.style.Style({
   image: new ol.style.Icon({
     anchor: [0.5, 0.5],
-    src: 'static/resources/quad_marker.png'
+    src: 'static/resources/vehicle_marker.svg',
+    scale: 0.25
+  })
+});
+
+let inactive_uav_style = new ol.style.Style({
+  image: new ol.style.Icon({
+    anchor: [0.5, 0.5],
+    src: 'static/resources/vehicle_marker.svg',
+    scale: 0.25,
+    opacity: 0.6
   })
 });
 
@@ -160,7 +213,6 @@ async function createGeoJSONLayer() {
     style: styleFunction
   });
 
-  // Добавляем имя зоны в свойство description каждой фичи
   geoJSONLayer.getSource().getFeatures().forEach(feature => {
     feature.set('description', `Запрещенная зона: ${feature.get('name')}`);
   });
@@ -219,7 +271,8 @@ map.getTargetElement().addEventListener('pointerleave', function () {
 function clear_markers() {
   var features = markers.getSource().getFeatures();
     features.forEach((feature) => {
-      if(feature.getId() != 'uav') {
+      const feature_id = feature.getId();
+      if(feature_id === undefined || !feature.getId().includes('uav')) {
         markers.getSource().removeFeature(feature);
       }
     });
@@ -328,6 +381,41 @@ async function mission_decision() {
   }
 }
 
+async function revised_mission_decision(decision) {
+  const revisedMissionBlock = document.getElementById('revised-mission-block');
+  revisedMissionBlock.style.visibility = 'hidden';
+  const query_str = `admin/revise_mission_decision?id=${active_id}&decision=${decision}&token=${access_token}`;
+  let mission_resp = await fetch(query_str);
+  let mission_text = await mission_resp.text();
+  console.log(mission_text);
+}
+
+async function toggle_display_mode() {
+  const query_str = `admin/toggle_display_mode?token=${access_token}`;
+  await fetch(query_str);
+  const $monitoringCheckbox = document.getElementById('monitoring-checkbox')
+  const $mainButtons = document.getElementById('main-buttons');
+  if($monitoringCheckbox.checked) {
+    $mainButtons.style.visibility = 'hidden';
+  } else {
+    $mainButtons.style.visibility = 'visible';
+  }
+}
+
+async function get_display_mode() {
+  const delay_resp = await fetch(`admin/get_display_mode?token=${access_token}`);
+  const delay_text = await delay_resp.text();
+  const $monitoringCheckbox = document.getElementById('monitoring-checkbox')
+  const $mainButtons = document.getElementById('main-buttons');
+  if (delay_text === '0') {
+    $monitoringCheckbox.checked = true;
+    $mainButtons.style.visibility = 'hidden';
+  } else {
+    $monitoringCheckbox.checked = false;
+    $mainButtons.style.visibility = 'visible';
+  }
+}
+
 async function fly_accept() {
   let fly_accept_checkbox = document.getElementById('fly_accept_checkbox');
   if (active_id == null || current_state == "Kill switch ON") {
@@ -373,8 +461,8 @@ async function waiters_change() {
   }
 }
 
-async function get_mission() {
-  let mission_resp = await fetch("admin/get_mission?id=" + active_id + "&token=" + access_token);
+async function get_mission(id) {
+  let mission_resp = await fetch("admin/get_mission?id=" + id + "&token=" + access_token);
   let mission_text = await mission_resp.text();
   if (mission_text == '$-1') {
     current_mission = mission_text;
@@ -395,7 +483,7 @@ async function get_mission() {
           var alt = mission_list[idx][3];
           add_marker(lat, lon, alt, 'home');
           mission_path.push([lon, lat]);
-          map.getView().setCenter([lon, lat]);
+          // map.getView().setCenter([lon, lat]);
       }
       else if (mission_list[idx][0] == 'W') {
           var lat = parseFloat(mission_list[idx][1]);
@@ -422,8 +510,45 @@ async function get_mission() {
   }
 }
 
-async function get_telemetry() {
-  let telemetry_resp = await fetch("admin/get_telemetry?id=" + active_id + "&token=" + access_token);
+let vehicles = {};
+
+function add_or_update_vehicle_marker(id, lat, lon, alt, azimuth, speed) {
+  let rotationInRadians = azimuth * Math.PI / 180;
+  let vehicleStyle = new ol.style.Style({
+    image: new ol.style.Icon({
+      anchor: [0.5, 0.5],
+      src: 'static/resources/vehicle_marker.svg',
+      scale: 0.25,
+      rotation: rotationInRadians
+    })
+  });
+  
+  let inactiveVehicleStyle = new ol.style.Style({
+      image: new ol.style.Icon({
+        anchor: [0.5, 0.5],
+        src: 'static/resources/vehicle_marker.svg',
+        scale: 0.25,
+        opacity: 0.6,
+        rotation: rotationInRadians
+      })
+    });
+
+  if (!vehicles[id]) {
+    let vehicle = new ol.Feature(new ol.geom.Point([lon, lat]));
+    vehicle.setId(`uav${id}`);
+    vehicle.setStyle(id === active_id ? vehicleStyle : inactiveVehicleStyle);
+    vehicle.set('description', `ID: ${id}\nВысота: ${alt}\nСкорость: ${speed}\nНаправление: ${azimuth}`);
+    vehicles[id] = vehicle;
+    markers.getSource().addFeature(vehicles[id]);
+  } else {
+    vehicles[id].getGeometry().setCoordinates([lon, lat]);
+    vehicles[id].set('description', `ID: ${id}\nВысота: ${alt}\nСкорость: ${speed}\nНаправление: ${azimuth}`);
+    vehicles[id].setStyle(id === active_id ? vehicleStyle : inactiveVehicleStyle);
+  }
+}
+
+async function get_telemetry(id) {
+  let telemetry_resp = await fetch("admin/get_telemetry?id=" + id + "&token=" + access_token);
   if (telemetry_resp.ok) {
     let telemetry_data = await telemetry_resp.json();
     if ('error' in telemetry_data) {
@@ -438,23 +563,26 @@ async function get_telemetry() {
     let speed = parseFloat(telemetry_data.speed);
     document.getElementById("dop").innerHTML = "DOP: " + dop;
     document.getElementById("sats").innerHTML = "SATS: " + sats;
-    if (uav == null) {
-      add_marker(lat, lon, alt, 'uav');
-    } else {
-      uav.getGeometry().setCoordinates([lon, lat]);
-      uav.set('description', `Высота: ${alt}\nСкорость: ${speed}`);
+    add_or_update_vehicle_marker(id, lat, lon, alt, azimuth, speed);
+    if (id === active_id) {
+      map.getView().setCenter([lon, lat]);
     }
-    map.getView().setCenter([lon, lat]);
   } else {
     console.error("Failed to fetch telemetry data");
   }
 }
 
-async function get_mission_state() {
-  let mission_state_resp = await fetch("admin/get_mission_state?id=" + active_id + "&token=" + access_token);
+async function get_mission_state(id) {
+  let mission_state_resp = await fetch("admin/get_mission_state?id=" + id + "&token=" + access_token);
   let mission_state_text = await mission_state_resp.text();
   if (mission_state_text == '0') {
     document.getElementById('mission_checkbox').checked = true;
+  } else if (mission_state_text == '1')  {
+    document.getElementById('mission_checkbox').checked = false;
+  } else if (mission_state_text == '2') {
+    document.getElementById('mission_checkbox').checked = false;
+    const revisedMissionBlock = document.getElementById('revised-mission-block');
+    revisedMissionBlock.style.visibility = 'visible';
   } else {
     document.getElementById('mission_checkbox').checked = false;
   }
@@ -465,9 +593,11 @@ async function change_active_id(new_id) {
   current_mission = null;
   clear_markers()
   status_change();
-  get_mission();
-  get_telemetry();
-  get_mission_state();
+  await get_mission(new_id);
+  for(let idx = 0; idx < ids.length; idx++) {
+    get_telemetry(ids[idx]);
+  }
+  get_mission_state(new_id);
   get_delay();
 }
 
@@ -528,17 +658,95 @@ async function get_delay() {
   }
 }
 
-setInterval(async function() {
-  get_ids();
-  if (active_id != null) {
-    status_change();
-    waiters_change();
-    get_mission();
-    get_telemetry();
-    get_mission_state();
-    get_delay();
+async function getAllData() {
+  try {
+    const response = await fetch(`/admin/get_all_data?token=${access_token}`);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const data = await response.json();
+
+    ids = data.ids;
+    let id_select = document.getElementById("id_select");
+    const selectedIndex = id_select.selectedIndex;
+    id_select.innerHTML = '';
+    for (let i = 0; i < ids.length; i++) {
+      let opt = document.createElement('option');
+      opt.value = ids[i];
+      opt.innerHTML = ids[i];
+      id_select.appendChild(opt);
+    }
+    if (selectedIndex >= 0 && selectedIndex < id_select.options.length) {
+      id_select.selectedIndex = selectedIndex;
+    } else if(ids.length > 0) {
+      change_active_id(ids[0]);
+    }
+
+    document.getElementById("waiters").innerHTML = "Ожидают: " + data.waiters;
+    document.getElementById('arm').disabled = !(parseInt(data.waiters) > 0);
+    document.getElementById('disarm').disabled = !(parseInt(data.waiters) > 0);
+
+    for (const id in data.uav_data) {
+      const uavData = data.uav_data[id];
+
+      if (id === active_id) {
+        document.getElementById("status").innerHTML = "Статус: " + uavData.state;
+        current_state = uavData.state;
+
+        if (uavData.state == 'В полете') {
+            document.getElementById('fly_accept_checkbox').checked = true;
+        } else {
+            document.getElementById('fly_accept_checkbox').checked = false;
+        }
+      }
+
+      if (uavData.telemetry) {
+        const { lat, lon, alt, azimuth, dop, sats, speed } = uavData.telemetry;
+        document.getElementById("dop").innerHTML = "DOP: " + dop;
+        document.getElementById("sats").innerHTML = "SATS: " + sats;
+        add_or_update_vehicle_marker(id, lat, lon, alt, azimuth, speed);
+        if (id === active_id) {
+          map.getView().setCenter([lon, lat]);
+        }
+      }
+
+      if (id === active_id) {
+        if (uavData.mission_state == '0') {
+            document.getElementById('mission_checkbox').checked = true;
+        } else if (uavData.mission_state == '1')  {
+            document.getElementById('mission_checkbox').checked = false;
+        } else if (uavData.mission_state == '2') {
+            document.getElementById('mission_checkbox').checked = false;
+            const revisedMissionBlock = document.getElementById('revised-mission-block');
+            revisedMissionBlock.style.visibility = 'visible';
+        } else {
+          document.getElementById('mission_checkbox').checked = false;
+        }
+    }
+
+        if (id === active_id) {
+            document.getElementById("delay").innerHTML = "Delay: " + uavData.delay;
+        }
+    }
+
+    if (forbidden_zones_display) {
+        await updateForbiddenZones();
+    }
+
+  } catch (error) {
+    console.error("Failed to fetch all data:", error);
   }
-  if (forbidden_zones_display) {
-    await updateForbiddenZones();
+}
+
+setInterval(async function() {
+  if(active_id) {
+    await get_mission(active_id);
+    await getAllData();
+  } else {
+    get_ids();
+    get_display_mode();
+    if (forbidden_zones_display) {
+      await updateForbiddenZones();
+    }
   }
 }, 1000);

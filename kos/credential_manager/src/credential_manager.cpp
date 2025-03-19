@@ -17,10 +17,10 @@
 #include "../../shared/include/ipc_messages_initialization.h"
 #include "../../shared/include/ipc_messages_server_connector.h"
 
-#include <mbedtls_v3/ctr_drbg.h>
-#include <mbedtls_v3/entropy.h>
-#include <mbedtls_v3/rsa.h>
-#include <mbedtls_v3/sha256.h>
+#include <mbedtls/ctr_drbg.h>
+#include <mbedtls/entropy.h>
+#include <mbedtls/rsa.h>
+#include <mbedtls/sha256.h>
 
 #include <string.h>
 #include <unistd.h>

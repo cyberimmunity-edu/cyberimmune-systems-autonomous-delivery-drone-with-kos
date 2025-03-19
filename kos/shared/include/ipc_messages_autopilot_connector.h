@@ -50,6 +50,13 @@ int pauseFlight();
  */
 int resumeFlight();
 /**
+ * \~English Sends a message to the autopilot demanding to abort current mission.
+ * \return Returns 1 on succesful message send, 0 otherwise.
+ * \~Russian Передает в автопилот сообщение с требованием отмены миссии.
+ * \return Возвращает 1, если сообщение было успешно передано, иначе -- 0.
+ */
+int abortMission();
+/**
  * \~English Sends a message to the autopilot demanding to change flight speed.
  * \param[in] speed Flight speed in m/s at which the drone should continue to move.
  * \return Returns 1 on succesful message send, 0 otherwise.
@@ -80,3 +87,14 @@ int changeAltitude(int32_t altitude);
  * \return Возвращает 1, если сообщение было успешно передано, иначе -- 0.
  */
 int changeWaypoint(int32_t latitude, int32_t longitude, int32_t altitude);
+/**
+ * \~English Sends a mission to autopilot demanding to set it as new.
+ * \param[in] mission Mission as a raw byte array.
+ * \param[in] missionSize Byte arrays size.
+ * \return Returns 1 on succesful message send, 0 otherwise.
+ * \~Russian Отправляет в автопилот новую миссию с требованием заменить ею текущую.
+ * \param[in] mission Миссия в виде массива байтов.
+ * \param[in] missionSize Размер массива с миссией.
+ * \return Возвращает 1, если сообщение было успешно передано, иначе -- 0.
+ */
+int setMission(uint8_t* mission, uint32_t missionSize);
