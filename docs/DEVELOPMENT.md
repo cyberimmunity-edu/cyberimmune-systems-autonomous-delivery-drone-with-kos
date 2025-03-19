@@ -36,11 +36,8 @@ sudo usermod -aG sudo,docker,dialout user
 # Клонирование репозитория с симулятором (вместо cyberimmunity-edu может быть ваш fork)
 git clone https://github.com/cyberimmunity-edu/cyberimmune-systems-autonomous-delivery-drone-with-kos.git
 
-# Размещение KasperskyOS CE SDK 1.2.0.89 в папке проекта (копия репозитория)
-cp ~/Downloads/KasperskyOS-Community-Edition-1.2.0.89_en.deb cyberimmune-systems-autonomous-delivery-drone-with-kos/
-
-# Размещение KasperskyOS CE SDK 1.2.0.45 в папке проекта (копия репозитория)
-cp ~/Downloads/KasperskyOS-Community-Edition-1.2.0.45.zip cyberimmune-systems-autonomous-delivery-drone-with-kos/
+# Размещение KasperskyOS CE SDK 1.3.0.166 в папке проекта (копия репозитория)
+cp ~/Downloads/KasperskyOS-Community-Edition-RaspberryPi4b-1.3.0.166_ru.deb cyberimmune-systems-autonomous-delivery-drone-with-kos/
 ```
 
 Запуск цифрового двойника:
@@ -76,7 +73,7 @@ git clone https://github.com/cyberimmunity-edu/cyberimmune-systems-autonomous-de
 cd cyberimmune-systems-autonomous-delivery-drone-with-kos
 ```
 
-1. Разместить KasperskyOS-Community-Edition-1.2.0.89_en.deb и KasperskyOS-Community-Edition-1.2.0.45.zip в скачанной папке
+1. Разместить KasperskyOS-Community-Edition-RaspberryPi4b-1.3.0.166_ru.deb в скачанной папке
 
 1. Установить необходимые для работы компоненты, запустив скрипт `install_dependencies.sh`
 
