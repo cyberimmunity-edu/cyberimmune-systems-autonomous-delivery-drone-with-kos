@@ -2,7 +2,7 @@ project (Logger)
 
 include (platform/nk)
 
-project_header_default ("STANDARD_GNU_11:YES" "STRICT_WARNINGS:NO")
+project_header_default ("STANDARD_GNU_17:YES" "STRICT_WARNINGS:NO")
 
 add_executable (Logger "src/main.cpp" "src/logger.cpp" "src/logger_interface.cpp"
     "../shared/src/initialization_interface.cpp" "../shared/src/ipc_messages_logger.cpp")
