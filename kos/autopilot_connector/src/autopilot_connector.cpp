@@ -13,32 +13,37 @@
 
 #include "../include/autopilot_connector.h"
 
+#include <stdlib.h>
 #include <string.h>
 
 int sendAutopilotCommand(AutopilotCommand command) {
     ssize_t size = sizeof(AutopilotCommandMessage);
-    uint8_t bytes[size] = {0};
+    uint8_t *bytes = (uint8_t*)malloc(size);
 
     AutopilotCommandMessage message = AutopilotCommandMessage(command);
     memcpy(bytes, &message, sizeof(AutopilotCommandMessage));
 
-    return sendAutopilotBytes(bytes, size);
+    int result = sendAutopilotBytes(bytes, size);
+    free(bytes);
+    return result;
 }
 
 int sendAutopilotCommand(AutopilotCommand command, int32_t value) {
     ssize_t size = sizeof(AutopilotCommandMessage) + sizeof(int32_t);
-    uint8_t bytes[size] = {0};
+    uint8_t *bytes = (uint8_t*)malloc(size);
 
     AutopilotCommandMessage message = AutopilotCommandMessage(command);
     memcpy(bytes, &message, sizeof(AutopilotCommandMessage));
     memcpy(bytes + sizeof(AutopilotCommandMessage), &value, sizeof(int32_t));
 
-    return sendAutopilotBytes(bytes, size);
+    int result = sendAutopilotBytes(bytes, size);
+    free(bytes);
+    return result;
 }
 
 int sendAutopilotCommand(AutopilotCommand command, int32_t valueFirst, int32_t valueSecond, int32_t valueThird) {
     ssize_t size = sizeof(AutopilotCommandMessage) + 3 * sizeof(int32_t);
-    uint8_t bytes[size] = {0};
+    uint8_t *bytes = (uint8_t*)malloc(size);
 
     AutopilotCommandMessage message = AutopilotCommandMessage(command);
     memcpy(bytes, &message, sizeof(AutopilotCommandMessage));
@@ -50,16 +55,20 @@ int sendAutopilotCommand(AutopilotCommand command, int32_t valueFirst, int32_t v
     shift += sizeof(int32_t);
     memcpy(bytes + shift, &valueThird, sizeof(int32_t));
 
-    return sendAutopilotBytes(bytes, size);
+    int result = sendAutopilotBytes(bytes, size);
+    free(bytes);
+    return result;
 }
 
 int sendAutopilotCommand(AutopilotCommand command, uint8_t* rawBytes, int32_t byteSize) {
     ssize_t size = sizeof(AutopilotCommandMessage) + byteSize;
-    uint8_t bytes[size] = {0};
+    uint8_t *bytes = (uint8_t*)malloc(size);
 
     AutopilotCommandMessage message = AutopilotCommandMessage(command);
     memcpy(bytes, &message, sizeof(AutopilotCommandMessage));
     memcpy(bytes + sizeof(AutopilotCommandMessage), rawBytes, byteSize);
 
-    return sendAutopilotBytes(bytes, size);
+    int result = sendAutopilotBytes(bytes, size);
+    free(bytes);
+    return result;
 }

@@ -154,11 +154,12 @@ int askForMissionApproval(char* mission, int& result) {
     int requestSize = 512 + strlen(mission);
 
     char signature[257] = {0};
-    char request[requestSize] = {0};
+    char *request = (char*)malloc(requestSize);
     snprintf(request, requestSize, "/api/nmission?id=%s&mission=%s", boardId, mission);
 
     if (!signMessage(request, signature, 257)) {
         logEntry("Failed to sign New Mission request at Credential Manager", ENTITY_NAME, LogLevel::LOG_WARNING);
+        free(request);
         return 0;
     }
     snprintf(request, 512, "%s&sig=0x%s", request, signature);
@@ -166,8 +167,10 @@ int askForMissionApproval(char* mission, int& result) {
     char response[1024] = {0};
     if (!sendRequest(request, response, 1024)) {
         logEntry("Failed to send New Mission request through Server Connector", ENTITY_NAME, LogLevel::LOG_WARNING);
+        free(request);
         return 0;
     }
+    free(request);
 
     uint8_t authenticity = 0;
     while (!checkSignature(response, authenticity) || !authenticity) {
