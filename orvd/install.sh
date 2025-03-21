@@ -32,7 +32,7 @@ systemctl restart mosquitto
 
 apt-get -y install libapache2-mod-wsgi-py3
 cp -r ./ /var/www/orvd
-mkdir /var/www/orvd/logs
+mkdir -p /var/www/orvd/logs
 cd /var/www/orvd
 export FLASK_APP=orvd_server.py
 export ADMIN_LOGIN=admin
