@@ -9,21 +9,25 @@ sudo apt-get update
 
 Установить связку ros2+gz:
 ```
-sudo apt install ros-jazzy-ros-gz ros-jazzy-desktop ros-dev-tools
+sudo apt install ros-humble-ros-gz ros-humble-desktop ros-dev-tools
+sudo usermod -aG render,video $USER
 ```
 
 Установить MAVROS:
 ```
-sudo apt install ros-jazzy-mavros
+sudo apt install ros-humble-mavros
 wget https://raw.githubusercontent.com/mavlink/mavros/ros2/mavros/scripts/install_geographiclib_datasets.sh
 chmod +x ./install_geographiclib_datasets.sh
 sudo ./install_geographiclib_datasets.sh
 ```
 
-Прописать в .bashrc установку ros2 и перезапустить консоль:
+Прописать в .bashrc установку ros2:
 ```
-source /opt/ros/jazzy/setup.bash
+source /opt/ros/humble/setup.bash
+export LIBGL_ALWAYS_SOFTWARE=1
 ```
+
+И перезапустить консоль.
 
 ## Запуск нод
 
@@ -79,8 +83,4 @@ sudo ufw allow 14571/udp
 
 И перезапустить сервер с СУПА.
 
-3. Если СУПА развернут в docker-контейнере, запускаемом через make online, то в ./src/rover_mavros/launch/mavros.launch.py изменить fcu_url на udp://:14551@localhost:14551 и пересобрать ноды через colcon.
-
-## Проблемы
-
-1. Иногда могут возникнуть проблемы с совместимостью QoS маврос ноды и управляющей ноды. Перезапуск управляющей ноды обычно помогает.
+3. Если СУПА развернут в docker-контейнере, запускаемом через make online, то в ./src/rover_mavros/launch/mavros.launch.py изменить fcu_url на udp://:14551@localhost:14551 и пересобрать проект через colcon.
