@@ -6,25 +6,17 @@
       <real_time_factor>1.0</real_time_factor>
     </physics>
 
-    <plugin filename="gz-sim-physics-system"
-      name="gz::sim::systems::Physics">
+    <plugin filename="libignition-gazebo-physics-system.so"
+      name="ignition::gazebo::systems::Physics">
     </plugin>
-    <plugin
-      filename="gz-sim-sensors-system"
-      name="gz::sim::systems::Sensors">
-      <render_engine>ogre</render_engine>
+    <plugin filename="libignition-gazebo-user-commands-system.so"
+      name="ignition::gazebo::systems::UserCommands">
     </plugin>
-    <plugin filename="gz-sim-user-commands-system"
-      name="gz::sim::systems::UserCommands">
+    <plugin filename="libignition-gazebo-scene-broadcaster-system.so"
+      name="ignition::gazebo::systems::SceneBroadcaster">
     </plugin>
-    <plugin filename="gz-sim-scene-broadcaster-system"
-      name="gz::sim::systems::SceneBroadcaster">
-    </plugin>
-    <plugin filename="gz-sim-imu-system"
-      name="gz::sim::systems::Imu">
-    </plugin>
-    <plugin filename="gz-sim-navsat-system"
-      name="gz::sim::systems::NavSat">
+    <plugin filename="libignition-gazebo-imu-system.so"
+      name="ignition::gazebo::systems::Imu">
     </plugin>
 
     <scene>

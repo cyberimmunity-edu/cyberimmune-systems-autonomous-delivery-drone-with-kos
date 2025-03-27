@@ -9,12 +9,13 @@ sudo apt-get update
 
 Установить связку ros2+gz:
 ```
-sudo apt install ros-jazzy-ros-gz ros-jazzy-desktop ros-dev-tools
+sudo apt install ros-humble-ros-gz ros-humble-desktop ros-dev-tools
+sudo usermod -aG render,video $USER
 ```
 
 Установить MAVROS:
 ```
-sudo apt install ros-jazzy-mavros
+sudo apt install ros-humble-mavros
 wget https://raw.githubusercontent.com/mavlink/mavros/ros2/mavros/scripts/install_geographiclib_datasets.sh
 chmod +x ./install_geographiclib_datasets.sh
 sudo ./install_geographiclib_datasets.sh
@@ -22,7 +23,8 @@ sudo ./install_geographiclib_datasets.sh
 
 Прописать в .bashrc установку ros2 и перезапустить консоль:
 ```
-source /opt/ros/jazzy/setup.bash
+source /opt/ros/humble/setup.bash
+export LIBGL_ALWAYS_SOFTWARE=1
 ```
 
 ## Запуск нод
