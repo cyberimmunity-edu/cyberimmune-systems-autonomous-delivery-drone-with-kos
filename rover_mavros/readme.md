@@ -21,11 +21,13 @@ chmod +x ./install_geographiclib_datasets.sh
 sudo ./install_geographiclib_datasets.sh
 ```
 
-Прописать в .bashrc установку ros2 и перезапустить консоль:
+Прописать в .bashrc установку ros2:
 ```
 source /opt/ros/humble/setup.bash
 export LIBGL_ALWAYS_SOFTWARE=1
 ```
+
+И перезапустить консоль.
 
 ## Запуск нод
 
@@ -81,8 +83,4 @@ sudo ufw allow 14571/udp
 
 И перезапустить сервер с СУПА.
 
-3. Если СУПА развернут в docker-контейнере, запускаемом через make online, то в ./src/rover_mavros/launch/mavros.launch.py изменить fcu_url на udp://:14551@localhost:14551 и пересобрать ноды через colcon.
-
-## Проблемы
-
-1. Иногда могут возникнуть проблемы с совместимостью QoS маврос ноды и управляющей ноды. Перезапуск управляющей ноды обычно помогает.
+3. Если СУПА развернут в docker-контейнере, запускаемом через make online, то в ./src/rover_mavros/launch/mavros.launch.py изменить fcu_url на udp://:14551@localhost:14551 и пересобрать проект через colcon.

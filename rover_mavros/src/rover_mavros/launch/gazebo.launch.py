@@ -22,7 +22,7 @@ def generate_launch_description():
 
     include_gz_sim = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(gz_sim_launch_path),
-        launch_arguments={'gz_args': '-r iris_runway.sdf --render-engine ogre'}.items()
+        launch_arguments={'gz_args': '-r iris_runway.sdf'}.items()
     )
 
     return LaunchDescription([
