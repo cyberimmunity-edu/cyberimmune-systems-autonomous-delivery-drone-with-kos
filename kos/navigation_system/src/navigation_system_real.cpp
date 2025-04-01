@@ -30,7 +30,8 @@
 
 std::thread barometerThread;
 
-char gpsUart[] = "uart3";
+char bspUart[] = "uart3";
+char gpsUart[] = "serial@7e201600";
 char gpsConfigSuffix[] = "default";
 UartHandle gpsUartHandler = NULL;
 
@@ -415,18 +416,18 @@ int initNavigationSystem() {
 
     char logBuffer[256] = {0};
     Retcode rc = BspInit(NULL);
-    if (rc != rcOk) {
+    if (rc != BSP_EOK) {
         snprintf(logBuffer, 256, "Failed to initialize BSP (" RETCODE_HR_FMT ")", RETCODE_HR_PARAMS(rc));
         logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_ERROR);
-        return 0;
+        return EXIT_FAILURE;
     }
-    rc = BspEnableModule(gpsUart);
-    if (rc != rcOk) {
+    rc = BspEnableModule(bspUart);
+    if (rc != BSP_EOK) {
         snprintf(logBuffer, 256, "Failed to enable UART %s (" RETCODE_HR_FMT ")", RETCODE_HR_PARAMS(rc));
         logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_ERROR);
-        return 0;
+        return EXIT_FAILURE;
     }
-    rc = BspSetConfig(gpsUart, gpsConfig);
+    rc = BspSetConfig(bspUart, gpsConfig);
     if (rc != rcOk) {
         snprintf(logBuffer, 256, "Failed to set BSP config for UART %s (" RETCODE_HR_FMT ")", gpsUart, RETCODE_HR_PARAMS(rc));
         logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_ERROR);

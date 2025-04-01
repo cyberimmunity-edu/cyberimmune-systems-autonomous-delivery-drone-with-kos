@@ -26,7 +26,8 @@
 /** \cond */
 #define NAME_MAX_LENGTH 64
 
-char autopilotUart[] = "uart2";
+char bspUart[] = "uart2";
+char autopilotUart[] = "serial@7e201400";
 char autopilotConfigSuffix[] = "default";
 UartHandle autopilotUartHandler = NULL;
 /** \endcond */
@@ -56,13 +57,13 @@ int initAutopilotConnector() {
         logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_ERROR);
         return 0;
     }
-    rc = BspEnableModule(autopilotUart);
+    rc = BspEnableModule(bspUart);
     if (rc != rcOk) {
         snprintf(logBuffer, 256, "Failed to enable UART %s (" RETCODE_HR_FMT ")", autopilotUart, RETCODE_HR_PARAMS(rc));
         logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_ERROR);
         return 0;
     }
-    rc = BspSetConfig(autopilotUart, autopilotConfig);
+    rc = BspSetConfig(bspUart, autopilotConfig);
     if (rc != rcOk) {
         snprintf(logBuffer, 256, "Failed to set BSP config for UART %s (" RETCODE_HR_FMT ")", autopilotUart, RETCODE_HR_PARAMS(rc));
         logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_ERROR);
