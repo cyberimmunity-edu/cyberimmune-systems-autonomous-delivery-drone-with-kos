@@ -27,11 +27,15 @@
 
 /** \cond */
 #define NAME_MAX_LENGTH 64
+#define LNS_ANGLE (69 * M_PI / 180.0f)
+#define LNS_LAT 598858446
+#define LNS_LNG 298209447
+#define LATLON_TO_M 0.011131884502145034
 
 std::thread barometerThread;
 
-char bspUart[] = "uart3";
-char gpsUart[] = "serial@7e201600";
+char bspUart[] = "uart5";
+char gpsUart[] = "serial@7e201a00";
 char gpsConfigSuffix[] = "default";
 UartHandle gpsUartHandler = NULL;
 
@@ -251,6 +255,10 @@ void getSensors() {
                         mode = 10;
                         messageType = 2;
                     }
+                    else if ((head[2] == 'L') && (head[3] == 'N') && (head[4] == 'S')) {
+                        mode = 17;
+                        messageType = 3;
+                    }
                     else
                         mode = 0;
                     idx = 0;
@@ -370,6 +378,36 @@ void getSensors() {
                     idx++;
                 }
                 break;
+            case 17: // X local coordinate
+                if (idx >= 16) {
+                    read = false;
+                    messageType = 0;;
+                }
+                else if (value == ',') {
+                    latStr[idx] = '\0';
+                    idx = 0;
+                    mode = 18;
+                }
+                else {
+                    latStr[idx] = value;
+                    idx++;
+                }
+                break;
+            case 18: // Y local coordinate
+                if (idx >= 16) {
+                    read = false;
+                    messageType = 0;
+                }
+                else if (value == ',') {
+                    lngStr[idx] = '\0';
+                    idx = 0;
+                    read = false;
+                }
+                else {
+                    lngStr[idx] = value;
+                    idx++;
+                }
+                break;
             }
         }
 
@@ -384,8 +422,23 @@ void getSensors() {
             setCoords(latitude, longitude);
             setInfo(atof(dopStr), atoi(satsStr));
         }
-        else if (messageType = 2)
+        else if (messageType == 2)
             setSpeed(atof(speedStr) / 3.6f);
+        else if (messageType == 3) {
+            float lns_angle_sin = sin(LNS_ANGLE);
+            float lns_angle_cos = cos(LNS_ANGLE);
+            float lns_x = atof(latStr);
+            float lns_y = atof(lngStr);
+            float X = lns_angle_cos * lns_x - lns_angle_sin * lns_y;
+            float Y = lns_angle_sin * lns_x + lns_angle_cos * lns_y;
+            int32_t difLat = (int32_t)round(Y / LATLON_TO_M);
+            float scale = cos(LNS_LAT * 1.0e-7 * M_PI / 180.0f);
+            if (scale < 0.01f)
+                scale = 0.01f;
+            int32_t difLng = (int32_t)round((X / LATLON_TO_M) / scale);
+            setCoords(LNS_LAT + difLat, LNS_LNG + difLng);
+            setInfo(1.0, 4);
+        }
         else
             logEntry("Failed to parse NMEA string from GPS", ENTITY_NAME, LogLevel::LOG_WARNING);
     }
@@ -428,7 +481,7 @@ int initNavigationSystem() {
         return EXIT_FAILURE;
     }
     rc = BspSetConfig(bspUart, gpsConfig);
-    if (rc != rcOk) {
+    if (rc != BSP_EOK) {
         snprintf(logBuffer, 256, "Failed to set BSP config for UART %s (" RETCODE_HR_FMT ")", gpsUart, RETCODE_HR_PARAMS(rc));
         logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_ERROR);
         return 0;
@@ -465,13 +518,13 @@ int initNavigationSystem() {
 int initSensors() {
     char logBuffer[256] = {0};
     Retcode rc = UartOpenPort(gpsUart, &gpsUartHandler);
-    if (rc != rcOk) {
+    if (rc != UART_EOK) {
         snprintf(logBuffer, 256, "Failed to open UART %s (" RETCODE_HR_FMT ")", gpsUart, RETCODE_HR_PARAMS(rc));
         logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
         return 0;
     }
 
-    rtl_size_t writtenBytes;
+    /*rtl_size_t writtenBytes;
     uint8_t gnssNmea[] = { 0xb5, 0x62,
         0x06, 0x00, 0x14, 0x00, 0x01, 0x00, 0x00, 0x00, 0xd0, 0x08, 0x00, 0x00, 0x00, 0xc2, 0x01, 0x00,
         0x03, 0x00, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0xbb, 0x58 };
@@ -504,7 +557,7 @@ int initSensors() {
         snprintf(logBuffer, 256, "Failed to write configuration message to GPS: %ld bytes were expected, %ld bytes were sent", expectedSize, writtenBytes);
         logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
         return 0;
-    }
+    }*/
 
     rc = I2cOpenChannel(barometerI2C, &barometerHandler);
     if (rc != rcOk) {
