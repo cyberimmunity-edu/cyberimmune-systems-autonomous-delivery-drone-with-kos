@@ -13,6 +13,8 @@ use EDL drone_controller.ServerConnector
 use EDL drone_controller.Logger
 use EDL drone_controller.KlogEntity
 use EDL drone_controller.KlogStorageEntity
+use EDL kl.drivers.UART
+use EDL wpa.WpaSupplicant
 
 /* Execution of entities */
 execute {

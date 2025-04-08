@@ -6,7 +6,7 @@ BUILD="${SCRIPT_DIR}/build"
 export LANG=C
 export TARGET="aarch64-kos"
 export PKG_CONFIG=""
-export SDK_PREFIX="/opt/KasperskyOS-Community-Edition-RaspberryPi4b-1.3.0.166"
+export SDK_PREFIX="/opt/KasperskyOS-Community-Edition-RaspberryPi4b-wifi"
 export INSTALL_PREFIX="$BUILD/../install"
 export PATH="$SDK_PREFIX/toolchain/bin:$PATH"
 
@@ -20,7 +20,8 @@ BOARD_ID=""
 UNIT_TESTS=""
 PAL_TESTS=""
 SIMULATOR_IP="10.0.2.2"
-SERVER_IP="10.0.2.2"
+SERVER_IP="192.168.1.78"
+BOARD="RPI4_BCM2711"
 
 set -eu
 
@@ -146,6 +147,7 @@ fi
       -D BOARD_ID="$BOARD_ID" \
       -D SIMULATOR_IP=$SIMULATOR_IP \
       -D SERVER_IP=$SERVER_IP \
+      -D BOARD=$BOARD \
       -D CMAKE_BUILD_TYPE:STRING=Debug \
       -D CMAKE_INSTALL_PREFIX:STRING="$INSTALL_PREFIX" \
       -D CMAKE_FIND_ROOT_PATH="${SDK_PREFIX}/sysroot-$TARGET" \
