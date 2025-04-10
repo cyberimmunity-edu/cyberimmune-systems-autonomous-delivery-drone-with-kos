@@ -28,6 +28,7 @@ document.getElementById('forbidden_zones_checkbox').onclick = toggleForbiddenZon
 document.getElementById('revised-mission-accept').onclick = () => revised_mission_decision(0);
 document.getElementById('revised-mission-decline').onclick = () => revised_mission_decision(1);
 document.getElementById('monitoring-checkbox').onclick = () => toggle_display_mode();
+document.getElementById('flight-info-checkbox').onclick = () => toggle_flight_info_response_mode();
 document.getElementById('copy-id').onclick = () => copy_current_id();
 
 
@@ -416,6 +417,23 @@ async function get_display_mode() {
   }
 }
 
+async function toggle_flight_info_response_mode() {
+  const query_str = `admin/toggle_flight_info_response_mode?token=${access_token}`;
+  await fetch(query_str);
+  await get_flight_info_response_mode();
+}
+
+async function get_flight_info_response_mode() {
+  const delay_resp = await fetch(`admin/get_flight_info_response_mode?token=${access_token}`);
+  const delay_text = await delay_resp.text();
+  const $monitoringCheckbox = document.getElementById('flight-info-checkbox')
+  if (delay_text === '0') {
+    $monitoringCheckbox.checked = true;
+  } else {
+    $monitoringCheckbox.checked = false;
+  }
+}
+
 async function fly_accept() {
   let fly_accept_checkbox = document.getElementById('fly_accept_checkbox');
   if (active_id == null || current_state == "Kill switch ON") {
@@ -734,6 +752,9 @@ async function getAllData() {
         await updateForbiddenZones();
     }
 
+    get_display_mode();
+    get_flight_info_response_mode();
+
   } catch (error) {
     console.error("Failed to fetch all data:", error);
   }
@@ -746,6 +767,7 @@ setInterval(async function() {
   } else {
     get_ids();
     get_display_mode();
+    get_flight_info_response_mode();
     if (forbidden_zones_display) {
       await updateForbiddenZones();
     }
