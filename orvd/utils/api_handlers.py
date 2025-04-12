@@ -446,7 +446,7 @@ def get_forbidden_zones_delta_handler(id: str):
             name = zone['properties']['name']
             change_type = zone['properties']['change_type']
             coordinates = zone['geometry']['coordinates'][0]
-            delta_str += f'&{name}&{change_type}&{len(coordinates)}&{"&".join(list(map(lambda e: str(e[0]) + "_" + str(e[1]), coordinates)))}'
+            delta_str += f'&{name}&{change_type}&{len(coordinates)}&{"&".join(list(map(lambda e: str(e[1]) + "_" + str(e[0]), coordinates)))}'
         
         return delta_str
     except Exception as e:

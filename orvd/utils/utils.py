@@ -572,5 +572,5 @@ def generate_forbidden_zones_string(forbidden_zones):
     for zone in forbidden_zones['features']:
         name = zone['properties']['name']
         coordinates = zone['geometry']['coordinates'][0]
-        result_str += f'&{name}&{len(coordinates)}&{"&".join(list(map(lambda e: str(e[0]) + "_" + str(e[1]), coordinates)))}'
+        result_str += f'&{name}&{len(coordinates)}&{"&".join(list(map(lambda e: str(e[1]) + "_" + str(e[0]), coordinates)))}'
     return result_str

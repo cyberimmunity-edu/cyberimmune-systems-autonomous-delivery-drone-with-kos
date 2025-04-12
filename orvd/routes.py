@@ -1431,7 +1431,7 @@ def get_all_forbidden_zones():
         description: Информация о запрещенных зонах.
         schema:
           type: string
-          example: "$ForbiddenZones 1&test_name&2&100_50&100_0#{signature}"
+          example: "$ForbiddenZones 1&test_name&2&50_100&0_100#{signature}"
       400:
         description: Неверный идентификатор.
         schema:
@@ -1472,7 +1472,7 @@ def get_forbidden_zones_delta():
         description: Дельта изменений в запрещенных зонах.
         schema:
           type: string
-          example: "$ForbiddenZonesDelta 1&test_name&modified&2&100_50&100_0#{signature}"
+          example: "$ForbiddenZonesDelta 1&test_name&modified&2&50_100&0_100#{signature}"
       400:
         description: Неверный идентификатор.
         schema:
