@@ -29,9 +29,9 @@ void KOS_CommandExecutor::change_speed(int32_t speed) {
         return;
 
 #if AP_SIM_ENABLED
-    gcs().send_text(MAV_SEVERITY_INFO, "Info: Changing speed to %d m/s", speed);
+    gcs().send_text(MAV_SEVERITY_INFO, "Info: Changing speed to %d cm/s", speed);
 #else
-    gcs().send_text(MAV_SEVERITY_INFO, "Info: Changing speed to %ld m/s", speed);
+    gcs().send_text(MAV_SEVERITY_INFO, "Info: Changing speed to %ld cm/s", speed);
 #endif
 #if APM_BUILD_TYPE(APM_BUILD_ArduCopter)
     copter.aparm.angle_max.set(DEFAULT_ANGLE_MAX);
@@ -40,7 +40,7 @@ void KOS_CommandExecutor::change_speed(int32_t speed) {
     cmd.index = 0;
     cmd.id = MAV_CMD_DO_CHANGE_SPEED;
     cmd.content.speed.speed_type = 0;
-    cmd.content.speed.target_ms = speed;
+    cmd.content.speed.target_ms = speed / 100.0f;
     cmd.content.speed.throttle_pct = 0;
     mission->start_command(cmd);
 }
