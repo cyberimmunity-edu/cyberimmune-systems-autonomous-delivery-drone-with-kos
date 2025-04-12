@@ -66,7 +66,7 @@ int sendSignedMessage(char* method, char* response, char* errorMessage, uint8_t 
     }
     snprintf(request, 512, "%s&sig=0x%s", request, signature);
 
-    while (!sendRequest(request, response, 1024)) {
+    while (!sendRequest(request, response, 4096)) {
         snprintf(logBuffer, 256, "Failed to send %s request through Server Connector. Trying again in %ds", errorMessage, delay);
         logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
         sleep(delay);
@@ -90,7 +90,7 @@ int sendSignedMessage(char* method, char* response, char* errorMessage, uint8_t 
  */
 void serverSession() {
     sleep(sessionDelay);
-    char response[1024] = {0};
+    char response[4096] = {0};
     while (true) {
         sendSignedMessage("/api/flight_info", response, "session", RETRY_DELAY_SEC);
         //If connection is failed, flight must be paused
@@ -116,7 +116,7 @@ void serverSession() {
         if (strcmp(receivedHash, calculatedHash)) {
             logEntry("No-flight areas on the server were updated", ENTITY_NAME, LogLevel::LOG_INFO);
             char hash[65] = {0};
-            char responseDelta[1024] = {0};
+            char responseDelta[4096] = {0};
             strcpy(hash, receivedHash);
             sendSignedMessage("/api/get_forbidden_zones_delta", responseDelta, "no-flight areas", RETRY_DELAY_SEC);
             int successful = updateNoFlightAreas(responseDelta);
@@ -164,8 +164,8 @@ int askForMissionApproval(char* mission, int& result) {
     }
     snprintf(request, 512, "%s&sig=0x%s", request, signature);
 
-    char response[1024] = {0};
-    if (!sendRequest(request, response, 1024)) {
+    char response[4096] = {0};
+    if (!sendRequest(request, response, 4096)) {
         logEntry("Failed to send New Mission request through Server Connector", ENTITY_NAME, LogLevel::LOG_WARNING);
         free(request);
         return 0;
@@ -203,7 +203,7 @@ int askForMissionApproval(char* mission, int& result) {
  */
 int main(void) {
     char logBuffer[256] = {0};
-    char responseBuffer[1024] = {0};
+    char responseBuffer[4096] = {0};
     //Before do anything, we need to ensure, that other modules are ready to work
     while (!waitForInit("logger_connection", "Logger")) {
         snprintf(logBuffer, 256, "Failed to receive initialization notification from Logger. Trying again in %ds", RETRY_DELAY_SEC);

@@ -58,10 +58,10 @@ int resumeFlight();
 int abortMission();
 /**
  * \~English Sends a message to the autopilot demanding to change flight speed.
- * \param[in] speed Flight speed in m/s at which the drone should continue to move.
+ * \param[in] speed Flight speed in cm/s at which the drone should continue to move.
  * \return Returns 1 on succesful message send, 0 otherwise.
  * \~Russian Передает в автопилот сообщение с требованием изменить скорость полета.
- * \param[in] speed Скорость в м/с, с которой должен продолжить движение дрон.
+ * \param[in] speed Скорость в см/с, с которой должен продолжить движение дрон.
  * \return Возвращает 1, если сообщение было успешно передано, иначе -- 0.
  */
 int changeSpeed(int32_t speed);

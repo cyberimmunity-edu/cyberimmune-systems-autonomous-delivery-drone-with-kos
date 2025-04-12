@@ -21,7 +21,7 @@
 
 /** \cond */
 #define BUFFER_SIZE 1024
-#define CONTENT_SIZE 2048
+#define CONTENT_SIZE 4096
 #define CONNECTION_TIMEOUT 5
 
 uint16_t serverPort = 8080;
