@@ -31,17 +31,19 @@
 #define LNS_LAT 598858446
 #define LNS_LNG 298209447
 
-std::thread barometerThread;
+#if ALT_SRC == 1
+    std::thread barometerThread;
+#endif
 
 #if COORD_SRC == 1
     char bspUart[] = "uart3";
     char gpsUart[] = "serial@7e201600";
 #elif COORD_SRC == 2
-#define LATLON_TO_M 0.011131884502145034
+    #define LATLON_TO_M 0.011131884502145034
     char bspUart[] = "uart5";
     char gpsUart[] = "serial@7e201a00";
     float lnsSin, lnsCos, lnsScale;
-    int32_t prevX = 0, prevY = 0;
+    int32_t prevX, prevY;
 #endif
 char gpsConfigSuffix[] = "default";
 UartHandle gpsUartHandler = NULL;
@@ -230,7 +232,7 @@ void getSensors() {
     uint8_t value;
     int mode, messageType, idx, latSign, lngSign;
     int32_t latitude, longitude;
-    char head[8], satsStr[8], dopStr[8], latStr[16], lngStr[16], speedStr[16], xStr[16], yStr[16];
+    char head[8], satsStr[8], dopStr[8], latStr[16], lngStr[16], speedStr[16], xStr[16], yStr[16], zStr[16];
 
     while (true) {
         read = true;
@@ -408,10 +410,25 @@ void getSensors() {
                 else if (value == ',') {
                     yStr[idx] = '\0';
                     idx = 0;
-                    read = false;
+                    mode = 19;
                 }
                 else {
                     yStr[idx] = value;
+                    idx++;
+                }
+                break;
+            case 19: // Z local coordinate
+                if (idx >= 16) {
+                    read = false;
+                    messageType = 0;
+                }
+                else if (value == '*') {
+                    zStr[idx] = '\0';
+                    idx = 0;
+                    read = false;
+                }
+                else {
+                    zStr[idx] = value;
                     idx++;
                 }
                 break;
@@ -452,6 +469,9 @@ void getSensors() {
             setCoords(LNS_LAT + difLat, LNS_LNG + difLng);
             setSpeed(speed);
             setInfo(1.0, 4);
+#endif
+#if ALT_SRC == 2
+            setAltitude((int32_t)round(atof(zStr)));
 #endif
         }
         else
@@ -581,8 +601,11 @@ int initSensors() {
     lnsScale = cos(LNS_LAT * 1.0e-7 * M_PI / 180.0f);
     if (lnsScale < 0.01f)
         lnsScale = 0.01f;
+    prevX = 0;
+    prevY = 0;
 #endif
 
+#if ALT_SRC == 1
     rc = I2cOpenChannel(barometerI2C, &barometerHandler);
     if (rc != rcOk) {
         snprintf(logBuffer, 256, "Failed to open I2C %s (" RETCODE_HR_FMT ")", barometerI2C, RETCODE_HR_PARAMS(rc));
@@ -636,6 +659,7 @@ int initSensors() {
     }
 
     barometerThread = std::thread(getBarometer);
+#endif
 
     return 1;
 }
