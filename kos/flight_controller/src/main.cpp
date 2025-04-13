@@ -71,6 +71,8 @@ int sendSignedMessage(char* method, char* response, char* errorMessage, uint8_t 
         logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
         sleep(delay);
     }
+    if (!strcmp(response, "TIMEOUT"))
+        return 0;
 
     uint8_t authenticity = 0;
     while (!checkSignature(response, authenticity) || !authenticity) {

@@ -158,6 +158,14 @@ int requestServer(char* query, char* response, uint32_t responseSize) {
         }
     close(socketDesc);
 
+    if (strstr(content, "HTTP/1.1 403 FORBIDDEN")) {
+        char logBuffer[256] = {0};
+        snprintf(logBuffer, 256, "Connection to %s:%d is not responding", SERVER_IP, serverPort);
+        logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
+        strncpy(response, "TIMEOUT", 8);
+        return 1;
+    }
+
     char* msg = strstr(content, "$");
     uint32_t len = strlen(msg);
     if (msg == NULL) {
