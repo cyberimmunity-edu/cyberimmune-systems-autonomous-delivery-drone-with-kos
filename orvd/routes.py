@@ -1236,7 +1236,9 @@ def flight_info():
     """
     id = cast_wrapper(request.args.get('id'), str)
     sig = request.args.get('sig')
-    if id:
+    if not modes["flight_info_response"]:
+        return '', 403
+    elif id:
         return signed_request(handler_func=flight_info_handler, verifier_func=verify, signer_func=sign,
                           query_str=f'/api/flight_info?id={id}', key_group=f'kos{id}', sig=sig, id=id)
     else:
@@ -1715,6 +1717,17 @@ def get_display_mode():
 def toggle_display_mode():
     token = request.args.get('token')
     return authorized_request(handler_func=toggle_display_mode_handler, token=token)
+  
+@bp.route('/admin/get_flight_info_response_mode')
+def get_flight_info_response_mode():
+    token = request.args.get('token')
+    return authorized_request(handler_func=get_flight_info_response_mode_handler, token=token)
+      
+
+@bp.route('/admin/toggle_flight_info_response_mode')
+def toggle_flight_info_response_mode():
+    token = request.args.get('token')
+    return authorized_request(handler_func=toggle_flight_info_response_mode_handler, token=token)
   
 @bp.route('/admin/get_all_data')
 def get_all_data():

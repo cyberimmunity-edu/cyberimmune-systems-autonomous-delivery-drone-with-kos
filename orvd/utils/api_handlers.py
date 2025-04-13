@@ -12,7 +12,8 @@ OUT_ADDR = 'localhost'
 arm_queue = set()
 revise_mission_queue = set()
 modes = {
-    "display_only": False
+    "display_only": False,
+    "flight_info_response": True
 }
 
 if ENABLE_MAVLINK:
@@ -1054,6 +1055,13 @@ def get_display_mode_handler():
 
 def toggle_display_mode_handler():
     modes['display_only'] = not modes['display_only']
+    return OK
+
+def get_flight_info_response_mode_handler():
+    return '0' if modes['flight_info_response'] else '1'
+
+def toggle_flight_info_response_mode_handler():
+    modes['flight_info_response'] = not modes['flight_info_response']
     return OK
 
 def get_all_data_handler():
