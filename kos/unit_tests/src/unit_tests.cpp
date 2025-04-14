@@ -331,24 +331,44 @@ TEST(FlighController, ParseAreasDelta) {
 
 TEST(FlighController, CoordinateToString) {
     char str1[13] = {0};
-    coordToString(str1, 13, 1237654321);
+    coordToString(str1, 13, 1237654321, 7);
     EXPECT_STREQ(str1, "123.7654321");
 
     char str2[13] = {0};
-    coordToString(str2, 13, -1237654321);
+    coordToString(str2, 13, -1237654321, 7);
     EXPECT_STREQ(str2, "-123.7654321");
 
     char str3[13] = {0};
-    coordToString(str3, 13, 1237654000);
-    EXPECT_FALSE(strcmp(str3, "123.7654"));
+    coordToString(str3, 13, 1237654000, 7);
+    EXPECT_STREQ(str3, "123.7654000");
 
     char str4[13] = {0};
-    coordToString(str4, 13, 1230000000);
-    EXPECT_FALSE(strcmp(str4, "123"));
+    coordToString(str4, 13, 1230000000, 7);
+    EXPECT_STREQ(str4, "123.0000000");
 
     char str5[13] = {0};
-    coordToString(str5, 13, 1000000000);
-    EXPECT_FALSE(strcmp(str5, "100"));
+    coordToString(str5, 13, 1000000000, 7);
+    EXPECT_STREQ(str5, "100.0000000");
+
+    char str6[13] = {0};
+    coordToString(str6, 13, 240123456, 7);
+    EXPECT_STREQ(str6, "24.0123456");
+
+    char str7[10] = {0};
+    coordToString(str7, 10, 100, 2);
+    EXPECT_STREQ(str7, "1.00");
+
+    char str8[10] = {0};
+    coordToString(str8, 10, 5, 0);
+    EXPECT_STREQ(str8, "5");
+
+    char str9[10] = {0};
+    coordToString(str9, 10, 0, 2);
+    EXPECT_STREQ(str9, "0.00");
+
+    char str10[13] = {0};
+    coordToString(str10, 13, 1234, 7);
+    EXPECT_STREQ(str10, "0.0001234");
 }
 
 TEST(FlighController, LoadMission) {

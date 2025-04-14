@@ -405,22 +405,30 @@ int parseAreasDelta(char* str) {
  * \param[out] string Pointer to string to write converted coordinate.
  * \param[in] len Length of string to write coordinate.
  * \param[in] coord Coordinate in degrees * 10^7.
+ * \param[in] digit Digit number after the comma.
  * \~Russian Преобразует координату в строку.
  * \param[out] string Указатель на строку, куда будет записана координата.
  * \param[in] len Длина строка для записи координаты.
  * \param[in] coord Координата в градусах * 10^7.
+ * \param[in] digit Количество точек после запятой.
  */
-void coordToString(char* string, uint8_t len, int32_t coord) {
-    snprintf(string, len, "%d.%d", coord / 10000000, abs(coord % 10000000));
-    for (int k = strlen(string) - 1; k >= 0; k--)
-        if (string[k] == '0')
-            string[k] = '\0';
-        else if (string[k] == '.') {
-            string[k] = '\0';
-            break;
+void coordToString(char* string, uint8_t len, int32_t coord, uint8_t digit) {
+    snprintf(string, len, "%d", coord);
+    int strLen = strlen(string);
+    if (strLen < digit + 1) {
+        int zeroNum = digit - strLen + 1;
+        for (int i = strLen; i >= 0; i--) {
+            string[i + zeroNum] = string[i];
+            string[i] = '0';
         }
-        else
-            break;
+        strLen = strlen(string);
+    }
+    if (digit) {
+        for (int i = strLen; i >= strLen - digit; i--) {
+            string[i] = string[i - 1];
+        }
+        string[strLen - digit] = '.';
+    }
 }
 
 int loadMission(char* mission) {
@@ -492,28 +500,29 @@ int missionToString(MissionCommand* commands, uint8_t num, char* string, uint32_
     for (int i = 0; i < num; i++) {
         int commandLen = 0;
         char command[256] = {0};
+        char latStr[13] = {0}, lngStr[13] = {0}, altStr[10] = {0};
         switch (commands[i].type) {
         case CommandType::HOME:
-            commandLen = snprintf(command, 256, "H%d.%d_%d.%d_%d.%d", commands[i].content.waypoint.latitude / 10000000,
-                abs(commands[i].content.waypoint.latitude % 10000000), commands[i].content.waypoint.longitude / 10000000,
-                abs(commands[i].content.waypoint.longitude % 10000000), commands[i].content.waypoint.altitude / 100,
-                abs(commands[i].content.waypoint.altitude % 100));
+            coordToString(latStr, 13, commands[i].content.waypoint.latitude, 7);
+            coordToString(lngStr, 13, commands[i].content.waypoint.longitude, 7);
+            coordToString(altStr, 10, commands[i].content.waypoint.altitude, 2);
+            commandLen = snprintf(command, 256, "H%s_%s_%s", latStr, lngStr, altStr);
             break;
         case CommandType::TAKEOFF:
-            commandLen = snprintf(command, 256, "T%d.%d", commands[i].content.takeoff.altitude / 100,
-                abs(commands[i].content.takeoff.altitude % 100));
+            coordToString(altStr, 10, commands[i].content.takeoff.altitude, 2);
+            commandLen = snprintf(command, 256, "T%s", altStr);
             break;
         case CommandType::WAYPOINT:
-            commandLen = snprintf(command, 256, "W%d.%d_%d.%d_%d.%d", commands[i].content.waypoint.latitude / 10000000,
-                abs(commands[i].content.waypoint.latitude % 10000000), commands[i].content.waypoint.longitude / 10000000,
-                abs(commands[i].content.waypoint.longitude % 10000000), commands[i].content.waypoint.altitude / 100,
-                abs(commands[i].content.waypoint.altitude % 100));
+            coordToString(latStr, 13, commands[i].content.waypoint.latitude, 7);
+            coordToString(lngStr, 13, commands[i].content.waypoint.longitude, 7);
+            coordToString(altStr, 10, commands[i].content.waypoint.altitude, 2);
+            commandLen = snprintf(command, 256, "W%s_%s_%s", latStr, lngStr, altStr);
             break;
         case CommandType::LAND:
-            commandLen = snprintf(command, 256, "L%d.%d_%d.%d_%d.%d", commands[i].content.waypoint.latitude / 10000000,
-                abs(commands[i].content.waypoint.latitude % 10000000), commands[i].content.waypoint.longitude / 10000000,
-                abs(commands[i].content.waypoint.longitude % 10000000), commands[i].content.waypoint.altitude / 100,
-                abs(commands[i].content.waypoint.altitude % 100));
+            coordToString(latStr, 13, commands[i].content.waypoint.latitude, 7);
+            coordToString(lngStr, 13, commands[i].content.waypoint.longitude, 7);
+            coordToString(altStr, 10, commands[i].content.waypoint.altitude, 2);
+            commandLen = snprintf(command, 256, "L%s_%s_%s", latStr, lngStr, altStr);
             break;
         case CommandType::SET_SERVO:
             commandLen = snprintf(command, 256, "S%d_%d", commands[i].content.servo.number, commands[i].content.servo.pwm);
@@ -693,16 +702,16 @@ NoFlightArea* getNoFlightAreas(int &num) {
 
 char* getNoFlightAreasHash() {
     if (!strlen(areasHash)) {
-        char areasString[512] = {0};
-        snprintf(areasString, 512, "$ForbiddenZones %d", areaNum);
+        char areasString[1024] = {0};
+        snprintf(areasString, 1024, "$ForbiddenZones %d", areaNum);
         for (int i = 0; i < areaNum; i++) {
-            snprintf(areasString, 512, "%s&%s&%d", areasString, areas[i].name, areas[i].pointNum);
+            snprintf(areasString, 1024, "%s&%s&%d", areasString, areas[i].name, areas[i].pointNum);
             for (int j = 0; j < areas[i].pointNum; j++) {
                 char lat[13] = {0};
                 char lng[13] = {0};
-                coordToString(lat, 13, areas[i].points[j].latitude);
-                coordToString(lng, 13, areas[i].points[j].longitude);
-                snprintf(areasString, 512, "%s&%s_%s", areasString, lat, lng);
+                coordToString(lat, 13, areas[i].points[j].latitude, 7);
+                coordToString(lng, 13, areas[i].points[j].longitude, 7);
+                snprintf(areasString, 1024, "%s&%s_%s", areasString, lat, lng);
             }
         }
 
