@@ -1,7 +1,7 @@
 document.getElementById('submit').onclick = submit;
 document.getElementById('submit-speed').onclick = submitSpeed;
 document.getElementById('submit-events').onclick = submitEvents;
-
+document.getElementById('submit-telemetry-csv').onclick = submitTelemetryCsv;
 
 let chartInstance = null;
 
@@ -76,6 +76,33 @@ async function submitEvents() {
       }
     }
     else{
+        alert('Введите серийный номер.');
+    }
+}
+
+async function submitTelemetryCsv() {
+    let id = document.getElementById('id').value;
+    if (id != null && id !== '') {
+        try {
+            let response = await fetch('logs/get_telemetry_csv?id=' + id);
+            if (response.ok) {
+                let blob = await response.blob();
+                let url = window.URL.createObjectURL(blob);
+                let a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                a.download = `telemetry_${id}.csv`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                a.remove();
+            } else {
+                alert('Ошибка при скачивании телеметрии: ' + response.statusText);
+            }
+        } catch (error) {
+            alert('Ошибка сети при скачивании телеметрии: ' + error);
+        }
+    } else {
         alert('Введите серийный номер.');
     }
 }
