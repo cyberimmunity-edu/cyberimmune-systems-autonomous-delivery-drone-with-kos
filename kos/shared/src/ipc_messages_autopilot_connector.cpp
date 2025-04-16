@@ -162,7 +162,7 @@ int setMission(uint8_t* mission, uint32_t missionSize) {
     struct nk_arena reqArena = NK_ARENA_INITIALIZER(reqBuffer, reqBuffer + sizeof(reqBuffer));
     nk_arena_reset(&reqArena);
 
-    nk_ptr_t* msg = nk_arena_alloc(nk_ptr_t, &reqArena, &(req.mission), missionSize);
+    nk_uint8_t* msg = nk_arena_alloc(nk_uint8_t, &reqArena, &(req.mission), missionSize);
     if ((msg == NULL) || (missionSize > AutopilotConnectorInterface_SetMission_req_arena_size))
         return 0;
     memcpy(msg, mission, missionSize);
