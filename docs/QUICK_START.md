@@ -47,8 +47,8 @@
 # Клонирование репозитория с симулятором (вместо cyberimmunity-edu может быть fork)
 git clone https://gitflic.ru/project/learning-cyberimmunity/cyberimmune-systems-autonomous-delivery-drone-with-kos.git
 
-# Размещение KasperskyOS CE SDK 1.3.0.166 в папке проекта
-cp ~/Downloads/KasperskyOS-Community-Edition-RaspberryPi4b-1.3.0.166_ru.deb cyberimmune-systems-autonomous-delivery-drone-with-kos/
+# Размещение KasperskyOS CE SDK 1.3.0-wifi в папке проекта
+cp ~/Downloads/KasperskyOS-Community-Edition-RaspberryPi4b-1.3.0_amd64.deb cyberimmune-systems-autonomous-delivery-drone-with-kos/
 ```
 
 ### Способ 1. Запуск цифрового двойника с использованием Docker

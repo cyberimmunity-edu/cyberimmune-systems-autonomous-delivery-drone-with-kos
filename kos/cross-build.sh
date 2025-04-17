@@ -6,7 +6,7 @@ BUILD="${SCRIPT_DIR}/build"
 export LANG=C
 export TARGET="aarch64-kos"
 export PKG_CONFIG=""
-export SDK_PREFIX="/opt/KasperskyOS-Community-Edition-RaspberryPi4b-1.3.0.166"
+export SDK_PREFIX="/opt/KasperskyOS-Community-Edition-RaspberryPi4b-wifi"
 export INSTALL_PREFIX="$BUILD/../install"
 export PATH="$SDK_PREFIX/toolchain/bin:$PATH"
 
@@ -56,7 +56,7 @@ function help
              Source of altitude: baro or lns
 
   Examples:
-      bash cross-build.sh -s /opt/KasperskyOS-Community-Edition-RaspberryPi4b-1.3.0.166
+      bash cross-build.sh -s /opt/KasperskyOS-Community-Edition-RaspberryPi4b-wifi
 
 EOF
 }

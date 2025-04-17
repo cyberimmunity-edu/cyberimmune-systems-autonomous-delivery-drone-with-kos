@@ -17,9 +17,9 @@
 
 [Документация KasperskyOS Community Edition SDK](https://support.kaspersky.ru/help/KCE/1.1/ru-RU/whats_new.htm) (на данный момент более свежая документация недоступна).
 
-В цифровом двойнике используется версия KasperskyOS Community Edition SDK 1.3.0.166 для RaspberryPi4b.
+В цифровом двойнике используется версия KasperskyOS Community Edition SDK 1.3.0-wifi для RaspberryPi4b.
 Наличие пакета с SDK требуется для запуска цифрового двойника, т.е. он необходим для прохождения квалификации и участия в соревнованиях.
-Пакет SDK представляет собой Debian-пакет с именем KasperskyOS-Community-Edition-RaspberryPi4b-1.3.0.166_ru.deb, который размещается в корне проекта.
+Пакет SDK представляет собой Debian-пакет с именем KasperskyOS-Community-Edition-RaspberryPi4b-1.3.0_amd64.deb, который размещается в корне проекта.
 
 ### QEMU - эмулятор вычислительной машины
 
