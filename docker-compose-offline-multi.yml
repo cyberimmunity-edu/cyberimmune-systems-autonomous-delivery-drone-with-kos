@@ -22,7 +22,7 @@ services:
       context: .
       dockerfile: ./Dockerfile
     container_name: arducopter
-    command: /home/user/ardupilot/sitl/arducopter -S --model + --speedup 1 --slave 0  --serial5=tcp:5765:wait --serial6=tcp:5766:wait --serial7=tcp:5767:wait --defaults copter.parm --sim-address=172.28.0.2 --home=60.0144850,27.8200870,20.00,200 -I0 --sysid 1
+    command: /home/user/ardupilot/sitl/arducopter -S --model + --speedup 1 --slave 0  --serial5=tcp:5765:wait --serial6=tcp:5766:wait --serial7=tcp:5767:wait --defaults copter.parm --sim-address=172.28.0.2 --home=60.0026843,27.8573162,0.00,120 -I0 --sysid 1
     working_dir: /home/user/ardupilot
     user: user
     restart: always
@@ -67,7 +67,7 @@ services:
       context: .
       dockerfile: ./Dockerfile
     container_name: arducopter1
-    command: /home/user/ardupilot/sitl/arducopter -S --model + --speedup 1 --slave 0  --serial5=tcp:5765:wait --serial6=tcp:5766:wait --serial7=tcp:5767:wait --defaults copter.parm --sim-address=172.28.0.12 --home=60.0142850,27.8200870,20.00,200 -I0 --sysid 2
+    command: /home/user/ardupilot/sitl/arducopter -S --model + --speedup 1 --slave 0  --serial5=tcp:5765:wait --serial6=tcp:5766:wait --serial7=tcp:5767:wait --defaults copter.parm --sim-address=172.28.0.12 --home=60.0024843,27.8573162,0.00,120 -I0 --sysid 2
     working_dir: /home/user/ardupilot
     user: user
     restart: always
@@ -112,7 +112,7 @@ services:
       context: .
       dockerfile: ./Dockerfile
     container_name: arducopter2
-    command: /home/user/ardupilot/sitl/arducopter -S --model + --speedup 1 --slave 0  --serial5=tcp:5765:wait --serial6=tcp:5766:wait --serial7=tcp:5767:wait --defaults copter.parm --sim-address=172.28.0.22 --home=60.0144850,27.8208870,20.00,200 -I0 --sysid 3
+    command: /home/user/ardupilot/sitl/arducopter -S --model + --speedup 1 --slave 0  --serial5=tcp:5765:wait --serial6=tcp:5766:wait --serial7=tcp:5767:wait --defaults copter.parm --sim-address=172.28.0.22 --home=60.0026843,27.8581162,0.00,120 -I0 --sysid 3
     working_dir: /home/user/ardupilot
     user: user
     restart: always

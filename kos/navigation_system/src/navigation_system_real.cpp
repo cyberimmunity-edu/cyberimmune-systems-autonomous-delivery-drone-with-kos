@@ -27,9 +27,9 @@
 
 /** \cond */
 #define NAME_MAX_LENGTH 64
-#define LNS_ANGLE 69
-#define LNS_LAT 598858446
-#define LNS_LNG 298209447
+#define LNS_ANGLE 60
+#define LNS_LAT 600025472
+#define LNS_LNG 278573184
 
 #if ALT_SRC == 1
     std::thread barometerThread;
