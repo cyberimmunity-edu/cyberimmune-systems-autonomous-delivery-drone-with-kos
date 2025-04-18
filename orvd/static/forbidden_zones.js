@@ -2,7 +2,7 @@ const TILES_URL = "https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}";
 const TILES_LOCAL_PATH = "static/resources/tiles";
 
 ol.proj.useGeographic();
-const place = [30.292907, 59.932100];
+const place = [27.85731575, 60.0026278];
 
 let availableTiles = [];
 
@@ -46,6 +46,117 @@ const map = new ol.Map({
         zoom: 15,
     }),
 });
+
+function createArcLine(center, radius, startAngle, endAngle, points = 64) {
+    const angleStep = (endAngle - startAngle) / points;
+    const coordinates = [];
+    for (let i = 0; i <= points; i++) {
+      const angle = startAngle + i * angleStep;
+      const lon = center[0] + radius * Math.cos(angle);
+      const lat = center[1] + radius * Math.sin(angle) / 2;
+      coordinates.push([lon, lat]);
+    }
+    return new ol.geom.LineString(coordinates);
+  }
+  
+  const fieldLayer = new ol.layer.Vector({
+    source: new ol.source.Vector({})
+  });
+  const fieldLayerMainColor = 'rgba(51, 153, 204, 1)';
+  
+  const mainFieldStyle = new ol.style.Style({
+    fill: new ol.style.Fill({
+      color: 'rgba(255, 255, 255, 0.2)',
+    }),
+    stroke: new ol.style.Stroke({
+      color: fieldLayerMainColor,
+      width: 2,
+    }),
+  });
+  
+  const fieldDashStrokeStyle = new ol.style.Style({
+    stroke: new ol.style.Stroke({
+      color: fieldLayerMainColor,
+      lineDash: [4],
+      width: 1,
+    }),
+  });
+  
+  const polygon = new ol.geom.Polygon([
+    [
+      [
+          27.8573025,
+          60.0027103
+      ],
+      [
+          27.8574654,
+          60.0026645
+      ],
+      [
+          27.857329,
+          60.0025433
+      ],
+      [
+          27.8571673,
+          60.002593
+      ],
+      [
+          27.8573025,
+          60.0027103
+      ]
+    ],
+  ]);
+  const polygonFeature = new ol.Feature(polygon);
+  polygonFeature.setStyle(mainFieldStyle);
+  fieldLayer.getSource().addFeature(polygonFeature);
+  
+  const mainLine = new ol.Feature(new ol.geom.LineString([[27.8572349, 60.00265165],[27.8573972, 60.0026039]]));
+  mainLine.setStyle(
+    new ol.style.Style({
+      stroke: new ol.style.Stroke({
+        color: fieldLayerMainColor,
+        width: 2,
+      }),
+    })
+  );
+  fieldLayer.getSource().addFeature(mainLine);
+  
+  const firstLine = new ol.Feature(new ol.geom.LineString([[27.8572574, 60.0026712],[27.8574199, 60.0026241]]));
+  const secondLine = new ol.Feature(new ol.geom.LineString([[27.8572123, 60.0026321],[27.8573744, 60.0025837]]));
+  firstLine.setStyle(fieldDashStrokeStyle);
+  secondLine.setStyle(fieldDashStrokeStyle);
+  fieldLayer.getSource().addFeature(firstLine);
+  fieldLayer.getSource().addFeature(secondLine);
+  
+  const firstArcBase = -0.514079;
+  const firstArc = new ol.Feature(
+    createArcLine([27.85738395, 60.0026874], 8e-5, firstArcBase + Math.PI, 2*Math.PI + firstArcBase)
+  )
+  firstArc.setStyle(fieldDashStrokeStyle);
+  fieldLayer.getSource().addFeature(firstArc);
+  
+  const secondArcBase = -0.554079;
+  const secondArc = new ol.Feature(
+    createArcLine([27.85724815, 60.00256815], 8e-5, secondArcBase, secondArcBase + Math.PI)
+  )
+  secondArc.setStyle(fieldDashStrokeStyle);
+  fieldLayer.getSource().addFeature(secondArc);
+  
+  const circleFeature = new ol.Feature(new ol.geom.Circle([27.85731575, 60.0026278], 2e-5));
+  circleFeature.setStyle(
+    new ol.style.Style({
+      fill: new ol.style.Fill({
+        color: 'rgba(255, 255, 255, 0.2)',
+      }),
+      stroke: new ol.style.Stroke({
+        color: fieldLayerMainColor,
+        width: 2,
+      }),
+    })
+  );
+  fieldLayer.getSource().addFeature(circleFeature);
+  
+  map.addLayer(fieldLayer);
 
 let vectorLayer;
 let vectorSource;
