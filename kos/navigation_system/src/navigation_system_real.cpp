@@ -455,19 +455,14 @@ void getSensors() {
         }
         else if (messageType == 3) {
 #if COORD_SRC == 2
-            float lns_x = atof(xStr);
-            float lns_y = atof(yStr);
+            float lns_x = atof(xStr) / 100.0f;
+            float lns_y = atof(yStr) / 100.0f;
             float X = lnsCos * lns_x - lnsSin * lns_y;
             float Y = lnsSin * lns_x + lnsCos * lns_y;
             int32_t difLat = (int32_t)round(Y / LATLON_TO_M);
             int32_t difLng = (int32_t)round((X / LATLON_TO_M) / lnsScale);
 
-            float speed = sqrt(pow(X - prevX, 2) + pow(Y - prevY, 2));
-            prevX = X;
-            prevY = Y;
-
             setCoords(LNS_LAT + difLat, LNS_LNG + difLng);
-            setSpeed(speed);
             setInfo(1.0, 4);
 #endif
 #if ALT_SRC == 2

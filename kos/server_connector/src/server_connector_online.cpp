@@ -46,7 +46,7 @@ int setMacId() {
     uint8_t mac[ETHER_ADDR_LEN] = {0};
     for (ifaddrs *ifa = address; ifa != NULL; ifa = ifa->ifa_next) {
         char *name = ifa->ifa_name;
-        if (strcmp(name, "en0") || (ifa->ifa_flags & IFF_LOOPBACK))
+        if (strcmp(name, "en0") || strcmp(name, "wl0") || (ifa->ifa_flags & IFF_LOOPBACK))
             continue;
         struct sockaddr_in *sock = (struct sockaddr_in*)(ifa->ifa_addr);
         if ((sock == NULL) || (sock->sin_family != AF_LINK))
