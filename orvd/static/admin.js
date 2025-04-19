@@ -10,8 +10,8 @@ function transformToAssocArray( prmstr ) {
   var params = {};
   var prmarr = prmstr.split("&");
   for ( var i = 0; i < prmarr.length; i++) {
-      var tmparr = prmarr[i].split("=");
-      params[tmparr[0]] = tmparr[1];
+    var tmparr = prmarr[i].split("=");
+    params[tmparr[0]] = tmparr[1];
   }
   return params;
 }
@@ -30,6 +30,7 @@ document.getElementById('revised-mission-decline').onclick = () => revised_missi
 document.getElementById('monitoring-checkbox').onclick = () => toggle_display_mode();
 document.getElementById('flight-info-checkbox').onclick = () => toggle_flight_info_response_mode();
 document.getElementById('copy-id').onclick = () => copy_current_id();
+document.getElementById('toggle-trajectory').onclick = toggleTrajectory;
 
 
 ol.proj.useGeographic()
@@ -42,27 +43,28 @@ let uav = null;
 let access_token = params.token;
 var current_state = null;
 let forbidden_zones_display = false;
+let trajectoryFeature = null;
 
 async function copyToClipboard(textToCopy) {
   if (navigator.clipboard && window.isSecureContext) {
-      await navigator.clipboard.writeText(textToCopy);
+    await navigator.clipboard.writeText(textToCopy);
   } else {
-      const textArea = document.createElement("textarea");
-      textArea.value = textToCopy;
-          
-      textArea.style.position = "absolute";
-      textArea.style.left = "-999999px";
-          
-      document.body.prepend(textArea);
-      textArea.select();
-
-      try {
-          document.execCommand('copy');
-      } catch (error) {
-          console.error(error);
-      } finally {
-          textArea.remove();
-      }
+    const textArea = document.createElement("textarea");
+    textArea.value = textToCopy;
+    
+    textArea.style.position = "absolute";
+    textArea.style.left = "-999999px";
+    
+    document.body.prepend(textArea);
+    textArea.select();
+    
+    try {
+      document.execCommand('copy');
+    } catch (error) {
+      console.error(error);
+    } finally {
+      textArea.remove();
+    }
   }
 }
 
@@ -133,13 +135,20 @@ let polyline_style = new ol.style.Style({
   })
 });
 
+let trajectory_style = new ol.style.Style({
+  stroke: new ol.style.Stroke({
+    color: 'yellow',
+    width: 3
+  })
+});
+
 let availableTiles = [];
 
 await fetch('/tiles/index')
-    .then(response => response.json())
-    .then(data => {
-        availableTiles = data;
-    });
+.then(response => response.json())
+.then(data => {
+  availableTiles = data;
+});
 
 function customTileLoadFunction(imageTile, src) {
   const urlPattern = /x=([0-9]+)&y=([0-9]+)&z=([0-9]+)/;
@@ -150,18 +159,18 @@ function customTileLoadFunction(imageTile, src) {
   
   const tilePath = `${z}/${x}/${y}`;
   const localUrl = `${TILES_LOCAL_PATH}/${tilePath}.png`;
-
+  
   if (availableTiles.includes(tilePath)) {
-      imageTile.getImage().src = localUrl;
+    imageTile.getImage().src = localUrl;
   } else {
-      imageTile.getImage().src = src;
+    imageTile.getImage().src = src;
   }
 }
 
 const tileLayer = new ol.layer.Tile({
   source: new ol.source.XYZ({
-      url: TILES_URL,
-      tileLoadFunction: customTileLoadFunction
+    url: TILES_URL,
+    tileLoadFunction: customTileLoadFunction
   })
 });
 
@@ -214,24 +223,24 @@ const fieldDashStrokeStyle = new ol.style.Style({
 const polygon = new ol.geom.Polygon([
   [
     [
-        27.8573025,
-        60.0027103
+      27.8573025,
+      60.0027103
     ],
     [
-        27.8574654,
-        60.0026645
+      27.8574654,
+      60.0026645
     ],
     [
-        27.857329,
-        60.0025433
+      27.857329,
+      60.0025433
     ],
     [
-        27.8571673,
-        60.002593
+      27.8571673,
+      60.002593
     ],
     [
-        27.8573025,
-        60.0027103
+      27.8573025,
+      60.0027103
     ]
   ],
 ]);
@@ -313,22 +322,22 @@ async function createGeoJSONLayer() {
     return;
   }
   const geojsonObject = await response.json();
-
+  
   if (geoJSONLayer) {
     map.removeLayer(geoJSONLayer);
   }
-
+  
   geoJSONLayer = new ol.layer.Vector({
     source: new ol.source.Vector({
       features: new ol.format.GeoJSON().readFeatures(geojsonObject),
     }),
     style: styleFunction
   });
-
+  
   geoJSONLayer.getSource().getFeatures().forEach(feature => {
     feature.set('description', `Запрещенная зона: ${feature.get('name')}`);
   });
-
+  
   map.addLayer(geoJSONLayer);
 }
 
@@ -343,10 +352,10 @@ const info = document.getElementById('info');
 let currentFeature;
 const displayFeatureInfo = function (pixel, target) {
   const feature = target.closest('.ol-control')
-    ? undefined
-    : map.forEachFeatureAtPixel(pixel, function (feature) {
-        return feature;
-      });
+  ? undefined
+  : map.forEachFeatureAtPixel(pixel, function (feature) {
+    return feature;
+  });
   if (feature) {
     info.style.left = pixel[0] + 'px';
     info.style.top = pixel[1] + 'px';
@@ -382,12 +391,12 @@ map.getTargetElement().addEventListener('pointerleave', function () {
 
 function clear_markers() {
   var features = markers.getSource().getFeatures();
-    features.forEach((feature) => {
-      const feature_id = feature.getId();
-      if(feature_id === undefined || !feature.getId().includes('uav')) {
-        markers.getSource().removeFeature(feature);
-      }
-    });
+  features.forEach((feature) => {
+    const feature_id = feature.getId();
+    if(feature_id === undefined || !feature.getId().includes('uav')) {
+      markers.getSource().removeFeature(feature);
+    }
+  });
 }
 
 function add_marker(lat, lon, alt, marker_type) {
@@ -419,9 +428,9 @@ function add_marker(lat, lon, alt, marker_type) {
 function add_polyline(line_path) {
   var polyline = new ol.geom.MultiLineString([line_path]);
   var polyline_feature = new ol.Feature({
-      name: "Thing",
-      geometry: polyline,
-      description: null
+    name: "Thing",
+    geometry: polyline,
+    description: null
   });
   polyline_feature.setStyle(polyline_style);
   markers.getSource().addFeature(polyline_feature);
@@ -607,26 +616,26 @@ async function get_mission(id) {
     }
     for (let idx = 0; idx < mission_list.length; ++idx) {
       if (mission_list[idx][0] == 'H') {
-          var lat = parseFloat(mission_list[idx][1]);
-          var lon = parseFloat(mission_list[idx][2]);
-          var alt = mission_list[idx][3];
-          add_marker(lat, lon, alt, 'home');
-          mission_path.push([lon, lat]);
-          // map.getView().setCenter([lon, lat]);
+        var lat = parseFloat(mission_list[idx][1]);
+        var lon = parseFloat(mission_list[idx][2]);
+        var alt = mission_list[idx][3];
+        add_marker(lat, lon, alt, 'home');
+        mission_path.push([lon, lat]);
+        // map.getView().setCenter([lon, lat]);
       }
       else if (mission_list[idx][0] == 'W') {
-          var lat = parseFloat(mission_list[idx][1]);
-          var lon = parseFloat(mission_list[idx][2]);
-          var alt = mission_list[idx][3];
-          if (idx < mission_list.length - 1 && mission_list[idx+1][0] == 'S') {
-            add_marker(lat, lon, alt, 'servo');              
-          } else if (idx < mission_list.length - 1 && mission_list[idx+1][0] == 'D') {
-            add_marker(lat, lon, alt, 'delay');
-          }
-          else {
-            add_marker(lat, lon, alt, 'regular');
-          }
-          mission_path.push([lon, lat]);
+        var lat = parseFloat(mission_list[idx][1]);
+        var lon = parseFloat(mission_list[idx][2]);
+        var alt = mission_list[idx][3];
+        if (idx < mission_list.length - 1 && mission_list[idx+1][0] == 'S') {
+          add_marker(lat, lon, alt, 'servo');              
+        } else if (idx < mission_list.length - 1 && mission_list[idx+1][0] == 'D') {
+          add_marker(lat, lon, alt, 'delay');
+        }
+        else {
+          add_marker(lat, lon, alt, 'regular');
+        }
+        mission_path.push([lon, lat]);
       }
       else if (mission_list[idx][0] == 'L'){
         var lat = parseFloat(mission_list[idx][1]);
@@ -635,7 +644,7 @@ async function get_mission(id) {
         add_marker(lat, lon, alt, 'regular');
       }         
     }
-  add_polyline(mission_path);
+    add_polyline(mission_path);
   }
 }
 
@@ -654,15 +663,15 @@ function add_or_update_vehicle_marker(id, lat, lon, alt, azimuth, speed) {
   });
   
   let inactiveVehicleStyle = new ol.style.Style({
-      image: new ol.style.Icon({
-        anchor: [0.5, 0.5],
-        src: 'static/resources/vehicle_marker.svg',
-        scale: 0.25,
-        opacity: 0.6,
-        rotation: rotationInRadians
-      })
-    });
-
+    image: new ol.style.Icon({
+      anchor: [0.5, 0.5],
+      src: 'static/resources/vehicle_marker.svg',
+      scale: 0.25,
+      opacity: 0.6,
+      rotation: rotationInRadians
+    })
+  });
+  
   if (!vehicles[id]) {
     let vehicle = new ol.Feature(new ol.geom.Point([lon, lat]));
     vehicle.setId(`uav${id}`);
@@ -719,8 +728,12 @@ async function get_mission_state(id) {
 }
 
 async function change_active_id(new_id) {
+  const previous_active_id = active_id;
   active_id = new_id;
   current_mission = null;
+  if (previous_active_id !== new_id) {
+    removeTrajectory();
+  }
   clear_markers()
   status_change();
   await get_mission(new_id);
@@ -741,16 +754,16 @@ async function get_ids() {
   if (active_id == null && ids.length > 0) {
     change_active_id(ids[0]);
   }
-
+  
   let id_select = document.getElementById("id_select");
-
+  
   for (var i = old_ids_len; i<ids.length; i++){
     var opt = document.createElement('option');
     opt.value = ids[i];
     opt.innerHTML = ids[i];
     id_select.appendChild(opt);
   }
-
+  
 }
 
 
@@ -795,7 +808,7 @@ async function getAllData() {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
     const data = await response.json();
-
+    
     ids = data.ids;
     let id_select = document.getElementById("id_select");
     const selectedIndex = id_select.selectedIndex;
@@ -811,25 +824,25 @@ async function getAllData() {
     } else if(ids.length > 0) {
       change_active_id(ids[0]);
     }
-
+    
     document.getElementById("waiters").innerHTML = "Ожидают: " + data.waiters;
     document.getElementById('arm').disabled = !(parseInt(data.waiters) > 0);
     document.getElementById('disarm').disabled = !(parseInt(data.waiters) > 0);
-
+    
     for (const id in data.uav_data) {
       const uavData = data.uav_data[id];
-
+      
       if (id === active_id) {
         document.getElementById("status").innerHTML = "Статус: " + uavData.state;
         current_state = uavData.state;
-
+        
         if (uavData.state == 'В полете') {
-            document.getElementById('fly_accept_checkbox').checked = true;
+          document.getElementById('fly_accept_checkbox').checked = true;
         } else {
-            document.getElementById('fly_accept_checkbox').checked = false;
+          document.getElementById('fly_accept_checkbox').checked = false;
         }
       }
-
+      
       if (uavData.telemetry) {
         const { lat, lon, alt, azimuth, dop, sats, speed } = uavData.telemetry;
         document.getElementById("dop").innerHTML = "DOP: " + dop;
@@ -839,33 +852,33 @@ async function getAllData() {
           map.getView().setCenter([lon, lat]);
         }
       }
-
+      
       if (id === active_id) {
         if (uavData.mission_state == '0') {
-            document.getElementById('mission_checkbox').checked = true;
+          document.getElementById('mission_checkbox').checked = true;
         } else if (uavData.mission_state == '1')  {
-            document.getElementById('mission_checkbox').checked = false;
+          document.getElementById('mission_checkbox').checked = false;
         } else if (uavData.mission_state == '2') {
-            document.getElementById('mission_checkbox').checked = false;
-            const revisedMissionBlock = document.getElementById('revised-mission-block');
-            revisedMissionBlock.style.visibility = 'visible';
+          document.getElementById('mission_checkbox').checked = false;
+          const revisedMissionBlock = document.getElementById('revised-mission-block');
+          revisedMissionBlock.style.visibility = 'visible';
         } else {
           document.getElementById('mission_checkbox').checked = false;
         }
+      }
+      
+      if (id === active_id) {
+        document.getElementById("delay").innerHTML = "Delay: " + uavData.delay;
+      }
     }
-
-        if (id === active_id) {
-            document.getElementById("delay").innerHTML = "Delay: " + uavData.delay;
-        }
-    }
-
+    
     if (forbidden_zones_display) {
-        await updateForbiddenZones();
+      await updateForbiddenZones();
     }
-
+    
     get_display_mode();
     get_flight_info_response_mode();
-
+    
   } catch (error) {
     console.error("Failed to fetch all data:", error);
   }
@@ -884,3 +897,76 @@ setInterval(async function() {
     }
   }
 }, 1000);
+
+function removeTrajectory() {
+  if (trajectoryFeature) {
+    markers.getSource().removeFeature(trajectoryFeature);
+    trajectoryFeature = null;
+    console.log('Trajectory removed.');
+  }
+}
+
+async function toggleTrajectory() {
+  if (trajectoryFeature) {
+    removeTrajectory();
+  } else {
+    if (!active_id) {
+      alert("Please select a drone ID first.");
+      return;
+    }
+    console.log(`Fetching trajectory for ID: ${active_id}`);
+    try {
+      const response = await fetch(`/logs/get_telemetry_csv?id=${active_id}`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const csvData = await response.text();
+      console.log('Received CSV data.');
+      
+      const lines = csvData.trim().split('\n');
+      if (lines.length <= 1) {
+        console.log('No trajectory data found.');
+        alert('No trajectory data available for this drone.');
+        return;
+      }
+      
+      const coordinates = [];
+      const headers = lines[0].split(',');
+      const latIndex = headers.indexOf('lat');
+      const lonIndex = headers.indexOf('lon');
+      
+      if (latIndex === -1 || lonIndex === -1) {
+        throw new Error('CSV data does not contain lat or lon columns.');
+      }
+      
+      for (let i = 1; i < lines.length; i++) {
+        const values = lines[i].split(',');
+        const lat = parseFloat(values[latIndex]);
+        const lon = parseFloat(values[lonIndex]);
+        if (!isNaN(lat) && !isNaN(lon)) {
+          coordinates.push([lon, lat]);
+        }
+      }
+      
+      if (coordinates.length === 0) {
+        console.log('No valid coordinates found in trajectory data.');
+        alert('No valid trajectory data available for this drone.');
+        return;
+      }
+      
+      const trajectoryLine = new ol.geom.LineString(coordinates);
+      trajectoryFeature = new ol.Feature({
+        geometry: trajectoryLine,
+        name: 'Drone Trajectory',
+        description: `Past trajectory for ID: ${active_id}`
+      });
+      trajectoryFeature.setStyle(trajectory_style);
+      markers.getSource().addFeature(trajectoryFeature);
+      console.log('Trajectory drawn.');
+      
+    } catch (error) {
+      console.error("Failed to fetch or draw trajectory:", error);
+      alert(`Failed to load trajectory: ${error.message}`);
+    }
+  }
+}
