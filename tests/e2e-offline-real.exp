@@ -1,0 +1,13 @@
+#!/usr/bin/expect
+spawn mavproxy.py --logfile /tmp/mav.tlog  --auto-protocol --master udp:0.0.0.0:14550
+set timeout 350
+expect_after eof {exit 0}
+expect_after timeout {exit 1}
+expect "AP: ArduCopter" { send "wp load /home/user/ardupilot/exampleMission.txt\r" }
+expect "AP: Flight plan received" { send "wp loop\r" }
+expect "Got MISSION_ACK: TYPE_MISSION: ACCEPTED" { send "arm throttle\r" }
+expect "AP: EKF3 IMU0 is using GPS" { send "arm throttle\r" }
+expect "ARMED" { send "mode auto\r" }
+expect "AP: Mission: 1 Takeoff" { send "long MAV_CMD_MISSION_START\r" }
+expect "DISARMED" { exit }
+
