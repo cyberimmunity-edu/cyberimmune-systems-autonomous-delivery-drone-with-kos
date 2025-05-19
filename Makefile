@@ -90,6 +90,10 @@ e2e-offline: docker-image
 	docker-compose -f tests/e2e-offline-docker-compose.yml up --abort-on-container-exit --exit-code-from mavproxy
 	docker-compose -f tests/e2e-offline-docker-compose.yml down
 
+e2e-offline-real:
+	docker-compose -f tests/e2e-offline-real-docker-compose.yml up --abort-on-container-exit --exit-code-from mavproxy
+	docker-compose -f tests/e2e-offline-real-docker-compose.yml down
+
 e2e-online: docker-image
 	docker-compose -f tests/e2e-online-docker-compose.yml up --abort-on-container-exit --exit-code-from mavproxy
 	docker-compose -f tests/e2e-online-docker-compose.yml down
