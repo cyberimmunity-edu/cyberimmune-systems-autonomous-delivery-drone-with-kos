@@ -7,7 +7,6 @@ RUN apt-get update && \
         apache2 \
         libapache2-mod-wsgi-py3 \
         net-tools \
-        mosquitto \
         python3 \
         python3-pip \
         python3-venv \
@@ -28,7 +27,6 @@ RUN apt-get update && \
         python3-paho-mqtt && \
         mkdir -p /var/www/orvd
 
-COPY ./orvd/default.conf /etc/mosquitto/conf.d/default.conf
 COPY ./orvd /var/www/orvd
 COPY ./orvd.conf.docker /etc/apache2/sites-available/orvd.conf
 
