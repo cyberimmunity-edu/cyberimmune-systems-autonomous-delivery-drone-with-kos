@@ -71,6 +71,18 @@ services:
         ipv4_address: 172.28.0.4
     ports:
       - "8080:8080"
+#################################################
+  mqtt-server:
+    image: mqtt-server
+    build:
+      context: .
+      dockerfile: ./mqtt-server.Dockerfile
+    container_name: mqtt-server
+    restart: always
+    networks:
+      cyberimmune:
+        ipv4_address: 172.28.0.5
+    ports:
       - "1883:1883"
       - "8883:8883"
 #################################################
