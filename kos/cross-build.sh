@@ -21,6 +21,7 @@ UNIT_TESTS=""
 PAL_TESTS=""
 SIMULATOR_IP="10.0.2.2"
 SERVER_IP="192.168.1.78"
+MQTT_IP="127.0.0.1"
 BOARD="RPI4_BCM2711"
 
 COORD_SRC=1
@@ -46,6 +47,8 @@ function help
              User-defined IP of SITL
     --server-ip,
              User-defined IP of the ATM server
+    --mqtt-ip,
+             User-defined IP of MQTT server
     --target,
              Build target: hardware (real), simulation (sim), unit-tests (unit) or pal-tests (pal)
     --mode,
@@ -78,6 +81,9 @@ do
             ;;
         --server-ip)
             SERVER_IP=$2
+            ;;
+        --mqtt-ip)
+            MQTT_IP=$2
             ;;
         --board-id)
             BOARD_ID=$2
@@ -174,6 +180,7 @@ fi
       -D BOARD_ID="$BOARD_ID" \
       -D SIMULATOR_IP=$SIMULATOR_IP \
       -D SERVER_IP=$SERVER_IP \
+      -D MQTT_IP=$MQTT_IP \
       -D COORD_SRC=$COORD_SRC \
       -D ALT_SRC=$ALT_SRC \
       -D BOARD=$BOARD \

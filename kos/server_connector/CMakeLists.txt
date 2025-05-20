@@ -19,7 +19,7 @@ target_compile_definitions (ServerConnector PRIVATE ENTITY_NAME="Server Connecto
 target_compile_definitions (ServerConnector PRIVATE BOARD_ID="${BOARD_ID}")
 
 if (SERVER)
-    target_compile_definitions (ServerConnector PRIVATE SERVER_IP="${SERVER_IP}")
+    target_compile_definitions (ServerConnector PRIVATE SERVER_IP="${SERVER_IP}" MQTT_IP="${MQTT_IP}")
     target_link_libraries (ServerConnector ${vfs_CLIENT_LIB} ${wpa_CLIENT_LIB} ${mosquitto_CXX_LIB})
 else ()
     target_compile_definitions (ServerConnector PRIVATE NO_SERVER)

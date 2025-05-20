@@ -184,7 +184,7 @@ int requestServer(char* query, char* response, uint32_t responseSize) {
 
 int publish(char* topic, char* publication) {
     if (!publishConnected) {
-        publishConnected = !publisher->connect_async(SERVER_IP, publishPort);
+        publishConnected = !publisher->connect_async(MQTT_IP, publishPort);
         if (!publishConnected) {
             logEntry("Connection to MQTT broker has failed", ENTITY_NAME, LogLevel::LOG_WARNING);
             return 0;
