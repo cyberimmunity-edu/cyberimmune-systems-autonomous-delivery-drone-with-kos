@@ -1,10 +1,11 @@
+import os
 import pytest
 import paho.mqtt.client as mqtt
 import time
 import json
 from unittest.mock import patch
 
-MQTT_BROKER = "localhost"
+MQTT_BROKER = os.environ.get("MQTT_HOST", "localhost")
 MQTT_PORT = 1883
 MQTT_TELEMETRY_TOPIC = "api/telemetry"
 MQTT_MISSION_TOPIC = 'api/mission'
