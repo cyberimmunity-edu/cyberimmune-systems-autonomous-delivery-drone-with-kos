@@ -45,7 +45,6 @@ void sendCoords() {
         sleep(1);
     }
 
-    char topic[] = "api/telemetry";
     char publication[1024] = {0};
 
     float dop, speed;
@@ -67,7 +66,7 @@ void sendCoords() {
             prevLat = lat;
             prevLng = lng;
             snprintf(publication, 1024, "id=%s&lat=%d&lon=%d&alt=%d&azimuth=%d&dop=%f&sats=%d&speed=%f", boardId, lat, lng, alt, azimuth, dop, sats, speed);
-            if (!publishMessage(topic, publication))
+            if (!publishMessage("api/telemetry", publication))
                 logEntry("Failed to publish telemetry message. Trying again in 500ms", ENTITY_NAME, LogLevel::LOG_WARNING);
         }
         usleep(500000);
