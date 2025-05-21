@@ -191,7 +191,10 @@ int publish(char* topic, char* publication) {
         }
     }
 
-    if (publisher && publishConnected && !publisher->publish(NULL, topic, strlen(publication), publication))
+    char idTopic[256];
+    snprintf(idTopic, 256, "%s/%s", topic, getBoardName());
+
+    if (publisher && publishConnected && !publisher->publish(NULL, idTopic, strlen(publication), publication))
         return 1;
     else {
         logEntry("Failed to publish message", ENTITY_NAME, LogLevel::LOG_WARNING);
