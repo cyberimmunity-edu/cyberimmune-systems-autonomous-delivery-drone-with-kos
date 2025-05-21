@@ -22,6 +22,9 @@ PAL_TESTS=""
 SIMULATOR_IP="10.0.2.2"
 SERVER_IP="10.0.2.2"
 
+COORD_SRC=1
+ALT_SRC=1
+
 set -eu
 
 function help
@@ -46,6 +49,10 @@ function help
              Build target: hardware (real), simulation (sim), unit-tests (unit) or pal-tests (pal)
     --mode,
              Connection mode: online or offline
+    --coords,
+             Source of horizontal coordinates: gnss or lns
+    --alt,
+             Source of altitude: baro or lns
 
   Examples:
       bash cross-build.sh -s /opt/KasperskyOS-Community-Edition-RaspberryPi4b-1.3.0.166
@@ -110,6 +117,26 @@ do
                 exit 1
             fi
             ;;
+        --coords)
+            if [ "$2" == "gnss" ] || [ "$2" == "GNSS" ]; then
+                COORD_SRC=1
+            elif [ "$2" == "lns" ] || [ "$2" == "LNS" ]; then
+                COORD_SRC=2
+            else
+                echo "Unknown coordinates source '$2'"
+                exit 1
+            fi
+            ;;
+        --alt)
+            if [ "$2" == "baro" ] || [ "$2" == "barometer" ]; then
+                ALT_SRC=1
+            elif [ "$2" == "lns" ] || [ "$2" == "LNS" ]; then
+                ALT_SRC=2
+            else
+                echo "Unknown altitude source '$2'"
+                exit 1
+            fi
+            ;;
         -*)
             echo "Invalid option: $key"
             exit 1
@@ -146,6 +173,8 @@ fi
       -D BOARD_ID="$BOARD_ID" \
       -D SIMULATOR_IP=$SIMULATOR_IP \
       -D SERVER_IP=$SERVER_IP \
+      -D COORD_SRC=$COORD_SRC \
+      -D ALT_SRC=$ALT_SRC \
       -D CMAKE_BUILD_TYPE:STRING=Debug \
       -D CMAKE_INSTALL_PREFIX:STRING="$INSTALL_PREFIX" \
       -D CMAKE_FIND_ROOT_PATH="${SDK_PREFIX}/sysroot-$TARGET" \
