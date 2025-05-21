@@ -80,7 +80,7 @@ else ()
     nk_build_idl_files (periphery_controller_idl_files DEPENDS logger_idl_files NK_MODULE "drone_controller" IDL "resources/PeripheryControllerInterface.idl")
     nk_build_idl_files (server_connector_idl_files DEPENDS logger_idl_files NK_MODULE "drone_controller" IDL "resources/ServerConnectorInterface.idl")
 
-    nk_build_edl_files (logger_edl_files IDL_TARGET logger_idl_files NK_MODULE "drone_controller" EDL "resources/Logger.edl")
+    nk_build_edl_files (logger_edl_files IDL_TARGET logger_idl_files DEPENDS server_connector_idl_files NK_MODULE "drone_controller" EDL "resources/Logger.edl")
     nk_build_edl_files (autopilot_connector_edl_files IDL_TARGET autopilot_connector_idl_files NK_MODULE "drone_controller" EDL "resources/AutopilotConnector.edl")
     nk_build_edl_files (credential_manager_edl_files IDL_TARGET credential_manager_idl_files NK_MODULE "drone_controller" EDL "resources/CredentialManager.edl")
     nk_build_edl_files (navigation_system_edl_files IDL_TARGET navigation_system_idl_files NK_MODULE "drone_controller" EDL "resources/NavigationSystem.edl")
