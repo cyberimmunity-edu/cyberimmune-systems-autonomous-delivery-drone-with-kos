@@ -11,6 +11,8 @@ use EDL drone_controller.NavigationSystem
 use EDL drone_controller.PeripheryController
 use EDL drone_controller.ServerConnector
 use EDL drone_controller.Logger
+use EDL drone_controller.KlogEntity
+use EDL drone_controller.KlogStorageEntity
 
 /* Execution of entities */
 execute {
@@ -35,8 +37,6 @@ request {
 
     match dst=drone_controller.CredentialManager interface=drone_controller.CredentialManagerInterface {
         match src=drone_controller.FlightController { grant () }
-        match src=drone_controller.NavigationSystem { grant () }
-        match src=drone_controller.PeripheryController { grant () }
     }
 
     match dst=drone_controller.NavigationSystem interface=drone_controller.NavigationSystemInterface {
@@ -51,10 +51,16 @@ request {
         match src=drone_controller.FlightController { grant () }
         match src=drone_controller.CredentialManager { grant () }
         match src=drone_controller.NavigationSystem { grant () }
-        match src=drone_controller.PeripheryController { grant () }
     }
 
     match dst=drone_controller.Logger interface=drone_controller.LoggerInterface method=Log { grant () }
+
+   match src=drone_controller.KlogEntity dst=drone_controller.KlogStorageEntity { grant() }
+   match src=drone_controller.KlogEntity dst=kl.core.Core { grant() }
+   match src=drone_controller.KlogStorageEntity dst=drone_controller.KlogEntity { grant() }
+   match src=drone_controller.KlogStorageEntity dst=kl.core.Core { grant() }
+   match src=kl.core.Core dst=drone_controller.KlogEntity { grant() }
+   match src=kl.core.Core dst=drone_controller.KlogStorageEntity { grant() }
 }
 
 /* Response messages */
@@ -67,8 +73,6 @@ response {
 
     match src=drone_controller.CredentialManager interface=drone_controller.CredentialManagerInterface {
         match dst=drone_controller.FlightController { grant () }
-        match dst=drone_controller.NavigationSystem { grant () }
-        match dst=drone_controller.PeripheryController { grant () }
     }
 
     match src=drone_controller.NavigationSystem interface=drone_controller.NavigationSystemInterface {
@@ -83,10 +87,16 @@ response {
         match dst=drone_controller.FlightController { grant () }
         match dst=drone_controller.CredentialManager { grant () }
         match dst=drone_controller.NavigationSystem { grant () }
-        match dst=drone_controller.PeripheryController { grant () }
     }
 
     match src=drone_controller.Logger interface=drone_controller.LoggerInterface method=Log { grant () }
+
+   match dst=drone_controller.KlogEntity src=drone_controller.KlogStorageEntity { grant() }
+   match dst=drone_controller.KlogEntity src=kl.core.Core { grant() }
+   match dst=drone_controller.KlogStorageEntity src=drone_controller.KlogEntity { grant() }
+   match dst=drone_controller.KlogStorageEntity src=kl.core.Core { grant() }
+   match dst=kl.core.Core src=drone_controller.KlogEntity { grant() }
+   match dst=kl.core.Core src=drone_controller.KlogStorageEntity { grant() }
 }
 
 /* Error calls */

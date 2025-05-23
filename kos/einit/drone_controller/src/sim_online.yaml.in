@@ -2,13 +2,15 @@ entities:
 
 - name: drone_controller.AutopilotConnector
   env:
-    VFS_FILESYSTEM_BACKEND: client:kl.VfsNet
+    VFS_FILESYSTEM_BACKEND: client:kl.VfsSdCardFs
     VFS_NETWORK_BACKEND: client:kl.VfsNet
   args:
     - -sV4
   connections:
   - target: kl.VfsNet
     id: kl.VfsNet
+  - target: kl.VfsSdCardFs
+    id: kl.VfsSdCardFs
   - target: drone_controller.Logger
     id: logger_connection
 @INIT_AutopilotConnector_ENTITY_CONNECTIONS@
@@ -43,15 +45,15 @@ entities:
 
 - name: drone_controller.NavigationSystem
   env:
-    VFS_FILESYSTEM_BACKEND: client:kl.VfsNet
+    VFS_FILESYSTEM_BACKEND: client:kl.VfsSdCardFs
     VFS_NETWORK_BACKEND: client:kl.VfsNet
   args:
     - -sV4
   connections:
   - target: kl.VfsNet
     id: kl.VfsNet
-  - target: drone_controller.CredentialManager
-    id: credential_manager_connection
+  - target: kl.VfsSdCardFs
+    id: kl.VfsSdCardFs
   - target: drone_controller.ServerConnector
     id: server_connector_connection
   - target: drone_controller.Logger
@@ -60,30 +62,30 @@ entities:
 
 - name: drone_controller.PeripheryController
   env:
-    VFS_FILESYSTEM_BACKEND: client:kl.VfsNet
+    VFS_FILESYSTEM_BACKEND: client:kl.VfsSdCardFs
     VFS_NETWORK_BACKEND: client:kl.VfsNet
   args:
     - -sV4
   connections:
   - target: kl.VfsNet
     id: kl.VfsNet
-  - target: drone_controller.CredentialManager
-    id: credential_manager_connection
-  - target: drone_controller.ServerConnector
-    id: server_connector_connection
+  - target: kl.VfsSdCardFs
+    id: kl.VfsSdCardFs
   - target: drone_controller.Logger
     id: logger_connection
 @INIT_PeripheryController_ENTITY_CONNECTIONS@
 
 - name: drone_controller.ServerConnector
   env:
-    VFS_FILESYSTEM_BACKEND: client:kl.VfsNet
+    VFS_FILESYSTEM_BACKEND: client:kl.VfsSdCardFs
     VFS_NETWORK_BACKEND: client:kl.VfsNet
   args:
     - -sV4
   connections:
   - target: kl.VfsNet
     id: kl.VfsNet
+  - target: kl.VfsSdCardFs
+    id: kl.VfsSdCardFs
   - target: drone_controller.Logger
     id: logger_connection
 @INIT_ServerConnector_ENTITY_CONNECTIONS@
@@ -95,5 +97,13 @@ entities:
   - target: kl.VfsSdCardFs
     id: kl.VfsSdCardFs
 @INIT_Logger_ENTITY_CONNECTIONS@
+
+- name: drone_controller.KlogEntity
+  path: @INIT_KlogEntity_PATH@
+  connections:
+  - target: drone_controller.KlogStorageEntity
+    id: {var: KLOG_STORAGE_SERVER_CONNECTION_ID, include: klog_storage/client.h}
+
+- name: drone_controller.KlogStorageEntity
 
 @INIT_EXTERNAL_ENTITIES@

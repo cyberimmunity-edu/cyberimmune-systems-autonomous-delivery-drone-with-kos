@@ -12,14 +12,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <thread>
 
 #define NK_USE_UNQUALIFIED_NAMES
 #include <drone_controller/PeripheryController.edl.h>
-
-/** \cond */
-std::thread killSwitchCheckThread;
-/** \endcond */
 
 /**
  * \~English \brief PeripheryController component main program entry point.
@@ -67,8 +62,6 @@ int main(void) {
         logEntry("Trying again to lock cargo in 1s", ENTITY_NAME, LogLevel::LOG_WARNING);
         sleep(1);
     }
-
-    killSwitchCheckThread = std::thread(checkKillSwitchPermission);
 
     logEntry("Initialization is finished", ENTITY_NAME, LogLevel::LOG_INFO);
 

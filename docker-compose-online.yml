@@ -7,11 +7,12 @@ services:
       context: .
       dockerfile: ./Dockerfile
     container_name: kos
-    command: /home/user/kos/cross-build.sh --target sim --mode online --simulator-ip 172.28.0.2 --server-ip 172.28.0.4
+    command: /home/user/kos/cross-build.sh --target sim --mode online --simulator-ip 172.28.0.2 --server-ip 172.28.0.4 --mqtt-ip 172.28.0.5
     working_dir: /home/user/kos
     user: user
     depends_on:
       - arducopter
+      - mqtt-server
     networks:
       cyberimmune:
         ipv4_address: 172.28.0.1
@@ -22,7 +23,7 @@ services:
       context: .
       dockerfile: ./Dockerfile
     container_name: arducopter
-    command: /home/user/ardupilot/sitl/bin/arducopter -S --model + --speedup 1 --slave 0  --serial5=tcp:5765:wait --serial6=tcp:5766:wait --serial7=tcp:5767:wait --defaults copter.parm --sim-address=172.28.0.2 --home=53.1019446,107.3774394,846.22,0 -I0
+    command: /home/user/ardupilot/sitl/arducopter -S --model + --speedup 1 --slave 0  --serial5=tcp:5765:wait --serial6=tcp:5766:wait --serial7=tcp:5767:wait --defaults copter.parm --sim-address=172.28.0.2 --home=60.0144850,27.8200870,20.00,200 -I0
     working_dir: /home/user/ardupilot
     user: user
     restart: always
@@ -66,11 +67,29 @@ services:
     container_name: orvd
     working_dir: /home/user/orvd
     restart: always
+    environment:
+      MQTT_HOST: "172.28.0.5"
+    depends_on:
+      - mqtt-server
     networks:
       cyberimmune:
         ipv4_address: 172.28.0.4
     ports:
       - "8080:8080"
+#################################################
+  mqtt-server:
+    image: mqtt-server
+    build:
+      context: .
+      dockerfile: ./mqtt-server.Dockerfile
+    container_name: mqtt-server
+    restart: always
+    networks:
+      cyberimmune:
+        ipv4_address: 172.28.0.5
+    ports:
+      - "1883:1883"
+      - "8883:8883"
 #################################################
 networks:
   cyberimmune:

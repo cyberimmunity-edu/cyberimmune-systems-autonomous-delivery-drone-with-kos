@@ -1,8 +1,48 @@
+import socket
+import time
+from threading import Thread
 from flask import jsonify
 from utils.db_utils import *
 from utils.utils import *
 
+ENABLE_MAVLINK = False
+MAVLINK_CONNECTIONS_NUMBER = 10
+OUT_ADDR = 'localhost'
+
 arm_queue = set()
+revise_mission_queue = set()
+modes = {
+    "display_only": False,
+    "flight_info_response": True
+}
+
+if ENABLE_MAVLINK:
+    from pymavlink import mavutil
+    
+    def mavlink_handler(in_port: int, out_port: int, out_addr: str = 'localhost'):
+        mavlink_connection = mavutil.mavlink_connection(f'udp:0.0.0.0:{in_port}')
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+
+        while True:
+            msg = mavlink_connection.recv_msg()
+            if msg:
+                data = msg.get_msgbuf()
+                sock.sendto(data, (out_addr, out_port))
+            time.sleep(1e-4)
+
+    def start_mavlink_connections(connections):
+        for conn in connections:
+            in_port, out_port, out_addr = conn
+            thread = Thread(
+                name=f"mav_thread_{in_port}_{out_port}",
+                target=mavlink_handler,
+                args=(in_port, out_port, out_addr),
+                daemon=True
+            )
+            thread.start()
+            
+    connections = [(in_port, in_port + 20, OUT_ADDR) for in_port in range(14551, 14551 + MAVLINK_CONNECTIONS_NUMBER)]
+    start_mavlink_connections(connections)
 
 def bad_request(message: str):
     """
@@ -188,7 +228,7 @@ def arm_handler(id: str):
     if not uav_entity:
         return NOT_FOUND
     elif uav_entity.is_armed:
-        return f'$Arm: {ARMED}' 
+        return f'$Arm {ARMED}$Delay {uav_entity.delay}' 
     else:
         mission = get_entity_by_key(Mission, id)
         if mission and mission.is_accepted == True:
@@ -201,9 +241,9 @@ def arm_handler(id: str):
             else:
                 uav_entity.state = 'В сети'
             commit_changes()
-            return f'$Arm: {decision}'
+            return f'$Arm {decision}$Delay {uav_entity.delay}'
         else:
-            return f'$Arm: {DISARMED}'
+            return f'$Arm {DISARMED}$Delay {uav_entity.delay}'
 
 
 def _arm_wait_decision(id: str):
@@ -239,9 +279,9 @@ def fly_accept_handler(id: str):
     if not uav_entity:
         return NOT_FOUND
     elif uav_entity.is_armed:
-        return f'$Arm: {ARMED}'
+        return f'$Arm {ARMED}$Delay {uav_entity.delay}'
     else:
-        return f'$Arm: {DISARMED}'
+        return f'$Arm {DISARMED}$Delay {uav_entity.delay}'
 
 
 def kill_switch_handler(id: str):
@@ -258,9 +298,34 @@ def kill_switch_handler(id: str):
     if not uav_entity:
         return NOT_FOUND
     elif uav_entity.kill_switch_state:
-        return f'$KillSwitch: {KILL_SWITCH_ON}'
+        return f'$KillSwitch {KILL_SWITCH_ON}'
     else:
-        return f'$KillSwitch: {KILL_SWITCH_OFF}'
+        return f'$KillSwitch {KILL_SWITCH_OFF}'
+
+
+def flight_info_handler(id: str) -> str:
+    """
+    Обрабатывает запрос на проверку информации полета БПЛА.
+
+    Args:
+        id (str): Идентификатор БПЛА.
+
+    Returns:
+        str: Состояние полета БПЛА.
+    """
+    uav_entity = get_entity_by_key(Uav, id)
+    if not uav_entity:
+        return NOT_FOUND
+    else:
+        forbidden_zones_hash = get_forbidden_zones_hash_handler(id)
+        delay = f'$Delay {uav_entity.delay}'
+        if uav_entity.kill_switch_state:
+            status = '$Flight -1'
+        elif uav_entity.is_armed:
+            status = '$Flight 0'
+        else:
+            status = '$Flight 1'
+        return ''.join([status, forbidden_zones_hash, delay])
 
 
 def telemetry_handler(id: str, lat: float, lon: float, alt: float,
@@ -282,6 +347,10 @@ def telemetry_handler(id: str, lat: float, lon: float, alt: float,
         str: Статус арма БПЛА.
     """
     uav_entity = get_entity_by_key(Uav, id)
+    if not uav_entity and modes['display_only']:
+        uav_entity = Uav(id=id, is_armed=False, state='В сети', kill_switch_state=False)
+        add_and_commit(uav_entity)
+        
     if not uav_entity:
         return NOT_FOUND
     else:
@@ -348,15 +417,61 @@ def get_all_forbidden_zones_handler(id: str):
     Returns:
         str: Строка с информацией о запрещенных зонах или NOT_FOUND.
     """
-    with open(FORBIDDEN_ZONES_PATH, 'r', encoding='utf-8') as f:
-        forbidden_zones = json.load(f)
-        result_str = f'$ForbiddenZones {len(forbidden_zones["features"])}'
-        for zone in forbidden_zones['features']:
-            coordinates = zone['geometry']['coordinates'][0]
-            result_str += f'&{len(coordinates)}&{"&".join(list(map(lambda e: str(e[0]) + "_" + str(e[1]), coordinates)))}'
-        return result_str
+    try:
+        with open(FORBIDDEN_ZONES_PATH, 'r', encoding='utf-8') as f:
+            forbidden_zones = json.load(f)
+            result_str = generate_forbidden_zones_string(forbidden_zones)
+            return result_str
 
-    return NOT_FOUND
+    except Exception as e:
+        print(e)
+        return NOT_FOUND
+
+
+def get_forbidden_zones_delta_handler(id: str):
+    """
+    Обрабатывает запрос на получение дельты изменений в запрещенных для полета зонах.
+
+    Args:
+        id (str): Идентификатор БПЛА.
+
+    Returns:
+        str: Строка с дельтой изменений в запрещенных зонах или NOT_FOUND.
+    """
+    try:
+        with open(FORBIDDEN_ZONES_DELTA_PATH, 'r', encoding='utf-8') as f:
+            delta_zones = json.load(f)
+        
+        delta_str = f'$ForbiddenZonesDelta {len(delta_zones["features"])}'
+        for zone in delta_zones['features']:
+            name = zone['properties']['name']
+            change_type = zone['properties']['change_type']
+            coordinates = zone['geometry']['coordinates'][0]
+            delta_str += f'&{name}&{change_type}&{len(coordinates)}&{"&".join(list(map(lambda e: f"{e[1]:.7f}_{e[0]:.7f}", coordinates)))}'
+        
+        return delta_str
+    except Exception as e:
+        print(e)
+        return NOT_FOUND
+    
+
+def get_forbidden_zones_hash_handler(id: str):
+    """
+    Обрабатывает запрос на получение SHA-256 хэша строки запрещенных зон.
+
+    Returns:
+        str: SHA-256 хэш строки запрещенных зон или NOT_FOUND.
+    """
+    try:
+        with open(FORBIDDEN_ZONES_PATH, 'r', encoding='utf-8') as f:
+            forbidden_zones = json.load(f)
+            result_str = generate_forbidden_zones_string(forbidden_zones)
+            hash_value = get_sha256_hex(result_str)
+            return f'$ForbiddenZonesHash {hash_value}'
+
+    except Exception as e:
+        print(e)
+        return NOT_FOUND
 
 
 def fmission_ms_handler(id: str, mission_str: str):
@@ -368,23 +483,86 @@ def fmission_ms_handler(id: str, mission_str: str):
         mission_str (str): Строка с полетным заданием.
 
     Returns:
-        str: OK в случае успешного сохранения.
+        str: Статус верификации миссии.
     """
+    mission_list, mission_verification_status = read_mission(mission_str)
+    
+    if mission_verification_status == MissionVerificationStatus.OK:
+        uav_entity = get_entity_by_key(Uav, id)
+        if not uav_entity and modes['display_only']:
+            uav_entity = Uav(id=id, is_armed=False, state='В сети', kill_switch_state=False)
+            add_and_commit(uav_entity)
+            
+        mission_entity = get_entity_by_key(Mission, id)
+        if mission_entity:
+            get_entities_by_field(MissionStep, MissionStep.mission_id, id).delete()
+            delete_entity(mission_entity)
+            commit_changes()
+        
+        mission_entity = Mission(uav_id=id, is_accepted=False)
+        add_changes(mission_entity)
+        encoded_mission = encode_mission(mission_list)
+        for idx, cmd in enumerate(encoded_mission):
+            mission_step_entity = MissionStep(mission_id=id, step=idx, operation=cmd)
+            add_changes(mission_step_entity)
+        commit_changes()
+        
+    return mission_verification_status
+
+
+def revise_mission_handler(id: str, mission: str):
+    mission_list = mission.split('*')
+    
     mission_entity = get_entity_by_key(Mission, id)
     if mission_entity:
         get_entities_by_field(MissionStep, MissionStep.mission_id, id).delete()
         delete_entity(mission_entity)
         commit_changes()
+    
     mission_entity = Mission(uav_id=id, is_accepted=False)
     add_changes(mission_entity)
-    mission_list = read_mission(mission_str)
-    encoded_mission = encode_mission(mission_list)
-    for idx, cmd in enumerate(encoded_mission):
+    for idx, cmd in enumerate(mission_list):
         mission_step_entity = MissionStep(mission_id=id, step=idx, operation=cmd)
         add_changes(mission_step_entity)
     commit_changes()
+    
+    uav_entity = get_entity_by_key(Uav, id)
+    if uav_entity:
+        uav_entity.is_armed = False
+        uav_entity.state = 'Ожидает'
+        commit_changes()
         
-    return OK
+    revise_mission_queue.add(id)
+    while id in revise_mission_queue:
+        time.sleep(0.1)
+        
+    mission_entity = get_entity_by_key(Mission, id)
+    if mission_entity:
+        if mission_entity.is_accepted:
+            return '$Approve 0'
+        else:
+            return '$Approve 1'
+
+
+def revise_mission_decision_handler(id: str, decision: int):
+    uav_entity = get_entity_by_key(Uav, id)
+    if not uav_entity:
+        return NOT_FOUND
+    elif id in revise_mission_queue:
+        mission_entity = get_entity_by_key(Mission, id)
+        if decision == 0:
+            uav_entity.is_armed = True
+            uav_entity.state = 'В полете'
+            mission_entity.is_accepted = True
+        else:
+            uav_entity.is_armed = False
+            uav_entity.state = 'В сети'
+            mission_entity.is_accepted = False
+        commit_changes()
+        revise_mission_queue.remove(id)
+        return f'$Arm: {decision}'
+    else:
+        return f'$Arm: -1'
 
 
 def get_logs_handler(id: str):
@@ -668,6 +846,8 @@ def get_mission_state_handler(id: str):
     Returns:
         str: Состояние миссии (принята/не принята) или NOT_FOUND.
     """
+    if id in revise_mission_queue:
+        return '2'
     uav_entity = get_entity_by_key(Uav, id)
     if uav_entity:
         mission = get_entity_by_key(Mission, id)
@@ -727,6 +907,18 @@ def get_forbidden_zone_handler(name: str):
     return NOT_FOUND
 
 
+def get_forbidden_zones_handler():
+    """
+    Обрабатывает запрос на получение всех запрещенных зон.
+
+    Returns:
+        dict: GeoJSON с запрещенными зонами
+    """
+    with open(FORBIDDEN_ZONES_PATH, 'r', encoding='utf-8') as f:
+        forbidden_zones = json.load(f)
+    return forbidden_zones
+
+
 def get_forbidden_zones_names_handler():
     """ 
     Обрабатывает запрос на получение имен всех запрещенных зон.
@@ -744,41 +936,46 @@ def get_forbidden_zones_names_handler():
     return NOT_FOUND
 
 
-def set_forbidden_zone_handler(name: str, geometry: str):
+def set_forbidden_zone_handler(name: str, geometry: list):
     """
     Обрабатывает запрос на установку или обновление запрещенной для полета зоны.
 
     Args:
         name (str): Имя запрещенной зоны.
-        geometry (str): Строка с координатами зоны.
+        geometry (list): Массив координат зоны.
 
     Returns:
         str: OK в случае успешной установки или сообщение об ошибке.
     """
-    geometry_coordinates = cast_wrapper(geometry, ast.literal_eval)
-    if geometry_coordinates == None:
+    if not isinstance(geometry, list) or not all(isinstance(coord, list) and len(coord) == 2 for coord in geometry):
         return 'Bad geometry'
-    for idx in range(len(geometry_coordinates)):
-        geometry_coordinates[idx][0] = round(geometry_coordinates[idx][0], 7)
-        geometry_coordinates[idx][1] = round(geometry_coordinates[idx][1], 7)
+    
+    for idx in range(len(geometry)):
+        geometry[idx][0] = round(geometry[idx][0], 7)
+        geometry[idx][1] = round(geometry[idx][1], 7)
         
     forbidden_zones = None
+    
+    with open(FORBIDDEN_ZONES_PATH, 'r', encoding='utf-8') as f:
+        old_zones = json.load(f)
     
     with open(FORBIDDEN_ZONES_PATH, 'r', encoding='utf-8') as f:
         forbidden_zones = json.load(f)
         existing_zone = False
         for zone in forbidden_zones['features']:
             if zone['properties'].get('name') == name:
-                zone['geometry']['coordinates'][0] = geometry_coordinates
+                zone['geometry']['coordinates'][0] = geometry
                 existing_zone = True
         
         if not existing_zone:
-            new_feature = get_new_polygon_feature(name, geometry_coordinates)
+            new_feature = get_new_polygon_feature(name, geometry)
             forbidden_zones['features'].append(new_feature)
     
-    if forbidden_zones != None:
+    if forbidden_zones is not None:
         with open(FORBIDDEN_ZONES_PATH, 'w', encoding='utf-8') as f:
             json.dump(forbidden_zones, f, ensure_ascii=False, indent=4)
+            
+        compute_and_save_forbidden_zones_delta(old_zones, forbidden_zones)
     
     return OK
 
@@ -796,6 +993,9 @@ def delete_forbidden_zone_handler(name: str):
     forbidden_zones = None
     
     with open(FORBIDDEN_ZONES_PATH, 'r', encoding='utf-8') as f:
+        old_zones = json.load(f)
+    
+    with open(FORBIDDEN_ZONES_PATH, 'r', encoding='utf-8') as f:
         forbidden_zones = json.load(f)
         for idx, zone in enumerate(forbidden_zones['features']):
             if zone['properties'].get('name') == name:
@@ -805,7 +1005,96 @@ def delete_forbidden_zone_handler(name: str):
     if forbidden_zones != None:
         with open(FORBIDDEN_ZONES_PATH, 'w', encoding='utf-8') as f:
             json.dump(forbidden_zones, f, ensure_ascii=False, indent=4)
-            return OK
+            
+        compute_and_save_forbidden_zones_delta(old_zones, forbidden_zones)
+        
+        return OK
     
     return NOT_FOUND
+
+
+def get_delay_handler(id: str):
+    """
+    Обрабатывает запрос на получение времени до следующего сеанса связи для указанного БПЛА.
+
+    Args:
+        id (str): Идентификатор БПЛА.
+
+    Returns:
+        str: Время до следующего сеанса связи или NOT_FOUND.
+    """
+    uav_entity = get_entity_by_key(Uav, id)
+    if not uav_entity:
+        return NOT_FOUND
+    else:
+        return str(uav_entity.delay)
+
+
+def set_delay_handler(id: str, delay: int):
+    """
+    Обрабатывает запрос на установку времени до следующего сеанса связи для указанного БПЛА.
+
+    Args:
+        id (str): Идентификатор БПЛА.
+        delay (int): Время до следующего сеанса связи.
+
+    Returns:
+        str: OK в случае успешной установки или NOT_FOUND.
+    """
+    uav_entity = get_entity_by_key(Uav, id)
+    if not uav_entity:
+        return NOT_FOUND
+    else:
+        uav_entity.delay = delay
+        commit_changes()
+        return OK
     
+    
+def get_display_mode_handler():
+    return '0' if modes['display_only'] else '1'
+
+def toggle_display_mode_handler():
+    modes['display_only'] = not modes['display_only']
+    return OK
+
+def get_flight_info_response_mode_handler():
+    return '0' if modes['flight_info_response'] else '1'
+
+def toggle_flight_info_response_mode_handler():
+    modes['flight_info_response'] = not modes['flight_info_response']
+    return OK
+
+def get_all_data_handler():
+    all_data = {}
+
+    uav_entities = Uav.query.order_by(Uav.created_date).all()
+    all_data['ids'] = [uav.id for uav in uav_entities]
+
+    all_data['waiters'] = str(len(arm_queue))
+
+    all_data['uav_data'] = {}
+    for uav in uav_entities:
+        uav_data = {}
+        
+        uav_data['state'] = uav.state
+
+        uav_telemetry_entity = get_entities_by_field_with_order(UavTelemetry, UavTelemetry.uav_id, uav.id, UavTelemetry.record_time.desc()).first()
+        if uav_telemetry_entity:
+            uav_data['telemetry'] = {
+                'lat': uav_telemetry_entity.lat,
+                'lon': uav_telemetry_entity.lon,
+                'alt': uav_telemetry_entity.alt,
+                'azimuth': uav_telemetry_entity.azimuth,
+                'dop': uav_telemetry_entity.dop,
+                'sats': uav_telemetry_entity.sats,
+                'speed': uav_telemetry_entity.speed
+            }
+        else:
+            uav_data['telemetry'] = None
+
+        uav_data['mission_state'] = get_mission_state_handler(uav.id)
+
+        uav_data['delay'] = str(uav.delay)
+
+        all_data['uav_data'][uav.id] = uav_data
+    return jsonify(all_data)

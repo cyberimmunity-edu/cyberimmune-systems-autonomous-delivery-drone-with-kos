@@ -26,12 +26,12 @@ int initServerConnector() {
 }
 
 int requestServer(char* query, char* response, uint32_t responseSize) {
-    if (strstr(query, "/api/kill_switch?") != NULL) {
-        if (responseSize < 16) {
+    if (strstr(query, "/api/flight_info?") != NULL) {
+        if (responseSize < 103) {
             logEntry("Size of response does not fit given buffer", ENTITY_NAME, LogLevel::LOG_WARNING);
             return 0;
         }
-        strncpy(response, "$KillSwitch: 1#", 16);
+        strncpy(response, "$Flight 0$ForbiddenZonesHash 0faa8891ae3eb2d172ed240008cc93b80b568dfea98c9335f5217fb315f9ff69$Delay 1#", 103);
     }
     else if (strstr(query, "/api/auth?") != NULL) {
         if (responseSize < 10) {
@@ -45,14 +45,28 @@ int requestServer(char* query, char* response, uint32_t responseSize) {
             logEntry("Size of response does not fit given buffer", ENTITY_NAME, LogLevel::LOG_WARNING);
             return 0;
         }
-        strncpy(response, "$FlightMission H53.1019446_107.3774394_846.22&T5.0&W53.1020863_107.3774180_5.0&W53.1021926_107.3775065_5.0&W53.1023102_107.3776701_5.0&W53.1023682_107.3779464_5.0&W53.1023923_107.3782736_5.0&W53.1023279_107.3786089_5.0&W53.1021991_107.3787698_5.0&D2.0&S5.0_1200.0&W53.1020284_107.3788181_5.0&W53.1018818_107.3786679_5.0&W53.1018206_107.3782790_5.0&W53.1017900_107.3778149_5.0&W53.1018480_107.3775575_5.0&W53.1019446_107.3774394_5.0&L53.1019446_107.3774394_846.22#", 464);
+        strncpy(response, "$FlightMission H60.0144850_27.8200870_20.00&T1.0&W60.0144222_27.8200360_1.0&W60.0144105_27.8201212_1.0&W60.0144478_27.8201520_1.0&W60.0144280_27.8202989_1.0&W60.0143923_27.8202660_1.0&W60.0143809_27.8203599_1.0&W60.0144471_27.8204216_1.0&D3.0&S5.0_1200.0&D1.0&S5.0_1800.0&W60.0144756_27.8201668_1.0&L60.0144756_27.8201668_0.0#", 327);
     }
-    else if ((strstr(query, "/api/arm?") != NULL) || (strstr(query, "/api/fly_accept?") != NULL)) {
-        if (responseSize < 9) {
+    else if (strstr(query, "/api/nmission?") != NULL) {
+        if (responseSize < 13) {
             logEntry("Size of response does not fit given buffer", ENTITY_NAME, LogLevel::LOG_WARNING);
             return 0;
         }
-        strncpy(response, "$Arm: 0#", 9);
+        strncpy(response, "$Approve 0#", 13);
+    }
+    else if ((strstr(query, "/api/arm?") != NULL) || (strstr(query, "/api/fly_accept?") != NULL)) {
+        if (responseSize < 16) {
+            logEntry("Size of response does not fit given buffer", ENTITY_NAME, LogLevel::LOG_WARNING);
+            return 0;
+        }
+        strncpy(response, "$Arm 0$Delay 1#", 16);
+    }
+    else if (strstr(query, "/api/get_all_forbidden_zones?") != NULL) {
+        if (responseSize < 191) {
+            logEntry("Size of response does not fit given buffer", ENTITY_NAME, LogLevel::LOG_WARNING);
+            return 0;
+        }
+        strncpy(response, "$ForbiddenZones 0#", 19);
     }
     else {
         if (responseSize < 3) {
@@ -62,5 +76,9 @@ int requestServer(char* query, char* response, uint32_t responseSize) {
         strncpy(response, "$#", 3);
     }
 
+    return 1;
+}
+
+int publish(char* topic, char* publication) {
     return 1;
 }

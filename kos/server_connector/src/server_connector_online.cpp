@@ -12,14 +12,22 @@
  */
 
 #include "../include/server_connector.h"
+#include <sys/select.h>
+#include <fcntl.h>
+#include <errno.h>
 
 #include <kos_net.h>
+#include <mosquittopp.h>
 
 /** \cond */
 #define BUFFER_SIZE 1024
-#define CONTENT_SIZE 2048
+#define CONTENT_SIZE 4096
+#define CONNECTION_TIMEOUT 5
 
 uint16_t serverPort = 8080;
+uint16_t publishPort = 1883;
+bool publishConnected = false;
+mosqpp::mosquittopp *publisher;
 /** \endcond */
 
 /**
@@ -38,7 +46,7 @@ int setMacId() {
     uint8_t mac[ETHER_ADDR_LEN] = {0};
     for (ifaddrs *ifa = address; ifa != NULL; ifa = ifa->ifa_next) {
         char *name = ifa->ifa_name;
-        if (strcmp(name, "en0") || (ifa->ifa_flags & IFF_LOOPBACK))
+        if (strcmp(name, "en0") || strcmp(name, "wl0") || (ifa->ifa_flags & IFF_LOOPBACK))
             continue;
         struct sockaddr_in *sock = (struct sockaddr_in*)(ifa->ifa_addr);
         if ((sock == NULL) || (sock->sin_family != AF_LINK))
@@ -64,6 +72,9 @@ int initServerConnector() {
         return 0;
     }
 
+    mosqpp::lib_init();
+    publisher = new mosqpp::mosquittopp();
+
     if (strlen(BOARD_ID)) {
         setBoardName(BOARD_ID);
         return 1;
@@ -81,16 +92,47 @@ int requestServer(char* query, char* response, uint32_t responseSize) {
         logEntry("Failed to create a socket", ENTITY_NAME, LogLevel::LOG_WARNING);
         return 0;
     }
+    if (fcntl(socketDesc, F_SETFL, O_NONBLOCK) < 0) {
+        logEntry("Failed to configure a socket", ENTITY_NAME, LogLevel::LOG_WARNING);
+        return 0;
+    }
 
     sockaddr_in serverAddress = {0};
     serverAddress.sin_family = AF_INET;
     serverAddress.sin_port = htons(serverPort);
     serverAddress.sin_addr.s_addr = inet_addr(SERVER_IP);
-    if (connect(socketDesc, (struct sockaddr *)&serverAddress, sizeof(serverAddress)) < 0) {
-        char logBuffer[257] = {0};
+    connect(socketDesc, (struct sockaddr *)&serverAddress, sizeof(serverAddress));
+
+    fd_set read, write, except;
+    FD_ZERO(&read);
+    FD_ZERO(&write);
+    FD_ZERO(&except);
+    FD_SET(socketDesc, &read);
+    FD_SET(socketDesc, &write);
+    FD_SET(socketDesc, &except);
+
+    timeval tv;
+    tv.tv_sec = CONNECTION_TIMEOUT;
+    tv.tv_usec = 0;
+
+    int res = select(NULL, &read, &write, &except, &tv);
+    if (res < 0) {
+        char logBuffer[256] = {0};
         snprintf(logBuffer, 256, "Connection to %s:%d has failed", SERVER_IP, serverPort);
         logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
         close(socketDesc);
+        return 0;
+    }
+    else if (res == 0) {
+        char logBuffer[256] = {0};
+        snprintf(logBuffer, 256, "Connection to %s:%d is timed out", SERVER_IP, serverPort);
+        logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
+        close(socketDesc);
+        strncpy(response, "TIMEOUT", 8);
+        return 1;
+    }
+    if (fcntl(socketDesc, F_SETFL, 0) < 0) {
+        logEntry("Failed to configure a socket", ENTITY_NAME, LogLevel::LOG_WARNING);
         return 0;
     }
 
@@ -116,6 +158,14 @@ int requestServer(char* query, char* response, uint32_t responseSize) {
         }
     close(socketDesc);
 
+    if (strstr(content, "HTTP/1.1 403 FORBIDDEN")) {
+        char logBuffer[256] = {0};
+        snprintf(logBuffer, 256, "Connection to %s:%d is not responding", SERVER_IP, serverPort);
+        logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
+        strncpy(response, "TIMEOUT", 8);
+        return 1;
+    }
+
     char* msg = strstr(content, "$");
     uint32_t len = strlen(msg);
     if (msg == NULL) {
@@ -130,4 +180,24 @@ int requestServer(char* query, char* response, uint32_t responseSize) {
     strncpy(response, msg, len);
 
     return 1;
+}
+
+int publish(char* topic, char* publication) {
+    if (!publishConnected) {
+        publishConnected = !publisher->connect_async(MQTT_IP, publishPort);
+        if (!publishConnected) {
+            logEntry("Connection to MQTT broker has failed", ENTITY_NAME, LogLevel::LOG_WARNING);
+            return 0;
+        }
+    }
+
+    char idTopic[256];
+    snprintf(idTopic, 256, "%s/%s", topic, getBoardName());
+
+    if (publisher && publishConnected && !publisher->publish(NULL, idTopic, strlen(publication), publication))
+        return 1;
+    else {
+        logEntry("Failed to publish message", ENTITY_NAME, LogLevel::LOG_WARNING);
+        return 0;
+    }
 }

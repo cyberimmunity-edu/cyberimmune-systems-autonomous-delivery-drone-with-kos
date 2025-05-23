@@ -1,20 +1,35 @@
 <!DOCTYPE html>
-<html>
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Авторизация</title>
-      <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
-      </head>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Авторизация</title>
+    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/style.css') }}">
+</head>
 <body>
-<script type="module" src="{{ url_for('static',filename='admin_auth.js') }}"> </script>
+    <header>
+        <h1>Авторизация</h1>
+    </header>
 
-<h1>Войдите в систему</h1>
+    <main class="auth-container">
+        <form id="auth-form">
+            <div class="auth-form-group">
+                <label for="login">Логин:</label>
+                <input id="login" type="text" name="login" class="auth-form-control"/>
+            </div>
+            <div class="auth-form-group">
+                <label for="password">Пароль:</label>
+                <input id="password" type="password" name="password" class="auth-form-control"/>
+            </div>
+            <input type="hidden" id="next-url" name="next-url" value="{{ next_url }}">
+            <input id="auth-submit-button" type="submit" value = "Войти" class="auth-submit-button">
+        </form>
+    </main>
+    <footer>
+      <p></p>
+    </footer>
 
-<label for="login">Логин:</label>
-<input id="login" type="text" name="login" /><br><br>
-<label for="password">Пароль:</label>
-<input id="password" type="password" name="password" /><br><br>
-<input id="submit" type="submit">
+    <script type="module" src="{{ url_for('static', filename='admin_auth.js') }}"> </script>
 </body>
 </html>

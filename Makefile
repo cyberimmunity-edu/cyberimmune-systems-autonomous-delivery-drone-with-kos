@@ -1,17 +1,20 @@
 .PHONY: docker-compose-stop docs
 
-docs: 
+docs:
 	doxygen Doxyfile
 
 docker: docker-image
 
-docker-image: docker-image-simulator docker-image-orvd
+docker-image: docker-image-simulator docker-image-orvd docker-image-mqtt-server
 
 docker-image-simulator:
 	docker build ./ -t simulator
 
 docker-image-orvd:
 	docker build -f orvd.Dockerfile -t orvd ./
+
+docker-image-mqtt-server:
+	docker build -f mqtt-server.Dockerfile -t mqtt-server ./
 
 clean-docker-compose:
 	docker-compose -f docker-compose-offline.yml down

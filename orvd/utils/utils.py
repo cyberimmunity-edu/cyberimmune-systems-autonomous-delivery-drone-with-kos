@@ -28,8 +28,16 @@ OK = '$OK'
 
 LOGS_PATH = './logs'
 FORBIDDEN_ZONES_PATH = './static/resources/forbidden_zones.json'
+FORBIDDEN_ZONES_DELTA_PATH = './static/resources/forbidden_zones_delta.json'
 
 loaded_keys = {}
+
+class MissionVerificationStatus:
+    OK = 'Mission accepted.'
+    NON_ZERO_DELAY_WAYPOINT = 'Error: The mission contains a waypoint with non-zero delay.'
+    WRONG_DELAY = 'Error: Delay in the mission can contain only one parameter (delay in seconds).'
+    UNKNOWN_COMMAND = 'Error: The mission contains an unknown command. Allowed commands: 16, 21, 22, 93, 183.'
+    
 
 
 def get_sha256_hex(message: str) -> str:
@@ -61,7 +69,7 @@ def parse_mission(mission: str) -> list:
     return cmds
 
 
-def read_mission(file_str: str) -> list:
+def read_mission(file_str: str) -> tuple[list | None, str]:
     """
     Читает миссию из строки файла и преобразует её в список команд.
 
@@ -69,7 +77,7 @@ def read_mission(file_str: str) -> list:
         file_str (str): Содержимое файла миссии.
 
     Returns:
-        list: Список команд миссии.
+        tuple: Кортеж, содержащий список команд миссии и статус верификации миссии.
 
     Raises:
         Exception: Если файл не поддерживается версией WP.
@@ -90,8 +98,8 @@ def read_mission(file_str: str) -> list:
             ln_command=int(linearray[3])
             ln_param1=float(linearray[4])
             ln_param2=float(linearray[5])
-            #ln_param3=float(linearray[6])
-            #ln_param4=float(linearray[7])
+            ln_param3=float(linearray[6])
+            ln_param4=float(linearray[7])
             ln_param5=float(linearray[8])
             ln_param6=float(linearray[9])
             ln_param7=float(linearray[10])
@@ -102,7 +110,10 @@ def read_mission(file_str: str) -> list:
             elif ln_command == 22:
                 cmd = takeoff_handler(alt=ln_param7)
             elif ln_command == 16:
-                cmd = waypoint_handler(hold=ln_param1, lat=ln_param5, lon=ln_param6, alt=ln_param7)
+                if ln_param1 == 0.0:
+                    cmd = waypoint_handler(lat=ln_param5, lon=ln_param6, alt=ln_param7)
+                else:
+                    return None, MissionVerificationStatus.NON_ZERO_DELAY_WAYPOINT
             elif ln_command == 183:
                 cmd = servo_handler(number=ln_param1, pwm=ln_param2)
             elif ln_command == 21:
@@ -111,14 +122,16 @@ def read_mission(file_str: str) -> list:
                 else:
                     drone_home = None
                 cmd = land_handler(lat=ln_param5, lon=ln_param6, alt=ln_param7, home=drone_home)
+            elif ln_command == 93:
+                if ln_param2 == ln_param3 == ln_param4 == 0.0:
+                    cmd = delay_handler(delay=ln_param1)
+                else:
+                    return None, MissionVerificationStatus.WRONG_DELAY
             else:
-                # print(f'Error: unknown command {ln_command}. Allowed commands: 16, 21, 22, 183.')
-                # missionlist = []
-                # break
-                continue
+                return None, MissionVerificationStatus.UNKNOWN_COMMAND
             
             missionlist.append(cmd)
-    return missionlist
+    return missionlist, MissionVerificationStatus.OK
 
 
 def home_handler(lat: float, lon: float, alt: float) -> list:
@@ -153,12 +166,11 @@ def takeoff_handler(alt: float) -> list:
     return ['T', str(alt)]
 
 
-def waypoint_handler(hold: float, lat: float, lon: float, alt: float) -> list:
+def waypoint_handler(lat: float, lon: float, alt: float) -> list:
     """
     Обрабатывает команду путевой точки.
 
     Args:
-        hold (float): Время удержания.
         lat (float): Широта.
         lon (float): Долгота.
         alt (float): Высота.
@@ -169,7 +181,7 @@ def waypoint_handler(hold: float, lat: float, lon: float, alt: float) -> list:
     lat = round(lat, 7)
     lon = round(lon, 7)
     alt = round(alt, 2)
-    return ['W', str(hold), str(lat), str(lon), str(alt)]
+    return ['W', str(lat), str(lon), str(alt)]
 
 
 def servo_handler(number: float, pwm: float) -> list:
@@ -215,6 +227,19 @@ def land_handler(lat: float, lon: float, alt: float, home: list = None) -> list:
     return ['L', str(ret_lat), str(ret_lon), str(ret_alt)]
 
 
+def delay_handler(delay: int) -> list:
+    """
+    Обрабатывает команду задержки.
+
+    Args:
+        delay (int): Время задержки в секундах.
+
+    Returns:
+        list: Команда задержки.
+    """
+    return ['D', str(delay)]
+
+
 def encode_mission(mission_list: list) -> list:
     """
     Кодирует список команд миссии в строковый формат.
@@ -227,7 +252,6 @@ def encode_mission(mission_list: list) -> list:
     """
     for idx, cmd in enumerate(mission_list):
         mission_list[idx] = f'{cmd[0]}' + '_'.join(cmd[1:])
-    #mission = '&'.join(mission_list)
     
     return mission_list
 
@@ -488,3 +512,65 @@ def create_csv_from_telemetry(telemetry_data):
 
     output.seek(0)
     return output.getvalue()
+
+
+def compute_forbidden_zones_delta(old_zones, new_zones):
+    """
+    Вычисляет дельту изменений между старыми и новыми запрещенными зонами.
+
+    Args:
+        old_zones (dict): Старые запрещенные зоны.
+        new_zones (dict): Новые запрещенные зоны.
+
+    Returns:
+        dict: Дельта изменений.
+    """
+    delta_zones = {"type": "FeatureCollection", "features": []}
+    
+    old_zones_dict = {zone['properties']['name']: zone for zone in old_zones['features']}
+    new_zones_dict = {zone['properties']['name']: zone for zone in new_zones['features']}
+    
+    # Обработка добавленных и измененных зон
+    for name, new_zone in new_zones_dict.items():
+        if name not in old_zones_dict:
+            new_zone['properties']['change_type'] = 'added'
+            delta_zones['features'].append(new_zone)
+        elif old_zones_dict[name]['geometry'] != new_zone['geometry']:
+            new_zone['properties']['change_type'] = 'modified'
+            delta_zones['features'].append(new_zone)
+    
+    # Обработка удаленных зон
+    for name, old_zone in old_zones_dict.items():
+        if name not in new_zones_dict:
+            old_zone['properties']['change_type'] = 'deleted'
+            delta_zones['features'].append(old_zone)
+    
+    return delta_zones
+
+
+def compute_and_save_forbidden_zones_delta(old_zones, new_zones):
+    try:
+        delta_zones = compute_forbidden_zones_delta(old_zones, new_zones)
+        
+        with open(FORBIDDEN_ZONES_DELTA_PATH, 'w', encoding='utf-8') as f:
+            json.dump(delta_zones, f, ensure_ascii=False, indent=4)
+    except Exception as e:
+        print(f"Error computing and saving forbidden zones delta: {e}")
+        
+        
+def generate_forbidden_zones_string(forbidden_zones):
+    """
+    Генерирует строку запрещенных зон из JSON данных.
+
+    Args:
+        forbidden_zones (dict): JSON данные запрещенных зон.
+
+    Returns:
+        str: Строка запрещенных зон.
+    """
+    result_str = f'$ForbiddenZones {len(forbidden_zones["features"])}'
+    for zone in forbidden_zones['features']:
+        name = zone['properties']['name']
+        coordinates = zone['geometry']['coordinates'][0]
+        result_str += f'&{name}&{len(coordinates)}&{"&".join(list(map(lambda e: f"{e[1]:.7f}_{e[0]:.7f}", coordinates)))}'
+    return result_str

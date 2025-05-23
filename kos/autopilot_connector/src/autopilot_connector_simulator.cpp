@@ -46,7 +46,7 @@ int initConnection() {
     address.sin_port = htons(autopilotPort);
 
     if (connect(autopilotSocket, (struct sockaddr*)&address, sizeof(address)) != 0) {
-        char logBuffer[257] = {0};
+        char logBuffer[256] = {0};
         snprintf(logBuffer, 256, "Connection to %s:%d has failed", SIMULATOR_IP, autopilotPort);
         logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
         return 0;
@@ -72,7 +72,7 @@ int getAutopilotCommand(uint8_t& command) {
     ssize_t expectedSize = sizeof(AutopilotCommandMessage) - AUTOPILOT_COMMAND_MESSAGE_HEAD_SIZE;
     ssize_t readBytes = read(autopilotSocket, message + AUTOPILOT_COMMAND_MESSAGE_HEAD_SIZE, expectedSize);
     if (readBytes != expectedSize) {
-        char logBuffer[257] = {0};
+        char logBuffer[256] = {0};
         snprintf(logBuffer, 256, "Failed to read message from autopilot: %ld bytes were expected, %ld bytes were received", expectedSize, readBytes);
         logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
         return 0;
@@ -82,28 +82,8 @@ int getAutopilotCommand(uint8_t& command) {
     return 1;
 }
 
-int sendAutopilotCommand(AutopilotCommand command) {
-    AutopilotCommandMessage message = AutopilotCommandMessage(command);
-
-    write(autopilotSocket, &message, sizeof(AutopilotCommandMessage));
-
-    return 1;
-}
-
-int sendAutopilotCommand(AutopilotCommand command, int32_t value) {
-    sendAutopilotCommand(command);
-
-    write(autopilotSocket, &value, sizeof(int32_t));
-
-    return 1;
-}
-
-int sendAutopilotCommand(AutopilotCommand command, int32_t valueFirst, int32_t valueSecond, int32_t valueThird) {
-    sendAutopilotCommand(command);
-
-    write(autopilotSocket, &valueFirst, sizeof(int32_t));
-    write(autopilotSocket, &valueSecond, sizeof(int32_t));
-    write(autopilotSocket, &valueThird, sizeof(int32_t));
+int sendAutopilotBytes(uint8_t* bytes, ssize_t size) {
+    write(autopilotSocket, bytes, size);
 
     return 1;
 }

@@ -121,20 +121,6 @@ assert "CredentialManager" {
         grant fc ~> cm:interface.CheckSignature { message : "message" }
         grant response src=cm dst=fc endpoint=interface method=CheckSignature { success : 1, correct : 1 }
     }
-
-    sequence "NavigationSystem" {
-        grant ns ~> cm:interface.SignMessage { message : "message" }
-        grant response src=cm dst=ns endpoint=interface method=SignMessage { success : 1, signature : "signature" }
-        grant ns ~> cm:interface.CheckSignature { message : "message" }
-        grant response src=cm dst=ns endpoint=interface method=CheckSignature { success : 1, correct : 1 }
-    }
-
-    sequence "PeripheryController" {
-        grant pc ~> cm:interface.SignMessage { message : "message" }
-        grant response src=cm dst=pc endpoint=interface method=SignMessage { success : 1, signature : "signature" }
-        grant pc ~> cm:interface.CheckSignature { message : "message" }
-        grant response src=cm dst=pc endpoint=interface method=CheckSignature { success : 1, correct : 1 }
-    }
 }
 
 assert "NavigationSystem" {
@@ -242,6 +228,8 @@ assert "ServerConnector" {
         grant response src=sc dst=fc endpoint=interface method=GetBoardId { success : 1, id : "id" }
         grant fc ~> sc:interface.SendRequest { query : "query" }
         grant response src=sc dst=fc endpoint=interface method=SendRequest { success : 1, response : "response" }
+        grant fc ~> sc:interface.PublishMessage { topic : "topic", publication : "publication" }
+        grant response src=sc dst=fc endpoint=interface method=PublishMessage { success : 1 }
     }
 
     sequence "CredentialManager" {
@@ -249,6 +237,8 @@ assert "ServerConnector" {
         grant response src=sc dst=cm endpoint=interface method=GetBoardId { success : 1, id : "id" }
         grant cm ~> sc:interface.SendRequest { query : "query" }
         grant response src=sc dst=cm endpoint=interface method=SendRequest { success : 1, response : "response" }
+        grant cm ~> sc:interface.PublishMessage { topic : "topic", publication : "publication" }
+        grant response src=sc dst=cm endpoint=interface method=PublishMessage { success : 1 }
     }
 
     sequence "NavigationSystem" {
@@ -256,12 +246,7 @@ assert "ServerConnector" {
         grant response src=sc dst=ns endpoint=interface method=GetBoardId { success : 1, id : "id" }
         grant ns ~> sc:interface.SendRequest { query : "query" }
         grant response src=sc dst=ns endpoint=interface method=SendRequest { success : 1, response : "response" }
-    }
-
-    sequence "PeripheryController" {
-        grant pc ~> sc:interface.GetBoardId {}
-        grant response src=sc dst=pc endpoint=interface method=GetBoardId { success : 1, id : "id" }
-        grant pc ~> sc:interface.SendRequest { query : "query" }
-        grant response src=sc dst=pc endpoint=interface method=SendRequest { success : 1, response : "response" }
+        grant ns ~> sc:interface.PublishMessage { topic : "topic", publication : "publication" }
+        grant response src=sc dst=ns endpoint=interface method=PublishMessage { success : 1 }
     }
 }

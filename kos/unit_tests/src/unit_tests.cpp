@@ -8,7 +8,7 @@
 #include "../../navigation_system/include/navigation_system.h"
 #include "../../periphery_controller/include/periphery_controller.h"
 #include "../../logger/include/logger.h"
-#include "../../flight_controller/include/mission.h"
+#include "../../flight_controller/include/flight_controller.h"
 
 //Credential Manager
 TEST(CredentialManager, HexCharToInt) {
@@ -143,12 +143,12 @@ TEST(CredentialManager, RSA) {
     char sign[257] = {0};
     EXPECT_TRUE(getMessageSignature(message, sign));
 
-    char key[1025] = {0};
+    char key[1024] = {0};
     snprintf(key, 1024, "$Key: %s %s", getKeyN(), getKeyE());
     EXPECT_TRUE(setRsaKey(key));
 
-    char signedMessage[1025] = {0};
-    snprintf(signedMessage, 1024, "%s#%s", message, sign);
+    char signedMessage[512] = {0};
+    snprintf(signedMessage, 512, "%s#%s", message, sign);
     uint8_t correct = 0;
     EXPECT_TRUE(checkMessageSignature(signedMessage, correct));
     EXPECT_TRUE(correct);
@@ -280,20 +280,194 @@ TEST(FlighController, ParseCommands) {
     EXPECT_STRNE(getMockLog(), "Empty log");
 }
 
-TEST(FlighController, ParseMission) {
+TEST(FlighController, ParseAreas) {
+    char areasGood[] = "2&test_area_1&3&53.1021169_107.377713&53.1022184_107.3779973&53.1022023_107.3783299&test_area_2&3&53.1019962_107.3782709&53.1019189_107.3779812&53.1019656_107.3777157#";
+    logEntry("Empty log", "", LOG_INFO);
+    EXPECT_TRUE(parseAreas(areasGood));
+    EXPECT_STREQ(getMockLog(), "Empty log");
+
+    char areasNoName[] = "1&3&53.1021169_107.377713&53.1022184_107.3779973&53.1022023_107.3783299#";
+    logEntry("Empty log", "", LOG_INFO);
+    EXPECT_FALSE(parseAreas(areasNoName));
+    EXPECT_STRNE(getMockLog(), "Empty log");
+
+    char areasWrongNum[] = "2&test_area&3&53.1021169_107.377713&53.1022184_107.3779973&53.1022023_107.3783299#";
+    logEntry("Empty log", "", LOG_INFO);
+    EXPECT_FALSE(parseAreas(areasWrongNum));
+    EXPECT_STRNE(getMockLog(), "Empty log");
+
+    char areasWrongPointNum1[] = "1&test_area&4&53.1021169_107.377713&53.1022184_107.3779973&53.1022023_107.3783299#";
+    logEntry("Empty log", "", LOG_INFO);
+    EXPECT_FALSE(parseAreas(areasWrongPointNum1));
+    EXPECT_STRNE(getMockLog(), "Empty log");
+
+    char areasWrongPointNum2[] = "2&test_area_1&2&53.1021169_107.377713&53.1022184_107.3779973&53.1022023_107.3783299&test_area_2&3&53.1021169_107.377713&53.1022184_107.3779973&53.1022023_107.3783299#";
+    logEntry("Empty log", "", LOG_INFO);
+    EXPECT_FALSE(parseAreas(areasWrongPointNum2));
+    EXPECT_STRNE(getMockLog(), "Empty log");
+}
+
+TEST(FlighController, ParseAreasDelta) {
+    char deltaGood[] = "3&area_1&modified&3&53.1021169_107.377713&53.1022184_107.3779973&53.1022023_107.3783299&area_2&added&3&53.1021169_107.377713&53.1022184_107.3779973&53.1022023_107.3783299&area_3&deleted&3&53.1021169_107.377713&53.1022184_107.3779973&53.1022023_107.3783299#";
+    logEntry("Empty log", "", LOG_INFO);
+    EXPECT_TRUE(parseAreasDelta(deltaGood));
+    EXPECT_STREQ(getMockLog(), "Empty log");
+
+    char deltaNoName[] = "1&modified&3&53.1021169_107.377713&53.1022184_107.3779973&53.1022023_107.3783299#";
+    logEntry("Empty log", "", LOG_INFO);
+    EXPECT_FALSE(parseAreasDelta(deltaNoName));
+    EXPECT_STRNE(getMockLog(), "Empty log");
+
+    char deltaNoType[] = "1&area&3&53.1021169_107.377713&53.1022184_107.3779973&53.1022023_107.3783299#";
+    logEntry("Empty log", "", LOG_INFO);
+    EXPECT_FALSE(parseAreasDelta(deltaNoType));
+    EXPECT_STRNE(getMockLog(), "Empty log");
+
+    char deltaWrongType[] = "1&area&changed&3&53.1021169_107.377713&53.1022184_107.3779973&53.1022023_107.3783299#";
+    logEntry("Empty log", "", LOG_INFO);
+    EXPECT_FALSE(parseAreasDelta(deltaWrongType));
+    EXPECT_STRNE(getMockLog(), "Empty log");
+}
+
+TEST(FlighController, CoordinateToString) {
+    char str1[13] = {0};
+    coordToString(str1, 13, 1237654321, 7);
+    EXPECT_STREQ(str1, "123.7654321");
+
+    char str2[13] = {0};
+    coordToString(str2, 13, -1237654321, 7);
+    EXPECT_STREQ(str2, "-123.7654321");
+
+    char str3[13] = {0};
+    coordToString(str3, 13, 1237654000, 7);
+    EXPECT_STREQ(str3, "123.7654000");
+
+    char str4[13] = {0};
+    coordToString(str4, 13, 1230000000, 7);
+    EXPECT_STREQ(str4, "123.0000000");
+
+    char str5[13] = {0};
+    coordToString(str5, 13, 1000000000, 7);
+    EXPECT_STREQ(str5, "100.0000000");
+
+    char str6[13] = {0};
+    coordToString(str6, 13, 240123456, 7);
+    EXPECT_STREQ(str6, "24.0123456");
+
+    char str7[10] = {0};
+    coordToString(str7, 10, 100, 2);
+    EXPECT_STREQ(str7, "1.00");
+
+    char str8[10] = {0};
+    coordToString(str8, 10, 5, 0);
+    EXPECT_STREQ(str8, "5");
+
+    char str9[10] = {0};
+    coordToString(str9, 10, 0, 2);
+    EXPECT_STREQ(str9, "0.00");
+
+    char str10[13] = {0};
+    coordToString(str10, 13, 1234, 7);
+    EXPECT_STREQ(str10, "0.0001234");
+}
+
+TEST(FlighController, LoadMission) {
     char missionGood[] = "$FlightMission H53.1019446_107.3774394_846.22&T5.0&W53.1020863_107.3774180_5.0&S5.0_1200.0&L53.1019446_107.3774394_846.22#";
     logEntry("Empty log", "", LOG_INFO);
-    EXPECT_TRUE(parseMission(missionGood));
+    EXPECT_TRUE(loadMission(missionGood));
     EXPECT_STREQ(getMockLog(), "Empty log");
 
     char missionEmpty[] = "Response: $-1#";
     logEntry("Empty log", "", LOG_INFO);
-    EXPECT_FALSE(parseMission(missionEmpty));
+    EXPECT_FALSE(loadMission(missionEmpty));
     EXPECT_STRNE(getMockLog(), "Empty log");
 
     char missionNoHead[] = "H53.1019446_107.3774394_846.22&T5.0&W53.1020863_107.3774180_5.0&S5.0_1200.0&L53.1019446_107.3774394_846.22#";
     logEntry("Empty log", "", LOG_INFO);
-    EXPECT_FALSE(parseMission(missionNoHead));
+    EXPECT_FALSE(loadMission(missionNoHead));
+    EXPECT_STRNE(getMockLog(), "Empty log");
+}
+
+TEST(FlighController, LoadNoFlightAreas) {
+    char areasGood[] = "$ForbiddenZones 1&test_area&3&53.1021169_107.377713&53.1022184_107.3779973&53.1022023_107.3783299#";
+    logEntry("Empty log", "", LOG_INFO);
+    EXPECT_TRUE(loadNoFlightAreas(areasGood));
+    EXPECT_STREQ(getMockLog(), "Empty log");
+
+    char areasEmptyGood[] = "$ForbiddenZones 0#";
+    logEntry("Empty log", "", LOG_INFO);
+    EXPECT_TRUE(loadNoFlightAreas(areasEmptyGood));
+    EXPECT_STREQ(getMockLog(), "Empty log");
+
+    char areasEmpty[] = "Response: $-1#";
+    logEntry("Empty log", "", LOG_INFO);
+    EXPECT_FALSE(loadNoFlightAreas(areasEmpty));
+    EXPECT_STRNE(getMockLog(), "Empty log");
+
+    char areasNoHead[] = "1&test_area&3&53.1021169_107.377713&53.1022184_107.3779973&53.1022023_107.3783299#";
+    logEntry("Empty log", "", LOG_INFO);
+    EXPECT_FALSE(loadMission(areasNoHead));
+    EXPECT_STRNE(getMockLog(), "Empty log");
+}
+
+TEST(FlighController, UpdateNoFlightAreas) {
+    char deltaGood[] = "$ForbiddenZonesDelta 3&area_1&modified&3&53.1021169_107.377713&53.1022184_107.3779973&53.1022023_107.3783299&area_2&added&3&53.1021169_107.377713&53.1022184_107.3779973&53.1022023_107.3783299&area_3&deleted&3&53.1021169_107.377713&53.1022184_107.3779973&53.1022023_107.3783299#";
+    logEntry("Empty log", "", LOG_INFO);
+    EXPECT_TRUE(updateNoFlightAreas(deltaGood));
+    EXPECT_STREQ(getMockLog(), "Empty log");
+
+    char deltaEmpty[] = "Response: $-1#";
+    logEntry("Empty log", "", LOG_INFO);
+    EXPECT_FALSE(updateNoFlightAreas(deltaEmpty));
+    EXPECT_STRNE(getMockLog(), "Empty log");
+
+    char deltaNoHead[] = "3&area_1&modified&3&53.1021169_107.377713&53.1022184_107.3779973&53.1022023_107.3783299&area_2&added&3&53.1021169_107.377713&53.1022184_107.3779973&53.1022023_107.3783299&area_3&deleted&3&53.1021169_107.377713&53.1022184_107.3779973&53.1022023_107.3783299#";
+    logEntry("Empty log", "", LOG_INFO);
+    EXPECT_FALSE(updateNoFlightAreas(deltaNoHead));
+    EXPECT_STRNE(getMockLog(), "Empty log");
+}
+
+TEST(FlighController, ParseNoFlightAreasHash) {
+    char hashGoodFst[65] = {0};
+    logEntry("Empty log", "", LOG_INFO);
+    parseNoFlightAreasHash("$ForbiddenZonesHash bdbac12490e31f4d0b3b5ee45a37dea125a35510b100e48d79e143eb3f419205$", hashGoodFst, 65);
+    EXPECT_STREQ(hashGoodFst, "bdbac12490e31f4d0b3b5ee45a37dea125a35510b100e48d79e143eb3f419205");
+    EXPECT_STREQ(getMockLog(), "Empty log");
+
+    char hashGoodSnd[65] = {0};
+    logEntry("Empty log", "", LOG_INFO);
+    parseNoFlightAreasHash("$ForbiddenZonesHash dbac12490e31f4d0b3b5ee45a37dea125a35510b100e48d79e143eb3f419205$", hashGoodSnd, 65);
+    EXPECT_STREQ(hashGoodSnd, "0dbac12490e31f4d0b3b5ee45a37dea125a35510b100e48d79e143eb3f419205");
+    EXPECT_STREQ(getMockLog(), "Empty log");
+
+    char hashEmpty[65] = {0};
+    logEntry("Empty log", "", LOG_INFO);
+    parseNoFlightAreasHash("Response: $-1#", hashEmpty, 65);
+    EXPECT_STREQ(hashEmpty, "");
+    EXPECT_STRNE(getMockLog(), "Empty log");
+
+    char hashNoHead[65] = {0};
+    logEntry("Empty log", "", LOG_INFO);
+    parseNoFlightAreasHash("bdbac12490e31f4d0b3b5ee45a37dea125a35510b100e48d79e143eb3f419205$", hashNoHead, 65);
+    EXPECT_STREQ(hashNoHead, "");
+    EXPECT_STRNE(getMockLog(), "Empty log");
+
+    char hashNoTail[65] = {0};
+    logEntry("Empty log", "", LOG_INFO);
+    parseNoFlightAreasHash("$ForbiddenZonesHash bdbac12490e31f4d0b3b5ee45a37dea125a35510b100e48d79e143eb3f419205#", hashNoTail, 65);
+    EXPECT_STREQ(hashNoTail, "");
+    EXPECT_STRNE(getMockLog(), "Empty log");
+
+    char hashLong[65] = {0};
+    logEntry("Empty log", "", LOG_INFO);
+    parseNoFlightAreasHash("$ForbiddenZonesHash bdbac12490e31f4d0b3b5ee45a37dea125a35510b100e48d79e143eb3f419205123456$", hashLong, 65);
+    EXPECT_STREQ(hashLong, "");
+    EXPECT_STRNE(getMockLog(), "Empty log");
+
+    char hashShort[65] = {0};
+    logEntry("Empty log", "", LOG_INFO);
+    parseNoFlightAreasHash("$ForbiddenZonesHash bdbac12490e31f4d0b3b5ee45a37dea125a35510b100e48d79e143eb3f", hashShort, 65);
+    EXPECT_STREQ(hashShort, "");
     EXPECT_STRNE(getMockLog(), "Empty log");
 }
 

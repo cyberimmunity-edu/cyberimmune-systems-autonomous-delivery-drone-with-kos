@@ -1,17 +1,28 @@
 <!DOCTYPE html>
-<html>
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Index</title>
-      <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
-      </head>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Панель оператора</title>
+    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/style.css') }}">
+</head>
 <body>
+    <header>
+        <h1>Панель оператора</h1>
+    </header>
 
-<h1>Index</h1>
-<p><a href="admin">• ОРВД</a></p>
-<p><a href="mission_sender">• Mission sender</a></p>
-<p><a href="logs">• Logs</a></p>
+    <nav>
+        <ul>
+            <li><a href="admin" class="nav-button">• ОРВД</a></li>
+            <li><a href="admin/forbidden_zones" class="nav-button">• Запрещенные зоны</a></li>
+            <li><a href="mission_sender" class="nav-button">• Mission sender</a></li>
+            <li><a href="logs" class="nav-button">• Инфо</a></li>
+        </ul>
+    </nav>
 
+    <footer>
+      <p></p>
+    </footer>
 </body>
 </html>

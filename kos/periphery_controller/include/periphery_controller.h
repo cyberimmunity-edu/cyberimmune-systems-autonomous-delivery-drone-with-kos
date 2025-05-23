@@ -76,18 +76,3 @@ int setKillSwitch(bool enable);
  * \return Возвращает 1, если режим был успешно установлен, иначе -- 0.
  */
 int setCargoLock(bool enable);
-
-/**
- * \~English Procedure that asks the ATM server whether the power supply to motors is allowed.
- * If the server forbids to supply motors, this procedure disables the supply. Sends requests only
- * when motors power supply is enabled. Signs requests and transmits them through CredentialManager
- * and ServerConnector respectively. It is assumed that this procedure is looped and is performed in a parallel thread.
- * Procedure that transmits drone position to the ATM server. Signs and transmits messages through
- * CredentialManager and ServerConnector components respectively. It is assumed that this procedure
- * is looped and is performed in a parallel thread.
- * \~Russian Процедура, опрашивающая сервер ОРВД, разрешена ли подача питания на двигатели. Если сервер
- * запрещает подачу питания на двигатели, эта процедура отключает подачу питания. Отправляет запросы только когда
- * питание двигателей разрешено. Подписывает запроса и передает их через компоненты CredentialManager и
- * ServerConnector соответственно. Предполагается, что данная процедура выполняется циклически в параллельной нити.
- */
-void checkKillSwitchPermission();

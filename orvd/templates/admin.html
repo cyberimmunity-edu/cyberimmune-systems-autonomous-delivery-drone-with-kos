@@ -7,6 +7,9 @@
   <script src="{{ url_for('static',filename='ol/dist/ol.js') }}"></script>
   <link rel= "stylesheet" type= "text/css" href= "{{ url_for('static',filename='ol/ol.css') }}">
   <link rel= "stylesheet" type= "text/css" href= "{{ url_for('static',filename='styles/style.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles/fontawesome.min.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles/solid.min.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles/brands.min.css') }}">
   <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
   </head>
   <body>
@@ -16,33 +19,62 @@
 
     <div class="container">
       <div class="horizontal-center">
-        <p id="id" class="id note">ID: </p>
-        <select id="id_select" style="display:inline-block;margin-left:10px;">
-        </select>
-        <p id="status" class="status note">Статус: - </p>
-        <p id="waiters" class="wait note">Ожидают: - </p>
-        <p id="dop" class="dop note">HDOP: - </p>
-        <p id="sats" class="sats note">SATS: - </p>
-        <div class="marginb"></div>
+        <div class="id-container">
+          <p id="id" class="id note">ID:</p>
+          <select id="id_select" style="display:inline-block;margin-left:10px;">
+          </select>
+          <div id="copy-id" class="interactable-icon" title="Copy current ID"><i class="fa-solid fa-copy"></i></div>
+        </div>
+        <p></p>
+        <label>
+          <input id="monitoring-checkbox" type="checkbox">
+          Режим мониторинга
+        </label>
+        <label>
+          <input id="flight-info-checkbox" type="checkbox">
+          Посылать информацию о полете
+        </label>
+        <div id="main-buttons">
+          <p id="status" class="status note">Статус: - </p>
+          <p id="waiters" class="wait note">Ожидают: - </p>
+          <p id="dop" class="dop note">HDOP: - </p>
+          <p id="sats" class="sats note">SATS: - </p>
+          <p id="delay" class="delay note">Задержка связи (сек): - </p>
 
-        <button id="arm" class="arm button" type="button">Arm</button>
-        <button id="disarm" class="disarm button" type="button">Disarm</button>
-        <div class="marginb"></div>
+          <button id="arm" class="arm button" type="button">Arm</button>
+          <button id="disarm" class="disarm button" type="button">Disarm</button>
+          <div class="marginb"></div>
+          <button id="kill_switch" class="kill_switch button" type="button">Kill switch</button>
+          <div class="marginb"></div>
+          <button id="toggle-trajectory" class="button" type="button">Показать/скрыть траекторию</button>
+          <div class="marginb"></div>
 
-        <form>
-          <label>
-            <input id="mission_checkbox" type="checkbox" name="languages" value="mission">
-            Подтверждение миссии
-          </label>
-          <br><br>
-          <label>
-            <input id="fly_accept_checkbox" type="checkbox" name="languages" value="fly_accept">
-            Разрешение на полет
-          </label>
-        </form>
-        <div class="marginb"></div>
-
-        <button id="kill_switch" class="kill_switch button" type="button">Kill switch</button>
+          <form>
+            <label>
+              <input id="mission_checkbox" type="checkbox" name="languages" value="mission">
+              Подтверждение миссии
+            </label>
+            <label>
+              <input id="fly_accept_checkbox" type="checkbox" name="languages" value="fly_accept">
+              Разрешение на полет
+            </label>
+            <label>
+              <input id="forbidden_zones_checkbox" type="checkbox" name="forbidden_zones" value="forbidden_zones">
+              Показ запрещенных зон
+            </label>
+            <label>
+              Задержка связи (сек):
+              <input id="delay_input" type="number" min="0" step="1">
+            </label>
+            <button id="set_delay" class="set_delay button" type="button">Установить задержку</button>
+            <br>
+            <div id="revised-mission-block">
+              Новая миссия:
+              <button id="revised-mission-accept" class="button" type="button">Подтвердить</button>
+              <button id="revised-mission-decline" class="button" type="button">Отклонить</button>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
     <script type="module" src="{{ url_for('static',filename='admin.js') }}"> </script>

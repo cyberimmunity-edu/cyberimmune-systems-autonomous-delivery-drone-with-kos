@@ -11,7 +11,7 @@
 #include <string.h>
 
 /** \cond */
-char mockLog[1025] = {0};
+char mockLog[1024] = {0};
 bool mockBuzzerEnabled = false;
 /** \endcond */
 
@@ -55,6 +55,10 @@ int setKillSwitch(bool enable) {
 }
 
 int sendRequest(char* query, char* response, uint32_t responseSize) {
+    return 1;
+}
+
+int publishMessage(char* topic, char* publication) {
     return 1;
 }
 

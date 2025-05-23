@@ -1,4 +1,4 @@
-from flask import Blueprint, request, render_template, redirect, jsonify
+from flask import Blueprint, request, render_template, redirect, jsonify, send_file
 from utils.api_handlers import *
 
 bp = Blueprint('main', __name__)
@@ -118,6 +118,12 @@ def auth_page():
     ---
     tags:
       - admin
+    parameters:
+      - name: next
+        in: query
+        type: string
+        required: false
+        description: URL для перенаправления после успешной аутентификации.
     responses:
       200:
         description: Cтраница аутентификации
@@ -127,7 +133,8 @@ def auth_page():
               type: string
               example: "<html>...</html>"
     """
-    return render_template('admin_auth.html')
+    next_url = request.args.get('next', '/admin')
+    return render_template('admin_auth.html', next_url=next_url)
 
 
 @bp.route('/admin/arm_decision')
@@ -380,7 +387,7 @@ def get_mission_state():
         description: Токен аутентификации.
     responses:
       200:
-        description: Текущее состояние миссии (0 - принята, 1 - не принята, $-1 - не найдена).
+        description: Текущее состояние миссии (0 - принята, 1 - не принята, , 2 - нужна повторная проверка, $-1 - не найдена).
         schema:
           type: string
           example: "0"
@@ -622,6 +629,36 @@ def change_fly_accept():
                        id=id, decision=decision)
     else:
         return bad_request('Wrong id/decision')
+      
+
+@bp.route('/admin/get_forbidden_zones')
+def get_forbidden_zones():
+    """
+    Возвращает все запрещенные зоны.
+    ---
+    tags:
+      - admin
+    parameters:
+      - name: token
+        in: query
+        type: string
+        required: true
+        description: Токен аутентификации
+    responses:
+      200:
+        description: GeoJSON с запрещенными зонами
+        content:
+          application/json:
+            schema:
+              type: object
+      401:
+        description: Неавторизованный доступ
+    """
+    token = request.args.get('token')
+    if token is None or not check_user_token(token):
+        return jsonify({"error": "Unauthorized"}), 401
+    
+    return authorized_request(handler_func=get_forbidden_zones_handler, token=token)
 
 
 @bp.route('/admin/get_forbidden_zone')
@@ -696,7 +733,11 @@ def set_forbidden_zone():
     parameters:
       - name: geometry
         in: body
-        type: string
+        type: array
+        items:
+          type: array
+          items:
+            type: number
         required: true
         description: Геометрия зоны.
       - name: name
@@ -721,16 +762,17 @@ def set_forbidden_zone():
           type: string
           example: "Wrong name"
     """
-    geometry = request.json.get('geometry')
-    name = request.json.get('name')
-    token = request.json.get('token')
+    data = request.json
+    geometry = data.get('geometry')
+    name = data.get('name')
+    token = data.get('token')
     if name:
         return authorized_request(handler_func=set_forbidden_zone_handler, token=token, name=name, geometry=geometry)
     else:
         return bad_request('Wrong name')
 
 
-@bp.route('/admin/delete_forbidden_zone')
+@bp.route('/admin/delete_forbidden_zone', methods=['DELETE'])
 def delete_forbidden_zone():
     """
     Удаляет запрещенную для полета зону по ее имени.
@@ -766,6 +808,35 @@ def delete_forbidden_zone():
         return authorized_request(handler_func=delete_forbidden_zone_handler, token=token, name=name)
     else:
         return bad_request('Wrong name')
+  
+
+@bp.route('/admin/forbidden_zones')
+def forbidden_zones():
+    """
+    Отображает страницу управления запрещенными зонами.
+    ---
+    tags:
+      - admin
+    parameters:
+      - name: token
+        in: query
+        type: string
+        required: true
+        description: Токен аутентификации
+    responses:
+      200:
+        description: Страница управления запрещенными зонами
+        content:
+          text/html:
+            schema:
+              type: string
+              example: "<html>...</html>"
+    """
+    token = request.args.get('token')
+    if token is None or not check_user_token(token):
+        return redirect(f"/admin/auth_page?next={request.path}")
+    else:
+        return render_template('forbidden_zones.html', token=token)
 
 
 @bp.route('/logs')
@@ -816,6 +887,22 @@ def get_logs():
     else:
         return bad_request('Wrong id')
 
+@bp.route('/api/nmission')
+def revise_mission():
+  """_summary_
+
+  Returns:
+      _type_: _description_
+  """
+  id = cast_wrapper(request.args.get('id'), str)
+  mission = cast_wrapper(request.args.get('mission'), str)
+  sig = request.args.get('sig')
+  if id:
+      return signed_request(handler_func=revise_mission_handler, verifier_func=mock_verifier, signer_func=sign,
+                            query_str=f'/api/nmission?id={id}&mission={mission}', key_group=f'kos{id}', sig=sig, id=id, mission=mission)
+  else:
+      return bad_request('Wrong id')
+  
 
 @bp.route('/api/logs')
 def save_logs():
@@ -898,8 +985,8 @@ def fmission():
         description: Строка с полетным заданием.
     responses:
       200:
-        description: Миссия успешно обработана.
-        example: "$OK"
+        description: Статус верификации миссии.
+        example: "Mission accepted."
       400:
         description: Неверный идентификатор.
         example: "Wrong id"
@@ -1012,10 +1099,10 @@ def arm_request():
         description: Подпись запроса.
     responses:
       200:
-        description: Состояние арма (0 - вкл, 1 - выкл) или $-1, если БПЛА не найден.
+        description: Состояние арма (0 - вкл, 1 - выкл) и время до следующего сеанса связи или $-1, если БПЛА не найден.
         schema:
           type: string
-          example: "$Arm: {state}#{signature}"
+          example: "$Arm {state}$Delay {time in seconds}#{signature}"
       400:
         description: Неверный идентификатор.
         schema:
@@ -1066,8 +1153,8 @@ def auth():
         description: Ошибка проверки подписи.
     """
     id = cast_wrapper(request.args.get('id'), str)
-    sig = request.args.get('sig')
-    if id:
+    if id is not None:
+        sig = request.args.get('sig')
         return signed_request(handler_func=auth_handler, verifier_func=verify, signer_func=sign,
                           query_str=f'/api/auth?id={id}', key_group=f'kos{id}', sig=sig, id=id)
     else:
@@ -1094,10 +1181,10 @@ def fly_accept():
         description: Подпись запроса.
     responses:
       200:
-        description: Состояние арма (0 - вкл, 1 - выкл) или $-1, если БПЛА не найден.
+        description: Состояние арма (0 - вкл, 1 - выкл) и время до следующего сеанса связи или $-1, если БПЛА не найден.
         schema:
           type: string
-          example: "$Arm: {state}#{signature}"
+          example: "$Arm: {state}$Delay {time in seconds}#{signature}"
       400:
         description: Неверный идентификатор.
         schema:
@@ -1114,7 +1201,50 @@ def fly_accept():
     else:
         return bad_request('Wrong id')
 
-
+ 
+@bp.route('/api/flight_info')
+def flight_info():
+    """
+    Обрабатывает запрос на информацию полета от БПЛА.
+    ---
+    tags:
+      - api
+    parameters:
+      - name: id
+        in: query
+        type: string
+        required: true
+        description: Идентификатор БПЛА.
+      - name: sig
+        in: query
+        type: string
+        required: true
+        description: Подпись запроса.
+    responses:
+      200:
+        description: Состояние полета (-1 в случае kill switch, 0 в случае продолжения полета, 1 в случае приостановки полета), хэш запретных зон и время до следующего сеанса связи или $-1, если БПЛА не найден.
+        schema:
+          type: string
+          example: "$Flight {status}$ForbiddenZonesHash {hash}$Delay {time in seconds}#{signature}"
+      400:
+        description: Неверный идентификатор.
+        schema:
+          type: string
+          example: "Wrong id"
+      403:
+        description: Ошибка проверки подписи.
+    """
+    id = cast_wrapper(request.args.get('id'), str)
+    sig = request.args.get('sig')
+    if not modes["flight_info_response"]:
+        return '', 403
+    elif id:
+        return signed_request(handler_func=flight_info_handler, verifier_func=verify, signer_func=sign,
+                          query_str=f'/api/flight_info?id={id}', key_group=f'kos{id}', sig=sig, id=id)
+    else:
+        return bad_request('Wrong id')
+      
+      
 @bp.route('/api/telemetry')
 def telemetry():
     """
@@ -1303,7 +1433,7 @@ def get_all_forbidden_zones():
         description: Информация о запрещенных зонах.
         schema:
           type: string
-          example: "1&2&100_50&100_0#{signature}"
+          example: "$ForbiddenZones 1&test_name&2&50_100&0_100#{signature}"
       400:
         description: Неверный идентификатор.
         schema:
@@ -1319,3 +1449,287 @@ def get_all_forbidden_zones():
                           query_str=f'/api/get_all_forbidden_zones?id={id}', key_group=f'kos{id}', sig=sig, id=id)
     else:
         return bad_request('Wrong id')
+      
+      
+@bp.route('/api/get_forbidden_zones_delta')
+def get_forbidden_zones_delta():
+    """
+    Возвращает дельту изменений в запрещенных для полета зонах.
+    ---
+    tags:
+      - api
+    parameters:
+      - name: id
+        in: query
+        type: string
+        required: true
+        description: Идентификатор БПЛА.
+      - name: sig
+        in: query
+        type: string
+        required: true
+        description: Подпись запроса.
+    responses:
+      200:
+        description: Дельта изменений в запрещенных зонах.
+        schema:
+          type: string
+          example: "$ForbiddenZonesDelta 1&test_name&modified&2&50_100&0_100#{signature}"
+      400:
+        description: Неверный идентификатор.
+        schema:
+          type: string
+          example: "Wrong id"
+      403:
+        description: Ошибка проверки подписи.
+    """
+    id = cast_wrapper(request.args.get('id'), str)
+    sig = request.args.get('sig')
+    if id:
+        return signed_request(handler_func=get_forbidden_zones_delta_handler, verifier_func=verify, signer_func=sign,
+                              query_str=f'/api/get_forbidden_zones_delta?id={id}', key_group=f'kos{id}', sig=sig, id=id)
+    else:
+        return bad_request('Wrong id')
+      
+      
+@bp.route('/api/forbidden_zones_hash')
+def forbidden_zones_hash():
+    """
+    Возвращает SHA-256 хэш строки запрещенных для полета зон.
+    ---
+    tags:
+      - api
+    parameters:
+      - name: id
+        in: query
+        type: string
+        required: true
+        description: Идентификатор БПЛА.
+      - name: sig
+        in: query
+        type: string
+        required: true
+        description: Подпись запроса.
+    responses:
+      200:
+        description: SHA-256 хэш строки запрещенных зон.
+        schema:
+          type: string
+          example: "$ForbiddenZonesHash 3a7bd3e2360a3d5f0d5f0d5f0d5f0d5f0d5f0d5f0d5f0d5f0d5f0d5f0d5f0d5f#{signature}"
+      400:
+        description: Неверный идентификатор.
+        schema:
+          type: string
+          example: "Wrong id"
+      403:
+        description: Ошибка проверки подписи.
+    """
+    id = cast_wrapper(request.args.get('id'), str)
+    sig = request.args.get('sig')
+    if id:
+        return signed_request(handler_func=get_forbidden_zones_hash_handler, verifier_func=verify, signer_func=sign,
+                              query_str=f'/api/forbidden_zones_hash?id={id}', key_group=f'kos{id}', sig=sig, id=id)
+    else:
+        return bad_request('Wrong id')
+      
+      
+@bp.route('/admin/export_forbidden_zones')
+def export_forbidden_zones():
+    """
+    Экспортирует все запрещенные зоны в файл.
+    ---
+    tags:
+      - admin
+    parameters:
+      - name: token
+        in: query
+        type: string
+        required: true
+        description: Токен аутентификации
+    responses:
+      200:
+        description: Файл с запрещенными зонами
+        content:
+          application/json:
+            schema:
+              type: string
+      401:
+        description: Неавторизованный доступ
+    """
+    token = request.args.get('token')
+    if token is None or not check_user_token(token):
+        return jsonify({"error": "Unauthorized"}), 401
+
+    return send_file(FORBIDDEN_ZONES_PATH, as_attachment=True, attachment_filename='forbidden_zones.json')
+
+
+@bp.route('/admin/import_forbidden_zones', methods=['POST'])
+def import_forbidden_zones():
+    """
+    Импортирует запрещенные зоны из файла.
+    ---
+    tags:
+      - admin
+    parameters:
+      - name: file
+        in: formData
+        type: file
+        required: true
+        description: Файл с запрещенными зонами
+      - name: token
+        in: formData
+        type: string
+        required: true
+        description: Токен аутентификации
+    responses:
+      200:
+        description: Успешный импорт зон
+      400:
+        description: Ошибка импорта зон
+      401:
+        description: Неавторизованный доступ
+    """
+    token = request.form.get('token')
+    if token is None or not check_user_token(token):
+        return jsonify({"error": "Unauthorized"}), 401
+
+    file = request.files.get('file')
+    if file is None:
+        return jsonify({"error": "No file provided"}), 400
+
+    try:
+        with open(FORBIDDEN_ZONES_PATH, 'r', encoding='utf-8') as f:
+            old_zones = json.load(f)
+        
+        file.save(FORBIDDEN_ZONES_PATH)
+        
+        with open(FORBIDDEN_ZONES_PATH, 'r', encoding='utf-8') as f:
+            new_zones = json.load(f)
+        
+        compute_and_save_forbidden_zones_delta(old_zones, new_zones)
+        
+        return jsonify({"status": "success"}), 200
+    except Exception as e:
+        print(e)
+        return jsonify({"error": "Failed to save file"}), 400
+      
+
+@bp.route('/admin/get_delay')
+def get_delay():
+    """
+    Получает время до следующего сеанса связи для указанного БПЛА.
+    ---
+    tags:
+      - admin
+    parameters:
+      - name: id
+        in: query
+        type: string
+        required: true
+        description: Идентификатор БПЛА.
+      - name: token
+        in: query
+        type: string
+        required: true
+        description: Токен аутентификации.
+    responses:
+      200:
+        description: Время до следующего сеанса связи.
+        schema:
+          type: string
+          example: "30"
+      400:
+        description: Какие-то параметры неверные
+        schema:
+          type: string
+          example: "Wrong id"
+    """
+    id = cast_wrapper(request.args.get('id'), str)
+    token = request.args.get('token')
+    if id:
+        return authorized_request(handler_func=get_delay_handler, token=token, id=id)
+    else:
+        return bad_request('Wrong id')
+
+
+@bp.route('/admin/set_delay')
+def set_delay():
+    """
+    Устанавливает время до следующего сеанса связи для указанного БПЛА.
+    ---
+    tags:
+      - admin
+    parameters:
+      - name: id
+        in: query
+        type: string
+        required: true
+        description: Идентификатор БПЛА.
+      - name: delay
+        in: query
+        type: integer
+        required: true
+        description: Время до следующего сеанса связи.
+      - name: token
+        in: query
+        type: string
+        required: true
+        description: Токен аутентификации.
+    responses:
+      200:
+        description: Результат установки времени до следующего сеанса связи.
+        schema:
+          type: string
+          example: "$OK"
+      400:
+        description: Какие-то параметры неверные
+        schema:
+          type: string
+          example: "Wrong id/delay"
+    """
+    id = cast_wrapper(request.args.get('id'), str)
+    delay = cast_wrapper(request.args.get('delay'), int)
+    token = request.args.get('token')
+    if id and delay is not None:
+        return authorized_request(handler_func=set_delay_handler, token=token, id=id, delay=delay)
+    else:
+        return bad_request('Wrong id/delay')
+      
+      
+@bp.route('/admin/revise_mission_decision')
+def revise_mission_decision():
+    id = cast_wrapper(request.args.get('id'), str)
+    decision = cast_wrapper(request.args.get('decision'), int)
+    token = request.args.get('token')
+    if id is not None and decision is not None:
+        return authorized_request(handler_func=revise_mission_decision_handler, token=token, id=id, decision=decision)
+    else:
+        return bad_request('Wrong id/decision')
+      
+      
+@bp.route('/admin/get_display_mode')
+def get_display_mode():
+    token = request.args.get('token')
+    return authorized_request(handler_func=get_display_mode_handler, token=token)
+      
+
+@bp.route('/admin/toggle_display_mode')
+def toggle_display_mode():
+    token = request.args.get('token')
+    return authorized_request(handler_func=toggle_display_mode_handler, token=token)
+  
+@bp.route('/admin/get_flight_info_response_mode')
+def get_flight_info_response_mode():
+    token = request.args.get('token')
+    return authorized_request(handler_func=get_flight_info_response_mode_handler, token=token)
+      
+
+@bp.route('/admin/toggle_flight_info_response_mode')
+def toggle_flight_info_response_mode():
+    token = request.args.get('token')
+    return authorized_request(handler_func=toggle_flight_info_response_mode_handler, token=token)
+  
+@bp.route('/admin/get_all_data')
+def get_all_data():
+    token = request.args.get('token')
+    return authorized_request(handler_func=get_all_data_handler, token=token)

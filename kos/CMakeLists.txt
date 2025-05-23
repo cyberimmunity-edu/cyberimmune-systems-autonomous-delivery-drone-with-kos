@@ -11,6 +11,17 @@ endif ()
 include (platform/nk)
 include (platform/install)
 
+set (RESOURCES ${CMAKE_SOURCE_DIR}/resources)
+
+# Add a package importing components for building an audit program and
+# connecting to it.
+find_package (klog REQUIRED)
+include_directories (${klog_INCLUDE})
+
+# Add the package that imports klog_storage_entity.
+find_package (klog_storage REQUIRED)
+include_directories (${klog_storage_INCLUDE})
+
 find_package (vfs REQUIRED)
 include_directories (${vfs_INCLUDE})
 find_package (precompiled_vfs REQUIRED)
@@ -21,9 +32,16 @@ if (SIMULATION OR SERVER)
     include_directories (${rump_INCLUDE})
 endif ()
 
+if (NOT SIMULATION)
+    if (SERVER)
+        find_package (wpa REQUIRED COMPONENTS SUPPLICANT_ENTITY)
+        include_directories (${wpa_INCLUDE})
+    endif ()
+endif ()
+
 if (SERVER)
-    find_package (wpa REQUIRED COMPONENTS SUPPLICANT_ENTITY)
-    include_directories (${wpa_INCLUDE})
+    find_package (mosquitto REQUIRED COMPONENTS CXX_LIB)
+    include_directories (${mosquitto_INCLUDE})
 endif ()
 
 if (NOT SIMULATION)
@@ -42,6 +60,8 @@ include_directories (${MbedTLS_INCLUDE})
 
 set (fmt_USE_STATIC ON)
 set (spdlog_USE_STATIC ON)
+set (fdn_USE_STATIC ON)
+set (logger_USE_STATIC ON)
 find_package (spdlog REQUIRED)
 include_directories (${koslogger_INCLUDE})
 find_package (logger REQUIRED)
@@ -59,7 +79,7 @@ else ()
     nk_build_idl_files (periphery_controller_idl_files DEPENDS logger_idl_files NK_MODULE "drone_controller" IDL "resources/PeripheryControllerInterface.idl")
     nk_build_idl_files (server_connector_idl_files DEPENDS logger_idl_files NK_MODULE "drone_controller" IDL "resources/ServerConnectorInterface.idl")
 
-    nk_build_edl_files (logger_edl_files IDL_TARGET logger_idl_files NK_MODULE "drone_controller" EDL "resources/Logger.edl")
+    nk_build_edl_files (logger_edl_files IDL_TARGET logger_idl_files DEPENDS server_connector_idl_files NK_MODULE "drone_controller" EDL "resources/Logger.edl")
     nk_build_edl_files (autopilot_connector_edl_files IDL_TARGET autopilot_connector_idl_files NK_MODULE "drone_controller" EDL "resources/AutopilotConnector.edl")
     nk_build_edl_files (credential_manager_edl_files IDL_TARGET credential_manager_idl_files NK_MODULE "drone_controller" EDL "resources/CredentialManager.edl")
     nk_build_edl_files (navigation_system_edl_files IDL_TARGET navigation_system_idl_files NK_MODULE "drone_controller" EDL "resources/NavigationSystem.edl")
@@ -67,11 +87,15 @@ else ()
     nk_build_edl_files (server_connector_edl_files IDL_TARGET server_connector_idl_files NK_MODULE "drone_controller" EDL "resources/ServerConnector.edl")
 
     nk_build_edl_files (flight_controller_edl_files DEPENDS autopilot_connector_idl_files DEPENDS credential_manager_idl_files DEPENDS navigation_system_idl_files DEPENDS periphery_controller_idl_files DEPENDS server_connector_idl_files NK_MODULE "drone_controller" EDL "resources/FlightController.edl")
+
+    nk_build_edl_files (klog_edl_files NK_MODULE "drone_controller" EDL "resources/KlogEntity.edl")
+    nk_build_edl_files (klog_storage_edl_files NK_MODULE "drone_controller" EDL "resources/KlogStorageEntity.edl" NK_FLAGS "--extended-errors")
+
 endif ()
 
 add_compile_options (-Wall -Wextra -Wconversion
-                     -fPIE -pie -D_FORTIFY_SOURCE=2 -O2
-                     -fstack-protector-strong -fstack-clash-protection
+                     -fPIE -D_FORTIFY_SOURCE=2 -O2
+                     -fstack-protector-strong
                      -mbranch-protection=standard
                      -Wsign-conversion -Wformat=2 -Wformat-security -Werror=format-security
                      -fsanitize=undefined -fsanitize-undefined-trap-on-error)
@@ -91,6 +115,7 @@ else ()
     add_subdirectory (periphery_controller)
     add_subdirectory (server_connector)
     add_subdirectory (flight_controller)
+    add_subdirectory (klog_storage)
     if (PAL_TESTS)
         add_subdirectory (einit/pal_tests)
     else ()
