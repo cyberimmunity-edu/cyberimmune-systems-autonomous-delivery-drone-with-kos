@@ -46,7 +46,7 @@ int setMacId() {
     uint8_t mac[ETHER_ADDR_LEN] = {0};
     for (ifaddrs *ifa = address; ifa != NULL; ifa = ifa->ifa_next) {
         char *name = ifa->ifa_name;
-        if (strcmp(name, "en0") || (ifa->ifa_flags & IFF_LOOPBACK))
+        if (strcmp(name, "en0") || strcmp(name, "wl0") || (ifa->ifa_flags & IFF_LOOPBACK))
             continue;
         struct sockaddr_in *sock = (struct sockaddr_in*)(ifa->ifa_addr);
         if ((sock == NULL) || (sock->sin_family != AF_LINK))
@@ -184,14 +184,17 @@ int requestServer(char* query, char* response, uint32_t responseSize) {
 
 int publish(char* topic, char* publication) {
     if (!publishConnected) {
-        publishConnected = !publisher->connect_async(SERVER_IP, publishPort);
+        publishConnected = !publisher->connect_async(MQTT_IP, publishPort);
         if (!publishConnected) {
             logEntry("Connection to MQTT broker has failed", ENTITY_NAME, LogLevel::LOG_WARNING);
             return 0;
         }
     }
 
-    if (publisher && publishConnected && !publisher->publish(NULL, topic, strlen(publication), publication))
+    char idTopic[256];
+    snprintf(idTopic, 256, "%s/%s", topic, getBoardName());
+
+    if (publisher && publishConnected && !publisher->publish(NULL, idTopic, strlen(publication), publication))
         return 1;
     else {
         logEntry("Failed to publish message", ENTITY_NAME, LogLevel::LOG_WARNING);

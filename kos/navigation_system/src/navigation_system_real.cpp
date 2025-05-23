@@ -27,10 +27,22 @@
 
 /** \cond */
 #define NAME_MAX_LENGTH 64
+#define LNS_ANGLE 69
+#define LNS_LAT 598858446
+#define LNS_LNG 298209447
 
-std::thread barometerThread;
+#if ALT_SRC == 1
+    std::thread barometerThread;
+#endif
 
-char gpsUart[] = "uart3";
+#if COORD_SRC == 1
+    char gpsUart[] = "uart3";
+#elif COORD_SRC == 2
+#define LATLON_TO_M 0.011131884502145034
+    char gpsUart[] = "uart5";
+    float lnsSin, lnsCos, lnsScale;
+    int32_t prevX, prevY;
+#endif
 char gpsConfigSuffix[] = "default";
 UartHandle gpsUartHandler = NULL;
 
@@ -218,7 +230,7 @@ void getSensors() {
     uint8_t value;
     int mode, messageType, idx, latSign, lngSign;
     int32_t latitude, longitude;
-    char head[8], satsStr[8], dopStr[8], latStr[16], lngStr[16], speedStr[16];
+    char head[8], satsStr[8], dopStr[8], latStr[16], lngStr[16], speedStr[16], xStr[16], yStr[16], zStr[16];
 
     while (true) {
         read = true;
@@ -249,6 +261,10 @@ void getSensors() {
                     else if ((head[2] == 'V') && (head[3] == 'T') && (head[4] == 'G')) {
                         mode = 10;
                         messageType = 2;
+                    }
+                    else if ((head[2] == 'L') && (head[3] == 'N') && (head[4] == 'S')) {
+                        mode = 17;
+                        messageType = 3;
                     }
                     else
                         mode = 0;
@@ -369,10 +385,56 @@ void getSensors() {
                     idx++;
                 }
                 break;
+            case 17: // X local coordinate
+                if (idx >= 16) {
+                    read = false;
+                    messageType = 0;;
+                }
+                else if (value == ',') {
+                    xStr[idx] = '\0';
+                    idx = 0;
+                    mode = 18;
+                }
+                else {
+                    xStr[idx] = value;
+                    idx++;
+                }
+                break;
+            case 18: // Y local coordinate
+                if (idx >= 16) {
+                    read = false;
+                    messageType = 0;
+                }
+                else if (value == ',') {
+                    yStr[idx] = '\0';
+                    idx = 0;
+                    mode = 19;
+                }
+                else {
+                    yStr[idx] = value;
+                    idx++;
+                }
+                break;
+            case 19: // Z local coordinate
+                if (idx >= 16) {
+                    read = false;
+                    messageType = 0;
+                }
+                else if (value == '*') {
+                    zStr[idx] = '\0';
+                    idx = 0;
+                    read = false;
+                }
+                else {
+                    zStr[idx] = value;
+                    idx++;
+                }
+                break;
             }
         }
 
         if (messageType == 1) {
+#if COORD_SRC == 1
             longitude = round(10000000 * atof(lngStr + 3) / 60.0f);
             latitude = round(10000000 * atof(latStr + 2) / 60.0f);
             lngStr[3] = '\0';
@@ -382,9 +444,29 @@ void getSensors() {
 
             setCoords(latitude, longitude);
             setInfo(atof(dopStr), atoi(satsStr));
+#endif
         }
-        else if (messageType = 2)
+        else if (messageType == 2) {
+#if COORD_SRC == 1
             setSpeed(atof(speedStr) / 3.6f);
+#endif
+        }
+        else if (messageType == 3) {
+#if COORD_SRC == 2
+            float lns_x = atof(xStr) / 100.0f;
+            float lns_y = atof(yStr) / 100.0f;
+            float X = lnsCos * lns_x - lnsSin * lns_y;
+            float Y = lnsSin * lns_x + lnsCos * lns_y;
+            int32_t difLat = (int32_t)round(Y / LATLON_TO_M);
+            int32_t difLng = (int32_t)round((X / LATLON_TO_M) / lnsScale);
+
+            setCoords(LNS_LAT + difLat, LNS_LNG + difLng);
+            setInfo(1.0, 4);
+#endif
+#if ALT_SRC == 2
+            setAltitude((int32_t)round(atof(zStr)));
+#endif
+        }
         else
             logEntry("Failed to parse NMEA string from GPS", ENTITY_NAME, LogLevel::LOG_WARNING);
     }
@@ -464,12 +546,13 @@ int initNavigationSystem() {
 int initSensors() {
     char logBuffer[256] = {0};
     Retcode rc = UartOpenPort(gpsUart, &gpsUartHandler);
-    if (rc != rcOk) {
+    if (rc != UART_EOK) {
         snprintf(logBuffer, 256, "Failed to open UART %s (" RETCODE_HR_FMT ")", gpsUart, RETCODE_HR_PARAMS(rc));
         logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
         return 0;
     }
 
+#if COORD_SRC == 1
     rtl_size_t writtenBytes;
     uint8_t gnssNmea[] = { 0xb5, 0x62,
         0x06, 0x00, 0x14, 0x00, 0x01, 0x00, 0x00, 0x00, 0xd0, 0x08, 0x00, 0x00, 0x00, 0xc2, 0x01, 0x00,
@@ -504,7 +587,18 @@ int initSensors() {
         logEntry(logBuffer, ENTITY_NAME, LogLevel::LOG_WARNING);
         return 0;
     }
+#elif COORD_SRC == 2
+    float lnsAngle = (LNS_ANGLE * M_PI / 180.0f);
+    lnsSin = sin(lnsAngle);
+    lnsCos = cos(lnsAngle);
+    lnsScale = cos(LNS_LAT * 1.0e-7 * M_PI / 180.0f);
+    if (lnsScale < 0.01f)
+        lnsScale = 0.01f;
+    prevX = 0;
+    prevY = 0;
+#endif
 
+#if ALT_SRC == 1
     rc = I2cOpenChannel(barometerI2C, &barometerHandler);
     if (rc != rcOk) {
         snprintf(logBuffer, 256, "Failed to open I2C %s (" RETCODE_HR_FMT ")", barometerI2C, RETCODE_HR_PARAMS(rc));
@@ -558,6 +652,7 @@ int initSensors() {
     }
 
     barometerThread = std::thread(getBarometer);
+#endif
 
     return 1;
 }
